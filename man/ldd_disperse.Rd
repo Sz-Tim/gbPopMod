@@ -4,13 +4,13 @@
 \alias{ldd_disperse}
 \title{Long distance dispersal}
 \usage{
-ldd_disperse(ncell, id_i, N.seed, n.ldd)
+ldd_disperse(ncell, id.i, N.seed, n.ldd)
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
 
-\item{id_i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id_inbd} indexes only inbound cells}
+\item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
+while \code{id.inbd} indexes only inbound cells}
 
 \item{N.seed}{\code{N.seed} output from \code{\link{sdd_disperse}} with grid
 id and number of seeds in each cell}
