@@ -10,36 +10,48 @@ cell_agg(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est, pr.est.trt = NULL)
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
 
-\item{K}{Vector with carrying capacity for each land cover type}
-
-\item{pr.s}{Vector with juvenile survival probability for each land cover
-type}
-
-\item{fec}{Vector with mean per-individual fruit production for each land
+\item{K}{Vector \code{length=n.lc} with carrying capacity for each land 
 cover type}
 
-\item{pr.f}{Vector with mean probability of fruiting for each land cover type}
+\item{pr.s}{Vector \code{length=n.lc} with juvenile survival probability for
+each land cover type}
 
-\item{pr.eat}{Vector with proportion of fruits eaten by birds for each land
-cover type}
+\item{fec}{Vector \code{length=n.lc} with mean per-individual fruit 
+production for each land cover type}
 
-\item{pr.est}{Vector with probability of establishment for each land cover
-type}
+\item{pr.f}{Vector \code{length=n.lc} with mean probability of fruiting for 
+each land cover type}
+
+\item{pr.eat}{Vector \code{length=n.lc} with proportion of fruits eaten by 
+birds for each land cover type}
+
+\item{pr.est}{Vector \code{length=n.lc} with seedling establishment 
+probability for each land cover type}
 
 \item{pr.est.trt}{Tibble with grid id and modified establishment
 probabilities for cells with ground cover treatments; default = NULL}
 }
 \value{
 Named list with values aggregated within cells based on land cover
-  types. Includes: \describe{ \item{lc.mx}{matrix(col=n.lc, row=ngrid) with
-  LC proportions} \item{K.ag}{vector(length=ngrid) with total K}
-  \item{K.lc}{matrix(col=n.lc, row=ngrid) with K per LC}
-  \item{pr.s.ag}{vector(length=ngrid) with pr(surv)}
-  \item{rel.dens}{matrix(col=n.lc, row=ngrid) with relative density among LC}
-  \item{fec.ag}{vector(length=ngrid) with mn(fruit per adult)}
-  \item{pr.f.ag}{vector(length=ngrid) with pr(fruit)}
-  \item{pr.eat.ag}{vector(length=ngrid) with pr(eaten by bird)}
-  \item{pr.est.ag}{vector(length=ngrid) with pr(establish)} }
+  types. Includes: 
+  \describe{ 
+    \item{\code{lc.mx}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with land
+      cover proportions} 
+    \item{\code{K.ag}}{Vector \code{length=ngrid} with total K}
+    \item{\code{K.lc}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with K per land
+      cover category}
+    \item{\code{pr.s.ag}}{Vector \code{length=ngrid} with pr(surv)}
+    \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with 
+      relative density among land cover categories}
+    \item{\code{fec.ag}}{Vector \code{length=ngrid} with mean fruit produced
+      per adult)}
+    \item{\code{pr.f.ag}}{Vector \code{length=ngrid} with fruiting 
+      probability}
+    \item{\code{pr.eat.ag}}{Vector \code{length=ngrid} with proportion
+      eaten by birds}
+    \item{\code{pr.est.ag}}{Vector \code{length=ngrid} with seedling
+      establishment probabilities} 
+  }
 }
 \description{
 This function reformats and calculates cell-means based on land cover
