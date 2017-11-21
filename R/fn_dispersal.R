@@ -108,8 +108,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL) {
 #' short distance dispersal neighborhood of each cell, accounting for the
 #' distance from the source cell, bird habitat preference, the proportion of
 #' fruits eaten by birds, and seed viability post-digestion.
-#' @param id_i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id_inbd} indexes only inbound cells
+#' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
+#'   while \code{id.inbd} indexes only inbound cells
 #' @param N.f Tibble of fruits produced in each cell output from
 #'   \code{\link{make_fruits}}
 #' @param pr.eat.ag Vector of proportion of fruits eaten by birds from
@@ -124,7 +124,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL) {
 #' @keywords dispersal, SDD
 #' @export
 
-sdd_disperse <- function(id_i, N.f, pr.eat.ag, pr.s.bird, 
+sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird, 
                          sdd.pr, sdd.rate, sdd.st=F) {
   
   require(tidyverse); require(magrittr)
@@ -135,20 +135,20 @@ sdd_disperse <- function(id_i, N.f, pr.eat.ag, pr.s.bird,
            N.emig=N.produced*(1-pexp(.5,sdd.rate))*pr.eat.ag[id,],
            N.drop=N.produced-N.emig) %>%
     mutate(N.emig=N.emig*pr.s.bird,
-           id_inbd=id_i$id_inbd[id])
+           id.inbd=id.i$id.inbd[id])
   N.seed <- N.source %>% select(id, N.drop) %>% rename(N.dep=N.drop)
   
   if(sdd.st) {
     N.seed$N.dep <- round(N.seed$N.dep)
-    SDD_sd <- unlist(apply(N.source, 1,
+    SDD.sd <- unlist(apply(N.source, 1,
                            function(x) sample(sdd.pr[,,2,x[7]], x[5], 
                                               replace=TRUE,
                                               prob=sdd.pr[,,1,x[7]])))
-    SDD_dep <- tabulate(SDD_sd)  # vector of counts for 1:max(SDD_sd)
-    SDD_nonzero <- SDD_dep > 0  # cell id's with N_dep > 0
+    SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
+    SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
     N.seed <- add_row(N.seed, 
-                      id=which(SDD_nonzero), 
-                      N.dep=SDD_dep[SDD_nonzero])
+                      id=which(SDD.nonzero), 
+                      N.dep=SDD.dep[SDD.nonzero])
   } else {
     # assign emigrants to target cells & sum within each cell
     N.seed %<>% 
@@ -162,7 +162,7 @@ sdd_disperse <- function(id_i, N.f, pr.eat.ag, pr.s.bird,
   N.seed %<>%
     group_by(id) %>% 
     summarise(N=sum(N.dep) %>% round) %>%
-    filter(!is.na(id_i$id_inbd[id]) & N > 0)
+    filter(!is.na(id.i$id.inbd[id]) & N > 0)
   
   return(N.seed)
 }
@@ -175,8 +175,8 @@ sdd_disperse <- function(id_i, N.f, pr.eat.ag, pr.s.bird,
 #' This function assigns n.ldd random long distance dispersal events across the
 #' landcape. A single seed is added to each target cell
 #' @param ncell Number of inbound grid cells
-#' @param id_i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id_inbd} indexes only inbound cells
+#' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
+#'   while \code{id.inbd} indexes only inbound cells
 #' @param N.seed \code{N.seed} output from \code{\link{sdd_disperse}} with grid
 #'   id and number of seeds in each cell
 #' @param n.ldd Number of long distance dispersal events per time step
@@ -185,11 +185,11 @@ sdd_disperse <- function(id_i, N.f, pr.eat.ag, pr.s.bird,
 #' @export
 
 
-ldd_disperse <- function(ncell, id_i, N.seed, n.ldd) {
+ldd_disperse <- function(ncell, id.i, N.seed, n.ldd) {
   
   require(tidyverse); require(magrittr)
   
-  ldd.id <- id_i$id[which(id_i$id_inbd == sample(1:ncell, n.ldd, replace=T))]
+  ldd.id <- id.i$id[which(id.i$id.inbd == sample(1:ncell, n.ldd, replace=T))]
   
   N.seed %<>% 
     add_row(id=ldd.id, N=rep(1, n.ldd)) %>%

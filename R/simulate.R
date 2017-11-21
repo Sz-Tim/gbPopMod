@@ -12,7 +12,7 @@
 #'     \item{\code{dem.st}}{\code{Logical} Include stochasticity in demography?}
 #'     \item{\code{sdd.st}}{\code{Logical} Include stochasticity in short
 #'       distance dispersal?}
-#'     \item{\code{n_cores}}{Number of cores for parallelizing sdd.pr 
+#'     \item{\code{n.cores}}{Number of cores for parallelizing sdd.pr 
 #'       calculation}
 #'     \item{\code{lc.r}}{Maximum number of rows (\code{y}) in landscape}
 #'     \item{\code{lc.c}}{Maximum number of columns (\code{x}) in landscape}
@@ -48,9 +48,9 @@
 #' @param control.p NULL or named list of buckthorn control treatment parameters 
 #'   including:
 #'   \describe{
-#'     \item{\code{nTrt_grd}}{Proportion of cells with ground treatments in 
+#'     \item{\code{nTrt.grd}}{Proportion of cells with ground treatments in 
 #'       each time step}
-#'     \item{\code{nTrt_man}}{Proportion of cells with manual treatments in 
+#'     \item{\code{nTrt.man}}{Proportion of cells with manual treatments in 
 #'       each time step}
 #'     \item{\code{grd.trt}}{Named vector with ground treatments and associated 
 #'       seedling establishment probabilities}
@@ -58,6 +58,8 @@
 #'       mortality (=success) rates}
 #'     \item{\code{add.owners}}{\code{Logical} Do owners treat every year once 
 #'       starting a particular treatment?}
+#'     \item{\code{lc.chg}}{\code{Logical} Does land cover change across years?}
+#'     \item{\code{n.chg}}{Proportion of cells with land cover change each year}
 #'     \item{\code{t.trt}}{Year to start treatments}
 #'   }
 #' @return Array of abundances for each cell and age group
@@ -88,15 +90,17 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
   n.ldd <- g.p$n.ldd   # num long distance dispersal events per year
   y.ad <- max(g.p$age.f)
   age.f.d <- length(age.f) > 1
-  id_i <- lc.df %>% select(id, id_inbd)
+  id.i <- lc.df %>% select(id, id.inbd)
   
   # If buckthorn is being actively managed...
   pr.est.trt <- NULL
   if(!is.null(control.p)) {
-    nTrt_grd <- control.p$nTrt_grd * ncell
-    nTrt_man <- control.p$nTrt_man * ncell
+    nTrt.grd <- control.p$nTrt.grd * ncell
+    nTrt.man <- control.p$nTrt.man * ncell
     grd.trt <- control.p$grd.trt
     man.trt <- control.p$man.trt
+    lc.chg <- control.p$lc.chg
+    n.chg <- control.p$n.chg
     t.trt <- control.p$t.trt
     add.owners <- control.p$add.owners
     est.trt <- tibble(id=numeric(), Trt=character())

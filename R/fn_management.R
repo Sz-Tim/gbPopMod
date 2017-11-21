@@ -3,8 +3,8 @@
 #' This function randomly assigns pixels to the specified buckthorn management
 #' treatment. Assigned cells either overwrite the cells treated in the previous
 #' time step or are appended.
-#' @param id_i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id_inbd} indexes only inbound cells
+#' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
+#'   while \code{id.inbd} indexes only inbound cells
 #' @param ncell Number of inbound grid cells
 #' @param nTrt Proportion of inbound grid cells to be treated. If add != NULL,
 #'   then this is appended to the cells treated in the previous time step.
@@ -21,12 +21,12 @@
 #' @export
 
 
-trt_assign <- function(id_i, ncell, nTrt, trt.eff, 
+trt_assign <- function(id.i, ncell, nTrt, trt.eff, 
                        addOwners=FALSE, trt.m1=NULL) {
   
   require(tidyverse)
   
-  trt.t <- tibble(id=id_i$id[which(id_i$id_inbd %in% sample(1:ncell, nTrt))],
+  trt.t <- tibble(id=id.i$id[which(id.i$id.inbd %in% sample(1:ncell, nTrt))],
                   Trt=sample(names(trt.eff), nTrt, replace=TRUE))
   
   if(addOwners) {
