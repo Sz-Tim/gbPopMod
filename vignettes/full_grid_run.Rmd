@@ -27,6 +27,22 @@ p_load("tidyverse", "magrittr", "stringr", "parallel", "here",
        "pbapply", "fastmatch", "gganimate"); theme_set(theme_bw())
 library(gbPopMod)
 data(lc.rct)
+### lc.rct was produced from the raw GRANIT output as follows:
+# grnt <- read_csv(here::here("data", "grnt_all.csv")) %>%
+#   mutate(x=as.numeric(as.factor(.$left)),
+#          y=as.numeric(factor(.$top, levels=rev(levels(factor(.$top))))),
+#          x_y=paste(x, y, sep="_"))
+# lc.rct <- as.tibble(expand.grid(x=1:max(grnt$x),
+#                                 y=1:max(grnt$y))) %>%
+#   mutate(x_y=paste(x, y, sep="_")) %>%
+#   mutate(OpI=grnt$OpI[match(.$x_y, grnt$x_y)], 
+#          Oth=grnt$Oth[match(.$x_y, grnt$x_y)], 
+#          Dec=grnt$Dec[match(.$x_y, grnt$x_y)], 
+#          Evg=grnt$Evg[match(.$x_y, grnt$x_y)], 
+#          WP=grnt$WP[match(.$x_y, grnt$x_y)], 
+#          Mxd=grnt$Mxd[match(.$x_y, grnt$x_y)],
+#          inbd=!is.na(match(.$x_y, grnt$x_y)))
+# lc.rct[is.na(lc.rct)] <- 0
 ```
 
 
