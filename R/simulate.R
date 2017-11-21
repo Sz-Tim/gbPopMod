@@ -123,6 +123,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
   }
   
   for(t in 1:tmax) {
+    cat("Year", t, "")
     if(age.f.d) {
       N.t <- N[,t,,]
     } else {
@@ -138,6 +139,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
       
       # 2A. Adjust LC %
       if(lc.chg) {
+        cat("Changing LC...")
         # i. decide which cells change and how much of each kind of forest
         chg.asn <- cut_assign(n.chg, ncell, lc.df, f.c=6:9)
         
@@ -151,6 +153,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
       
       # 2B. Adjust p.est
       if(nTrt.grd > 0) {
+        cat("Covering...")
         est.trt <- trt_assign(id.i, ncell, nTrt.grd, grd.trt, 
                                         addOwners=add.owners, trt.m1=est.trt)
         pr.est.trt <- trt_ground(est.trt, grd.trt)
@@ -158,6 +161,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
       
       # 2C. Adjust N
       if(nTrt.man > 0) {
+        cat("Cutting & spraying...")
         N.trt <- trt_assign(id.i, ncell, nTrt.man, man.trt, 
                                       addOwners=add.owners, trt.m1=N.trt)
         if(age.f.d) {
@@ -173,17 +177,17 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
                                  pr.eat, pr.est, pr.est.trt)
     
     # 4. Local fruit production
-    cat("Year", t, "- Fruiting...")
+    cat("Fruiting...")
     N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.ag, pm$pr.f.ag,
                                   y.ad, age.f.d, dem.st)
     
     # 5. Short distance dispersal
-    cat("Dispersing locally...")
+    cat("Dispersing near...")
     N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.ag, pr.s.bird, 
                                 sdd.pr, sdd.rate, sdd.st)
     
     # 6. Long distance dispersal
-    cat("Dispersing regionally...")
+    cat("Dispersing far...")
     N.seed <- ldd_disperse(ncell, id.i, N.seed, n.ldd)
     
     # 7. Seedling establishment
@@ -193,7 +197,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
     N.sb[,t+1] <- estab.out$N.sb
     
     # 8. Update abundances
-    cat("Updating abundances.\n")
+    cat("Updating N...\n")
     if(age.f.d) {
       for(l in 1:n.lc) {
         N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad] + 
