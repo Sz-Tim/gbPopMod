@@ -189,7 +189,7 @@ ldd_disperse <- function(ncell, id.i, N.seed, n.ldd) {
   
   require(tidyverse); require(magrittr)
   
-  ldd.id <- id.i$id[which(id.i$id.inbd == sample(1:ncell, n.ldd, replace=T))]
+  ldd.id <- id.i$id[which(id.i$id.inbd %in% sample(1:ncell, n.ldd, replace=T))]
   
   N.seed %<>% 
     add_row(id=ldd.id, N=rep(1, n.ldd)) %>%
