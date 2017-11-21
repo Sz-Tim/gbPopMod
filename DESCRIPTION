@@ -12,15 +12,15 @@ Imports:
   devtools,
   tidyverse,
   magrittr,
-  roxygen2,
   pacman,
-  gganimate,
   stringr, 
   purrr,
   parallel, 
   pbapply, 
   fastmatch
 RoxygenNote: 6.0.1
-Suggests: knitr,
+Suggests: gganimate,
+    knitr,
+    roxygen2,
     rmarkdown
 VignetteBuilder: knitr
