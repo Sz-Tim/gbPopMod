@@ -57,32 +57,32 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL) {
   }
   
   # create lists of on-map xy neighborhood ranges
-  n_ix <- map(xx, ~.[.>=n.x[1] & .<=n.x[2]])
-  n_iy <- map(yy, ~.[.>=n.y[1] & .<=n.y[2]])
+  n.ix <- map(xx, ~.[.>=n.x[1] & .<=n.x[2]])
+  n.iy <- map(yy, ~.[.>=n.y[1] & .<=n.y[2]])
   
   # generate all xy combinations & neighborhood matrix indices
   if(is.null(lc.new)) cat("generating neighborhoods...\n")
-  n_i <- map2(n_ix, n_iy, expand_v) 
-  n_x <- map2(xx, n_ix, `%fin%`) %>% map(which) %>% map(range)
-  n_y <- map2(yy, n_iy, `%fin%`) %>% map(which) %>% map(range)
+  n.i <- map2(n.ix, n.iy, expand_v) 
+  n.x <- map2(xx, n.ix, `%fin%`) %>% map(which) %>% map(range)
+  n.y <- map2(yy, n.iy, `%fin%`) %>% map(which) %>% map(range)
   
   # match xy combinations with cell IDs
   if(is.null(lc.new)) cat("determining neighborhood cell IDs...\n")
   pboptions(type="none")
-  if(g.p$n_cores > 1) {
-    p.c <- makeCluster(g.p$n_cores)
-    c_i <- pblapply(n_i, function(x) fastmatch::fmatch(x, lc.df$x_y), cl=p.c)
+  if(g.p$n.cores > 1) {
+    p.c <- makeCluster(g.p$n.cores)
+    c.i <- pblapply(n.i, function(x) fastmatch::fmatch(x, lc.df$x_y), cl=p.c)
     stopCluster(p.c)
   } else {
-    c_i <- pblapply(n_i, function(x) fastmatch::fmatch(x, lc.df$x_y))
+    c.i <- pblapply(n.i, function(x) fastmatch::fmatch(x, lc.df$x_y))
   }
   
   if(is.null(lc.new)) cat("calculating probabilities...\n")
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
-    sdd.i[n_y[[n]][1]:n_y[[n]][2],
-          n_x[[n]][1]:n_x[[n]][2],2,n] <- matrix(c_i[[n]], 
-                                                 ncol=diff(n_x[[n]])+1,
+    sdd.i[n.y[[n]][1]:n.y[[n]][2],
+          n.x[[n]][1]:n.x[[n]][2],2,n] <- matrix(c.i[[n]], 
+                                                 ncol=diff(n.x[[n]])+1,
                                                  byrow=TRUE)
     # weight by bird habitat preference
     ib <- sdd.i[,,2,n] != 0  # inbounds neighbors
