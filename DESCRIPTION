@@ -1,0 +1,26 @@
+Package: gbPopMod
+Type: Package
+Title: Mechanistic species distribution model for glossy buckthorn (*Frangula alnus*)
+Version: 0.1.0
+Author: Tim Szewczyk
+Maintainer: Tim Szewczyk <tim.szewczyk@gmail.com>
+Description: Contains all of the functions, documentation, and data necessary for running the model
+License: Free for everyone, but will be tied to a publication & is the product of a USDA grant.
+Encoding: UTF-8
+LazyData: true
+Imports:
+  devtools,
+  tidyverse,
+  magrittr,
+  roxygen2,
+  pacman,
+  gganimate,
+  stringr, 
+  purrr,
+  parallel, 
+  pbapply, 
+  fastmatch
+RoxygenNote: 6.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
