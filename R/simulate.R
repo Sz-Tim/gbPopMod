@@ -136,49 +136,59 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
       # the adults back to a previous age so they don't fruit for a number
       # of years after the treatment rather than being killed explicitly
       
-      # A. Adjust LC %
-      lc.trt <- NULL # to do
-      
-      # B. Adjust p.est
-      if(nTrt_grd > 0) {
-        est.trt <- gbPopMod::trt_assign(id_i, ncell, nTrt_grd, grd.trt, 
-                                        addOwners=add.owners, trt.m1=est.trt)
-        pr.est.trt <- gbPopMod::trt_ground(est.trt, grd.trt)
+      # 2A. Adjust LC %
+      if(lc.chg) {
+        # i. decide which cells change and how much of each kind of forest
+        chg.asn <- cut_assign(n.chg, ncell, lc.df, f.c=6:9)
+        
+        # ii. cut forest & update SDD neighborhoods
+        lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
+                                                f.c=6:9, lc.df)
+        sdd.pr[,,,chg.asn$id.chg$id.inbd] <- sdd_set_probs(nrow(chg.asn$id.chg), 
+                                                           lc.df, g.p, 
+                                                           chg.asn$id.chg)
       }
       
-      # C. Adjust N
-      if(nTrt_man > 0) {
-        N.trt <- gbPopMod::trt_assign(id_i, ncell, nTrt_man, man.trt, 
+      # 2B. Adjust p.est
+      if(nTrt.grd > 0) {
+        est.trt <- trt_assign(id.i, ncell, nTrt.grd, grd.trt, 
+                                        addOwners=add.owners, trt.m1=est.trt)
+        pr.est.trt <- trt_ground(est.trt, grd.trt)
+      }
+      
+      # 2C. Adjust N
+      if(nTrt.man > 0) {
+        N.trt <- trt_assign(id.i, ncell, nTrt.man, man.trt, 
                                       addOwners=add.owners, trt.m1=N.trt)
         if(age.f.d) {
-          N[,t,,] <- gbPopMod::trt_manual(N.t, y.ad, N.trt, man.trt)
+          N[,t,,] <- trt_manual(N.t, y.ad, N.trt, man.trt)
         } else {
-          N[,t,] <- gbPopMod::trt_manual(N.t, y.ad, N.trt, man.trt)
+          N[,t,] <- trt_manual(N.t, y.ad, N.trt, man.trt)
         }
       }
     }
     
     # 3. Pre-multiply compositional parameters
-    pm <- gbPopMod::cell_agg(lc.df, K, pr.s, fec, pr.f, 
+    pm <- cell_agg(lc.df, K, pr.s, fec, pr.f, 
                                  pr.eat, pr.est, pr.est.trt)
     
     # 4. Local fruit production
     cat("Year", t, "- Fruiting...")
-    N.f <- gbPopMod::make_fruits(N.t, pm$lc.mx, pm$fec.ag, pm$pr.f.ag,
+    N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.ag, pm$pr.f.ag,
                                   y.ad, age.f.d, dem.st)
     
     # 5. Short distance dispersal
     cat("Dispersing locally...")
-    N.seed <- gbPopMod::sdd_disperse(id_i, N.f, pm$pr.eat.ag, pr.s.bird, 
+    N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.ag, pr.s.bird, 
                                 sdd.pr, sdd.rate, sdd.st)
     
     # 6. Long distance dispersal
     cat("Dispersing regionally...")
-    N.seed <- gbPopMod::ldd_disperse(ncell, id_i, N.seed, n.ldd)
+    N.seed <- ldd_disperse(ncell, id.i, N.seed, n.ldd)
     
     # 7. Seedling establishment
     cat("Establishing...")
-    estab.out <- gbPopMod::new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.ag, 
+    estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.ag, 
                                           pr.sb, dem.st, bank)
     N.sb[,t+1] <- estab.out$N.sb
     

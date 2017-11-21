@@ -4,11 +4,11 @@
 \alias{trt_assign}
 \title{Assign landowner treatments}
 \usage{
-trt_assign(id_i, ncell, nTrt, trt.eff, addOwners = FALSE, trt.m1 = NULL)
+trt_assign(id.i, ncell, nTrt, trt.eff, addOwners = FALSE, trt.m1 = NULL)
 }
 \arguments{
-\item{id_i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id_inbd} indexes only inbound cells}
+\item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
+while \code{id.inbd} indexes only inbound cells}
 
 \item{ncell}{Number of inbound grid cells}
 

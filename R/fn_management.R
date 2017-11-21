@@ -97,28 +97,71 @@ trt_manual <- function(N.t, y.ad, N.trt, man.trt) {
 
 
 
-#' Change forested land cover to open invasible
+#' Assign cells to convert a proportion of forest to open invasible
 #'
-#' Specified pixels have a specified proportion of specified forest type 
-#' converted to open invasible habitat instead. This function updates the land
-#' cover proportions within \code{lc.df} and adjusts the short distance 
-#' dispersal kernels in \code{sdd.pr} since bird habitat preferences will alter
-#' the dispersal to each cell with land cover changes. This is a one way,
-#' deterministic change with no natural reversion to forest. The affected 
-#' parameters \emphasis{must} be updated with a call to \code{\link{cell_agg}}.
-#' @param lc_chg.df Dataframe or tibble with cell grid indexes and a column for each forest type corresponding with the columns in \code{lc.df} specifying what proportion of forest should be converted to open invasible
+#' Randomly assigns a specified number of cells to have their forest habitat
+#' cleared by a random proportion.
+#' @param nChg Proportion of inbound cells to cut
+#' @param ncell Number of inbound grid cells
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param sdd.pr Array with \code{dim=c(i:disp.rows, j:disp.cols, k:2, n:ncell)} 
-#'   output from \code{\link{sdd_set_probs}}
-#' @param sdd.rate Rate parameter for SDD exponential kernel
-#' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
-#'   dimension contains grid id's for the neighborhood or probabilities to each
-#'   target cell
-#' @keywords sdd, dispersal, probability, probabilities
+#' @param f.c Vector of forest column indexes within \code{lc.df}
+#' @return Tibble \code{id.chg} with grid and inbound indexes of cells with land
+#'   cover change and matrix \code{mx} with the change in each forest category
+#'   and the total change to be added to open habitat
+#' @keywords control, cut, forest, land cover change, owners
 #' @export
 
-clear_forest <- function(lc_ch.df, lc.df, sdd.pr, sdd.rate) {
-  # this happens
-  return(list(lc.df=lc.df, sdd.pr=sdd.pr))
+cut_assign <- function(nChg, ncell, lc.df, f.c) {
+  
+  require(tidyverse)
+  
+  id.lc <- sample(1:ncell, nChg*ncell)
+  n <- length(id.lc)
+  id.chg <- dplyr::filter(lc.df, id.inbd %in% id.lc) %>% 
+    select(id, id.inbd)
+  mx <- (runif(n*length(f.c)) * lc.df[id.chg$id, f.c]) %>%
+    cbind(., TotChg=rowSums(.))
+  
+  return(list(id.chg=id.chg, mx=mx))
+}
+
+
+
+
+
+#' Change forested land cover to open invasible
+#'
+#' Specified pixels have a specified proportion of specified forest type
+#' converted to open invasible habitat. This function updates the land cover
+#' proportions within \code{lc.df}. This is a one way, deterministic change with
+#' no natural reversion to forest. The affected parameters \emph{must} be
+#' updated with a call to \code{\link{cell_agg}} and to
+#' \code{\link{sdd_set_probs}(lc.new=id.chg)}.
+#' @param id.chg Dataframe or tibble with cell grid indexes identifying which
+#'   cells are to change. if not input manually, can be randomly created by
+#'   \code{\link{cut_assign}}
+#' @param f.chg Matrix with a column for each forest type corresponding with the
+#'   forest columns in \code{lc.df} specifying the amount of each category of
+#'   forest to be converted, and a final column \code{TotChg} with the total
+#'   amount converted to open invasible. If not input manually, can be randomly
+#'   created by \code{\link{cut_assign}}
+#' @param f.c Vector of forest column indexes within \code{lc.df}
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
+#' @return List with \code{lc.df} and \code{sdd.pr} where both are sparse,
+#'   containing only updated values for the cells with altered land cover.
+#' @keywords control, cut, forest, land cover change, owners
+#' @export
+
+cut_forest <- function(id.chg, f.chg, f.c, lc.df) {
+  
+  require(tidyverse)
+  
+  # shift forest to open 
+  chg.df <- lc.df[id.chg$id,]
+  chg.df[,f.c] <- chg.df[,f.c] - f.chg[,1:length(f.c)]
+  chg.df[,"OpI"] <- chg.df[,"OpI"] + f.chg[,length(f.c)+1]
+
+  return(chg.df)
 }

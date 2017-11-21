@@ -17,7 +17,7 @@ run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p = NULL)
   \item{\code{dem.st}}{\code{Logical} Include stochasticity in demography?}
   \item{\code{sdd.st}}{\code{Logical} Include stochasticity in short
     distance dispersal?}
-  \item{\code{n_cores}}{Number of cores for parallelizing sdd.pr 
+  \item{\code{n.cores}}{Number of cores for parallelizing sdd.pr 
     calculation}
   \item{\code{lc.r}}{Maximum number of rows (\code{y}) in landscape}
   \item{\code{lc.c}}{Maximum number of columns (\code{x}) in landscape}
@@ -57,9 +57,9 @@ cell id info}
 \item{control.p}{NULL or named list of buckthorn control treatment parameters 
 including:
 \describe{
-  \item{\code{nTrt_grd}}{Proportion of cells with ground treatments in 
+  \item{\code{nTrt.grd}}{Proportion of cells with ground treatments in 
     each time step}
-  \item{\code{nTrt_man}}{Proportion of cells with manual treatments in 
+  \item{\code{nTrt.man}}{Proportion of cells with manual treatments in 
     each time step}
   \item{\code{grd.trt}}{Named vector with ground treatments and associated 
     seedling establishment probabilities}
@@ -67,6 +67,8 @@ including:
     mortality (=success) rates}
   \item{\code{add.owners}}{\code{Logical} Do owners treat every year once 
     starting a particular treatment?}
+  \item{\code{lc.chg}}{\code{Logical} Does land cover change across years?}
+  \item{\code{n.chg}}{Proportion of cells with land cover change each year}
   \item{\code{t.trt}}{Year to start treatments}
 }}
 }
