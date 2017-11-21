@@ -8,13 +8,16 @@
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
 #' @param g.p Named list of global parameters
+#' @param lc.new Dataframe or tibble with indexes of cells that have changed in
+#'   land cover proportions. For use within simulation; defaults to \code{NULL}
+#'   and calculates SDD neighborhoods for all cells
 #' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
 #'   dimension contains grid id's for the neighborhood or probabilities to each
 #'   target cell
 #' @keywords sdd, dispersal, probability, probabilities
 #' @export
 
-sdd_set_probs <- function(ncell, lc.df, g.p) {
+sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL) {
   
   require(purrr); require(tidyverse); require(pbapply); require(fastmatch)
   
@@ -45,21 +48,26 @@ sdd_set_probs <- function(ncell, lc.df, g.p) {
   d.pr <- d.pr/sum(d.pr)
   
   # pair cell IDs for each neighborhood; indexes match neighborhood matrix
-  xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
-  yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+  if(is.null(lc.new)) {
+    xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+    yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+  } else {
+    xx <- map(lc.df$x[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
+    yy <- map(lc.df$y[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
+  }
   
   # create lists of on-map xy neighborhood ranges
   n_ix <- map(xx, ~.[.>=n.x[1] & .<=n.x[2]])
   n_iy <- map(yy, ~.[.>=n.y[1] & .<=n.y[2]])
   
   # generate all xy combinations & neighborhood matrix indices
-  cat("generating neighborhoods...\n")
+  if(is.null(lc.new)) cat("generating neighborhoods...\n")
   n_i <- map2(n_ix, n_iy, expand_v) 
   n_x <- map2(xx, n_ix, `%fin%`) %>% map(which) %>% map(range)
   n_y <- map2(yy, n_iy, `%fin%`) %>% map(which) %>% map(range)
   
   # match xy combinations with cell IDs
-  cat("determining neighborhood cell IDs...\n")
+  if(is.null(lc.new)) cat("determining neighborhood cell IDs...\n")
   pboptions(type="none")
   if(g.p$n_cores > 1) {
     p.c <- makeCluster(g.p$n_cores)
@@ -69,7 +77,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p) {
     c_i <- pblapply(n_i, function(x) fastmatch::fmatch(x, lc.df$x_y))
   }
   
-  cat("calculating probabilities...\n")
+  if(is.null(lc.new)) cat("calculating probabilities...\n")
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
     sdd.i[n_y[[n]][1]:n_y[[n]][2],
@@ -83,10 +91,10 @@ sdd_set_probs <- function(ncell, lc.df, g.p) {
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
     # progress update
     if(n %% 5000 == 0) {
-      cat("finished cell", n, "\n")
+      if(is.null(lc.new)) cat("finished cell", n, "\n")
     }
   }
-  cat("finished:", n, "cells\n")
+  if(is.null(lc.new)) cat("finished:", n, "cells\n")
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
   return(sdd.i)
 }
