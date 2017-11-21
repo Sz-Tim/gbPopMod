@@ -26,7 +26,7 @@ if(!require(pacman)) {install.packages("pacman"); require(pacman)}
 p_load("tidyverse", "magrittr", "stringr", "parallel", "here",
        "pbapply", "fastmatch", "gganimate"); theme_set(theme_bw())
 library(gbPopMod)
-data(grnt); data(lc.rct)
+data(lc.rct)
 ```
 
 
