@@ -4,7 +4,7 @@
 \alias{sdd_set_probs}
 \title{Set short distance dispersal probabilities}
 \usage{
-sdd_set_probs(ncell, lc.df, g.p)
+sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL)
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
@@ -13,6 +13,10 @@ sdd_set_probs(ncell, lc.df, g.p)
 cell id info}
 
 \item{g.p}{Named list of global parameters}
+
+\item{lc.new}{Dataframe or tibble with indexes of cells that have changed in
+land cover proportions. For use within simulation; defaults to \code{NULL}
+and calculates SDD neighborhoods for all cells}
 }
 \value{
 Array with dim(disp.rows, disp.cols, 2, ncell) where the third
