@@ -86,11 +86,13 @@ data(lc.rct)
   )
   
   control.p <- list(
-    nTrt_grd=0.05,  # % of cells treated in each time step
-    nTrt_man=0.05,  # % of cells treated in each time step
+    nTrt.grd=0,  # % of cells treated in each time step
+    nTrt.man=0,  # % of cells treated in each time step
     grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
     man.trt=c(M=0.1, C=0.3, MC=0.8),
     add.owners=FALSE,  # do owners treat every year once starting?
+    lc.chg=TRUE,
+    n.chg=0.02,
     t.trt=20
   )
 
@@ -104,7 +106,7 @@ data(lc.rct)
   lc.df <- lc.rct %>% 
     filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
     mutate(id=row_number(), 
-           id_inbd=min_rank(na_if(inbd*id, 0)))
+           id.inbd=min_rank(na_if(inbd*id, 0)))
   ngrid <- nrow(lc.df)
   ncell <- sum(lc.df$inbd)
     
@@ -115,7 +117,7 @@ data(lc.rct)
   
   # dispersal probabilities
   # indexed 1:ncell with only inbound cells: sdd.pr[,,,i] = ith inbound cell
-  # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id_inbd==i,]
+  # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.inbd==i,]
   # cell indexes in sdd.pr[,,2,] correspond with lc.df$id
   # this extra complication avoids calculating many, many unnecessary cells
   system.time(sdd.pr <- sdd_set_probs(ncell, lc.df, g.p))
