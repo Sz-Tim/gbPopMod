@@ -3,42 +3,10 @@
 #' This function runs the simulation. Currently, it runs all time steps, but for
 #' the economic model, the structure will need to be slightly adjusted to run a
 #' single time step. The initialization is separated from this function for that
-#' reason.
+#' reason. 
 #' @param ngrid Number of grid cells in entire map
 #' @param ncell Number of inbound grid cells
-#' @param g.p Named list of global parameters including:
-#'   \describe{
-#'     \item{\code{tmax}}{Number of time steps per simulation}
-#'     \item{\code{dem.st}}{\code{Logical} Include stochasticity in demography?}
-#'     \item{\code{sdd.st}}{\code{Logical} Include stochasticity in short
-#'       distance dispersal?}
-#'     \item{\code{n.cores}}{Number of cores for parallelizing sdd.pr 
-#'       calculation}
-#'     \item{\code{lc.r}}{Maximum number of rows (\code{y}) in landscape}
-#'     \item{\code{lc.c}}{Maximum number of columns (\code{x}) in landscape}
-#'     \item{\code{n.lc}}{Number of land cover categories} 
-#'     \item{\code{N.p.t0}}{Number of cells with buckthorn at t=1} 
-#'     \item{\code{K}}{Vector (length=n.lc) of carrying capacities for adults} 
-#'     \item{\code{pr.s}}{Vector \code{length=n.lc} of annual juvenile survival
-#'       rates}
-#'     \item{\code{pr.f}}{Vector \code{length=n.lc} of fruiting probabilities} 
-#'     \item{\code{fec}}{Vector \code{length=n.lc} of mean fruit per adult} 
-#'     \item{\code{age.f}}{Vector \code{length=n.lc} or scalar of age at first
-#'       fruiting. Individuals at this age are considered adults}
-#'      \item{\code{bank}}{\code{Logical} Include seedbank?} 
-#'     \item{\code{pr.sb}}{Probability of annual survival in seed bank} 
-#'     \item{\code{pr.est}}{Vector \code{length=n.lc} of seedling establishment 
-#'       probabilities }
-#'     \item{\code{sdd.max}}{Maximum dispersal distance in cells} 
-#'     \item{\code{sdd.rate}}{1/mn for exponential dispersal kernel}
-#'     \item{\code{pr.eat}}{Vector \code{length=n.lc} of proportion of fruits 
-#'       eaten by birds, with \code{1-pr.eat} assumed to drop directly below
-#'       buckthorn individuals}
-#'     \item{\code{bird.hab}}{Vector \code{length=n.lc} of bird habitat 
-#'       preferences}
-#'     \item{\code{pr.s.bird}}{Seed viability post-digestion} 
-#'     \item{\code{n.ldd}}{Number of long distance dispersal events per year} 
-#'   }
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
 #' @param sdd.pr Array with sdd probabilities and neighborhoods created by 
@@ -46,27 +14,12 @@
 #' @param N.init Matrix or array with initial population sizes created by 
 #'   \code{\link{pop_init}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters 
-#'   including:
-#'   \describe{
-#'     \item{\code{nTrt.grd}}{Proportion of cells with ground treatments in 
-#'       each time step}
-#'     \item{\code{nTrt.man}}{Proportion of cells with manual treatments in 
-#'       each time step}
-#'     \item{\code{grd.trt}}{Named vector with ground treatments and associated 
-#'       seedling establishment probabilities}
-#'     \item{\code{man.trt}}{Named vector with manual treatments and associated
-#'       mortality (=success) rates}
-#'     \item{\code{add.owners}}{\code{Logical} Do owners treat every year once 
-#'       starting a particular treatment?}
-#'     \item{\code{lc.chg}}{\code{Logical} Does land cover change across years?}
-#'     \item{\code{n.chg}}{Proportion of cells with land cover change each year}
-#'     \item{\code{t.trt}}{Year to start treatments}
-#'   }
+#'   set with \code{\link{set_control_p}}
 #' @return Array of abundances for each cell and age group
 #' @keywords run, simulate
 #' @export
 
-run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
+run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
   
   require(tidyverse); require(magrittr)
   
@@ -146,7 +99,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p=NULL) {
         # ii. cut forest & update SDD neighborhoods
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
                                                 f.c=6:9, lc.df)
-        sdd.pr[,,,chg.asn$id.chg$id.inbd] <- sdd_set_probs(nrow(chg.asn$id.chg), 
+        sdd.pr[,,,chg.asn$id.chg$id.inbd] <- sdd_set_probs(nrow(chg.asn$id.chg),
                                                            lc.df, g.p, 
                                                            chg.asn$id.chg)
       }
