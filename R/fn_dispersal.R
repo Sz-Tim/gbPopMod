@@ -70,13 +70,9 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   # match xy combinations with cell IDs
   if(is.null(lc.new)) cat("determining neighborhood cell IDs...\n")
   pboptions(type="none")
-  if(g.p$n.cores > 1) {
-    p.c <- makeCluster(g.p$n.cores)
-    c.i <- pblapply(n.i, function(x) fastmatch::fmatch(x, lc.df$x_y), cl=p.c)
-    stopCluster(p.c)
-  } else {
-    c.i <- pblapply(n.i, function(x) fastmatch::fmatch(x, lc.df$x_y))
-  }
+  p.c <- makeCluster(g.p$n.cores)
+  c.i <- pblapply(n.i, function(x) fastmatch::fmatch(x, lc.df$x_y), cl=p.c)
+  stopCluster(p.c)
   
   if(is.null(lc.new)) cat("calculating probabilities...\n")
   for(n in 1:ncell) {
