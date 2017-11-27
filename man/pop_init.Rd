@@ -15,7 +15,8 @@ pop_init(ngrid, g.p, lc.df)
 cell id info}
 }
 \value{
-Matrix or array of initial abundances with dim=c(ngrid, (n.lc), y.ad)
+Matrix or array of initial abundances with \code{dim=c(ngrid, (n.lc),
+  y.ad)}
 }
 \description{
 This function initializes populations randomly with populated cells
