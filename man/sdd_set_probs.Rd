@@ -4,7 +4,7 @@
 \alias{sdd_set_probs}
 \title{Set short distance dispersal probabilities}
 \usage{
-sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL)
+sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL, edges = "wall")
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
@@ -17,6 +17,8 @@ cell id info}
 \item{lc.new}{Dataframe or tibble with indexes of cells that have changed in
 land cover proportions. For use within simulation; defaults to \code{NULL}
 and calculates SDD neighborhoods for all cells}
+
+\item{edges}{Character taking the value of one of: \code{"wall", "sink", "none"} where \code{"wall"} results in a dispersal probability of 0 for all out-of-bound cells with no populations modeled, \code{"sink"} results in dispersal of seeds to out-of-bound cells but no populations modeled, and \code{"none"} results in dispersal of seeds and populations modeled}
 }
 \value{
 Array with dim(disp.rows, disp.cols, 2, ncell) where the third
