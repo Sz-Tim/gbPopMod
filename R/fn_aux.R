@@ -10,7 +10,6 @@
 #' @keywords expand.grid
 #' @export
 
-
 expand_v <- function(x, y, sep="_") {
   paste(rep.int(x, length(y)), 
         rep.int(y, rep.int(length(x),length(y))),
@@ -99,10 +98,10 @@ cell_agg <- function(lc.df, K, pr.s, fec, pr.f, pr.eat,
 #' @param g.p Named list of global parameters
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @return Matrix or array of initial abundances with dim=c(ngrid, (n.lc), y.ad)
+#' @return Matrix or array of initial abundances with \code{dim=c(ngrid, (n.lc),
+#'   y.ad)}
 #' @keywords initialize, set up
 #' @export
-
 
 pop_init <- function(ngrid, g.p, lc.df) {
   
@@ -111,16 +110,118 @@ pop_init <- function(ngrid, g.p, lc.df) {
   
   if(length(g.p$age.f) == 1) {
     N.init <- matrix(0, ngrid, y.ad)  # column for each age class
-    N.init[p.0,y.ad] <- round(as.matrix(lc.df[lc.df$id %in% p.0,4:9]) %*% 
+    N.init[p.0,y.ad] <- round(as.matrix(lc.df[lc.df$id %in% p.0, 4:9]) %*% 
                                 (g.p$K/2))
     N.init[p.0,-y.ad] <- round(N.init[p.0,y.ad]/5)
     
   } else {
-    N.init <- array(0, dim=c(ncell, g.p$n.lc, y.ad))
-    N.init[p.0,,y.ad] <- round(t(t(as.matrix(lc.df[lc.df$id %in% p.0,4:9])) * 
+    N.init <- array(0, dim=c(ngrid, g.p$n.lc, y.ad))
+    N.init[p.0,,y.ad] <- round(t(t(as.matrix(lc.df[lc.df$id %in% p.0, 4:9])) * 
                                    g.p$K/2))
     N.init[p.0,,-y.ad] <- round(N.init[p.0,,y.ad]/5)
   }
   
   return(N.init)
+}
+
+
+
+
+#' Set global parameters
+#'
+#' This function sets the global parameters for the simulation, allowing for
+#' individual elements to be reassigned.
+#' @param tmax Number of time steps per simulation
+#' @param dem.st \code{Logical} Include stochasticity in demography?
+#' @param sdd.st \code{Logical} Include stochasticity in short distance
+#'   dispersal?
+#' @param n.cores Number of cores for parallelizing sdd.pr calculation
+#' @param lc.r Maximum number of rows (\code{y}) in landscape
+#' @param lc.c Maximum number of columns (\code{x}) in landscape
+#' @param n.lc Number of land cover categories
+#' @param N.p.t0 Number of cells with buckthorn at t=1
+#' @param K Vector (length=n.lc) of carrying capacities for adults
+#' @param pr.s Vector \code{length=n.lc} of annual juvenile survival rates
+#' @param pr.f Vector \code{length=n.lc} of fruiting probabilities
+#' @param fec Vector \code{length=n.lc} of mean fruit per adult
+#' @param age.f Vector \code{length=n.lc} or scalar of age at first fruiting.
+#'   Individuals at this age are considered adults
+#' @param bank \code{Logical} Include seedbank?
+#' @param pr.sb Probability of annual survival in seed bank
+#' @param pr.est Vector \code{length=n.lc} of seedling establishment
+#'   probabilities
+#' @param sdd.max Maximum dispersal distance in cells
+#' @param sdd.rate 1/mn for exponential dispersal kernel
+#' @param pr.eat Vector \code{length=n.lc} of proportion of fruits eaten by
+#'   birds, with \code{1-pr.eat} assumed to drop directly below buckthorn
+#'   individuals
+#' @param bird.hab Vector \code{length=n.lc} of bird habitat preferences
+#' @param pr.s.bird Seed viability post-digestion
+#' @param n.ldd Number of long distance dispersal events per year
+#' @return Named list of global parameters including all arguments as elements
+#' @keywords initialize, set up, global, parameter
+#' @export
+
+set_g_p <- function(tmax=150, dem.st=FALSE, sdd.st=TRUE, n.cores=4, 
+                    lc.r=100, lc.c=100, n.lc=6, N.p.t0=10,
+                    K=c(750, 10, 100, 100, 300, 100),
+                    pr.s=c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6),
+                    pr.f=c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
+                    fec=c(200, 100, 40, 20, 20, 10),
+                    age.f=4, bank=TRUE, pr.sb=0.3, 
+                    pr.est=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
+                    sdd.max=15, sdd.rate=0.1, n.ldd=5,
+                    pr.eat=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
+                    bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), pr.s.bird=0.6) {
+  
+  g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, n.cores=n.cores, 
+              lc.r=lc.r, lc.c=lc.c, n.lc=n.lc, N.p.t0=N.p.t0, K=K, pr.s=pr.s,
+              pr.f=pr.f, fec=fec, age.f=age.f, bank=bank, pr.sb=pr.sb,
+              pr.est=pr.est, sdd.max=sdd.max, sdd.rate=sdd.rate, n.ldd=n.ldd,
+              pr.eat=pr.eat, bird.hab=bird.hab, pr.s.bird=pr.s.bird)
+  
+  return(g.p)
+}
+
+
+
+
+#' Set buckthorn control treatment parameters
+#'
+#' This function sets the buckthorn control treatment parameters for the
+#' simulation, allowing for individual elements to be reassigned.
+#' @param null_ctrl \code{Logical} Set control parameters to \code{NULL}?
+#' @param t.trt Year to start treatments
+#' @param add.owners \code{Logical} Do owners treat every year once starting a
+#'   particular treatment?
+#' @param nTrt.grd Proportion of cells with ground treatments in each time step
+#' @param nTrt.man Proportion of cells with manual treatments in each time step
+#' @param grd.trt Named vector with ground treatments and associated seedling
+#'   establishment probabilities
+#' @param man.trt Named vector with manual treatments and associated mortality
+#'   (=success) rates
+#' @param lc.chg \code{Logical} Does land cover change across years?
+#' @param n.chg Proportion of cells with land cover change each year
+#' @return Named list of control parameters including all arguments as elements
+#'   unless \code{null_ctrl==TRUE}, in which case the function returns
+#'   \code{NULL}
+#' @keywords initialize, set up, control, treatment, parameter
+#' @export
+
+set_control_p <- function(null_ctrl=TRUE, t.trt=30, add.owners=FALSE,
+                          nTrt.grd=0.05, nTrt.man=0.05,
+                          grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
+                          man.trt=c(M=0.1, C=0.3, MC=0.8),
+                          lc.chg=TRUE, n.chg=0.0001) {
+  
+  if(null_ctrl) {
+    control.p <- NULL
+  } else {
+    control.p <- list(t.trt=t.trt, add.owners=add.owners,
+                      nTrt.grd=nTrt.grd, nTrt.man=nTrt.man,
+                      grd.trt=grd.trt, man.trt=man.trt,
+                      lc.chg=lc.chg, n.chg=n.chg)
+  }
+  
+  return(control.p)
 }
