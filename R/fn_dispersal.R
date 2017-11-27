@@ -83,6 +83,13 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
                                                  byrow=TRUE)
     # weight by bird habitat preference
     ib <- sdd.i[,,2,n] != 0  # inbounds neighbors
+    
+    if(edge=="wall") {
+      
+    } else if(edge=="sink") {
+      
+    }
+    
     sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.ag[sdd.i[,,2,n][ib]]
     # set cell ID to 0 if pr(target) == 0 
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
