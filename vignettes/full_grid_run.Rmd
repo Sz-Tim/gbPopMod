@@ -55,7 +55,6 @@ data(lc.rct)
   n.sim <- 1
   g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.ldd=1)
   control.p <- set_control_p()
-
   
 
 ##--
@@ -69,7 +68,6 @@ data(lc.rct)
            id.inbd=min_rank(na_if(inbd*id, 0)))
   ngrid <- nrow(lc.df)
   ncell <- sum(lc.df$inbd)
-    
   
   # populations
   # indexed 1:ngrid including rows for out-of-bounds cells
