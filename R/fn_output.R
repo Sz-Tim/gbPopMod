@@ -252,34 +252,34 @@ make_plots_lc <- function(p.wd, lc.df) {
   
   # Check for success
   if(file.exists(opi.f)) { 
-    cat("Open invasible saved as", opi.f, "\n") 
+    cat("Open invasible proportions saved as", opi.f, "\n") 
   } else {
-    cat("--- Error: Open invasible not saved! \n")
+    cat("--- Error: Open invasible proportions not saved! \n")
   }
   if(file.exists(oth.f)) { 
-    cat("Open invasible saved as", oth.f, "\n") 
+    cat("Other proportions saved as", oth.f, "\n") 
   } else {
-    cat("--- Error: Open invasible not saved! \n")
+    cat("--- Error: Other proportions not saved! \n")
   }
   if(file.exists(dec.f)) { 
-    cat("Open invasible saved as", dec.f, "\n") 
+    cat("Deciduous forest proportions saved as", dec.f, "\n") 
   } else {
-    cat("--- Error: Open invasible not saved! \n")
+    cat("--- Error: Deciduous forest proportions not saved! \n")
   }
   if(file.exists(wp.f)) { 
-    cat("Open invasible saved as", wp.f, "\n") 
+    cat("White pine forest proportions saved as", wp.f, "\n") 
   } else {
-    cat("--- Error: Open invasible not saved! \n")
+    cat("--- Error: White pine forest proportions not saved! \n")
   }
   if(file.exists(evg.f)) { 
-    cat("Open invasible saved as", evg.f, "\n") 
+    cat("Evergreen forest proportions saved as", evg.f, "\n") 
   } else {
-    cat("--- Error: Open invasible not saved! \n")
+    cat("--- Error: Evergreen forest proportions not saved! \n")
   }
   if(file.exists(mxd.f)) { 
-    cat("Open invasible saved as", mxd.f, "\n") 
+    cat("Mixed forest proportions saved as", mxd.f, "\n") 
   } else {
-    cat("--- Error: Open invasible not saved! \n")
+    cat("--- Error: Mixed forest proportions not saved! \n")
   }
 }
 
