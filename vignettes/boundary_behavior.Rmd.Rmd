@@ -96,7 +96,7 @@ out.ad <- out$N[,,max(g.p$age.f)]
 N.out <- cbind(lc.df, out.ad) %>% as.tibble %>%
   gather(year, N.adult, (1:ncol(out.ad)) + ncol(lc.df)) %>%
   mutate(N.sb=c(out.sb),
-         N.less5=c(out.sb > 0))
+         N.less5=c(out.ad > 0))
 N.out$N.less5 <- N.out$N.less5 + c(out.ad > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
