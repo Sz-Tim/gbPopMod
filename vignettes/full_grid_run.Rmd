@@ -106,6 +106,7 @@ age.i <- ifelse(length(g.p$age.f)==1,
                 paste0("ages", min(g.p$age.f), "-", max(g.p$age.f), ""))
 
 # save plots
+rm(sdd.pr); rm(out.ad); rm(out)
 save_pars(p.wd, age.i, g.p, control.p)
 make_plots_final_t(p.wd, age.i, g.p, filter(N.out, year==max(N.out$year)))
 make_plots_gifs(p.wd, age.i, g.p, N.out)
