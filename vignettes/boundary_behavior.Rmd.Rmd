@@ -48,7 +48,7 @@ data(lc.rct)
   n.sim <- 1
   g.p <- set_g_p(tmax=100, lc.r=100, lc.c=100, n.ldd=1, n.cores=1)
   control.p <- set_control_p()
-  g.p$edges <- "sink"
+  g.p$edges <- c("wall", "sink", "none")[1]
   
 
 ##--
