@@ -44,6 +44,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
   y.ad <- max(g.p$age.f)
   age.f.d <- length(age.f) > 1
   id.i <- lc.df %>% select(id, id.inbd)
+  edges <- g.p$edges
   
   # If buckthorn is being actively managed...
   pr.est.trt <- NULL
@@ -127,7 +128,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
     
     # 3. Pre-multiply compositional parameters
     pm <- cell_agg(lc.df, K, pr.s, fec, pr.f, 
-                                 pr.eat, pr.est, pr.est.trt)
+                                 pr.eat, pr.est, pr.est.trt, edges=edges)
     
     # 4. Local fruit production
     cat("Fruiting...")
@@ -137,7 +138,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
     # 5. Short distance dispersal
     cat("Dispersing near...")
     N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.ag, pr.s.bird, 
-                                sdd.pr, sdd.rate, sdd.st)
+                                sdd.pr, sdd.rate, sdd.st, edges=edges)
     
     # 6. Long distance dispersal
     cat("Dispersing far...")

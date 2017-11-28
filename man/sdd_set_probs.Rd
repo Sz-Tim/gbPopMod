@@ -18,7 +18,11 @@ cell id info}
 land cover proportions. For use within simulation; defaults to \code{NULL}
 and calculates SDD neighborhoods for all cells}
 
-\item{edges}{Character taking the value of one of: \code{"wall", "sink", "none"} where \code{"wall"} results in a dispersal probability of 0 for all out-of-bound cells with no populations modeled, \code{"sink"} results in dispersal of seeds to out-of-bound cells but no populations modeled, and \code{"none"} results in dispersal of seeds and populations modeled}
+\item{edges}{Character taking the value of one of: \code{"wall", "sink",
+"none"} where \code{"wall"} results in a dispersal probability of 0 for all
+out-of-bound cells with no populations modeled, \code{"sink"} results in
+dispersal of seeds to out-of-bound cells but no populations modeled, and
+\code{"none"} results in dispersal of seeds and populations modeled}
 }
 \value{
 Array with dim(disp.rows, disp.cols, 2, ncell) where the third

@@ -11,7 +11,11 @@
 #' @param lc.new Dataframe or tibble with indexes of cells that have changed in
 #'   land cover proportions. For use within simulation; defaults to \code{NULL}
 #'   and calculates SDD neighborhoods for all cells
-#' @param edges Character taking the value of one of: \code{"wall", "sink", "none"} where \code{"wall"} results in a dispersal probability of 0 for all out-of-bound cells with no populations modeled, \code{"sink"} results in dispersal of seeds to out-of-bound cells but no populations modeled, and \code{"none"} results in dispersal of seeds and populations modeled
+#' @param edges Character taking the value of one of: \code{"wall", "sink",
+#'   "none"} where \code{"wall"} results in a dispersal probability of 0 for all
+#'   out-of-bound cells with no populations modeled, \code{"sink"} results in
+#'   dispersal of seeds to out-of-bound cells but no populations modeled, and
+#'   \code{"none"} results in dispersal of seeds and populations modeled
 #' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
 #'   dimension contains grid id's for the neighborhood or probabilities to each
 #'   target cell
@@ -33,6 +37,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   nbr <- 2 * sdd.max + 1
   sdd.i <- array(0, dim=c(nbr, nbr, 2, ncell))
   bird.hab.ag <- as.matrix(lc.df[,4:9]) %*% (bird.hab %>% divide_by(sum(.)))
+  if(edges=="wall") bird.hab.ag[!lc.df$inbd] <- 0
+  
   
   # generate default dispersal probability matrix
   d.pr <- matrix(0, nbr, nbr)
@@ -81,18 +87,10 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
           n.x[[n]][1]:n.x[[n]][2],2,n] <- matrix(c.i[[n]], 
                                                  ncol=diff(n.x[[n]])+1,
                                                  byrow=TRUE)
-    # weight by bird habitat preference
-    ib <- sdd.i[,,2,n] != 0  # inbounds neighbors
-    
-    if(edge=="wall") {
-      
-    } else if(edge=="sink") {
-      
-    }
-    
-    sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.ag[sdd.i[,,2,n][ib]]
-    # set cell ID to 0 if pr(target) == 0 
+    # weight by bird habitat preference & set cell ID to 0 if pr(target) == 0 
+    sdd.i[,,1,n] <- d.pr * bird.hab.ag[sdd.i[,,2,n]]
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
+    
     # progress update
     if(n %% 5000 == 0) {
       if(is.null(lc.new)) cat("finished cell", n, "\n")
@@ -124,12 +122,17 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
 #' @param sdd.rate Rate parameter for SDD exponential kernel
 #' @param sdd.st \code{Logical} denoting whether to implement short distance
 #'   dispersal stochastically
+#' @param edges Character taking the value of one of: \code{"wall", "sink",
+#'   "none"} where \code{"wall"} results in a dispersal probability of 0 for all
+#'   out-of-bound cells with no populations modeled, \code{"sink"} results in
+#'   dispersal of seeds to out-of-bound cells but no populations modeled, and
+#'   \code{"none"} results in dispersal of seeds and populations modeled
 #' @return Tibble with grid id and number of seeds in each cell
 #' @keywords dispersal, SDD
 #' @export
 
 sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird, 
-                         sdd.pr, sdd.rate, sdd.st=F) {
+                         sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
   
   require(tidyverse); require(magrittr)
   
@@ -166,7 +169,8 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
   N.seed %<>%
     group_by(id) %>% 
     summarise(N=sum(N.dep) %>% round) %>%
-    filter(!is.na(id.i$id.inbd[id]) & N > 0)
+    filter(N > 0)
+  if(edges=="wall") N.seed %<>% filter(!is.na(id.i$id.inbd[id]))
   
   return(N.seed)
 }
