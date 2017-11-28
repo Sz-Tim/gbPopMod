@@ -89,12 +89,11 @@ for(s in 1:n.sim) {
 
 
 ```{r plots, fig.height=8, fig.width=10}
-out.sb <- log(out$N.sb+1)
 out.ad <- out$N[,,max(g.p$age.f)]
 N.out <- cbind(lc.df, out.ad) %>% as.tibble %>%
   gather(year, N.adult, (1:ncol(out.ad)) + ncol(lc.df)) %>%
-  mutate(N.sb=c(out.sb),
-         N.less5=c(out.sb > 0))
+  mutate(N.sb=c(log(out$N.sb+1)),
+         N.less5=c(out.ad > 0))
 N.out$N.less5 <- N.out$N.less5 + c(out.ad > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
@@ -107,6 +106,7 @@ age.i <- ifelse(length(g.p$age.f)==1,
                 paste0("ages", min(g.p$age.f), "-", max(g.p$age.f), ""))
 
 # save plots
+rm(sdd.pr); rm(out.ad); rm(out)
 save_pars(p.wd, age.i, g.p, control.p)
 make_plots_final_t(p.wd, age.i, g.p, filter(N.out, year==max(N.out$year)))
 make_plots_gifs(p.wd, age.i, g.p, N.out)
