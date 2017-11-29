@@ -204,27 +204,23 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
 #' Long distance dispersal
 #'
 #' This function assigns n.ldd random long distance dispersal events across the
-#' landcape. A single seed is added to each target cell
+#' landcape. A single established seed is added to each target cell
 #' @param ncell Number of inbound grid cells
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
 #'   while \code{id.inbd} indexes only inbound cells
-#' @param N.seed \code{N.seed} output from \code{\link{sdd_disperse}} with grid
-#'   id and number of seeds in each cell
+#' @param N.rcrt \code{N.rcrt} output from \code{\link{new_seedlings}} with grid
+#'   id and number of new recruits in each cell
 #' @param n.ldd Number of long distance dispersal events per time step
 #' @return Tibble with grid id and number of seeds
 #' @keywords LDD, dispersal
 #' @export
 
 
-ldd_disperse <- function(ncell, id.i, N.seed, n.ldd) {
-  
-  require(tidyverse); require(magrittr)
+ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
   
   ldd.id <- id.i$id[which(id.i$id.inbd %in% sample(1:ncell, n.ldd, replace=T))]
+  N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
   
-  N.seed %<>% 
-    add_row(id=ldd.id, N=rep(1, n.ldd)) %>%
-    group_by(id) %>% summarise(N=sum(N))
-  
-  return(N.seed)
+  return(N.rcrt)
 }
+
