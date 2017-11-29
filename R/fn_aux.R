@@ -131,38 +131,42 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #'
 #' This function sets the global parameters for the simulation, allowing for
 #' individual elements to be reassigned.
-#' @param tmax Number of time steps per simulation
-#' @param dem.st \code{Logical} Include stochasticity in demography?
-#' @param sdd.st \code{Logical} Include stochasticity in short distance
-#'   dispersal?
-#' @param n.cores Number of cores for parallelizing sdd.pr calculation
-#' @param lc.r Maximum number of rows (\code{y}) in landscape
-#' @param lc.c Maximum number of columns (\code{x}) in landscape
-#' @param n.lc Number of land cover categories
-#' @param N.p.t0 Number of cells with buckthorn at t=1
-#' @param K Vector (length=n.lc) of carrying capacities for adults
-#' @param pr.s Vector \code{length=n.lc} of annual juvenile survival rates
-#' @param pr.f Vector \code{length=n.lc} of fruiting probabilities
-#' @param fec Vector \code{length=n.lc} of mean fruit per adult
-#' @param age.f Vector \code{length=n.lc} or scalar of age at first fruiting.
-#'   Individuals at this age are considered adults
-#' @param bank \code{Logical} Include seedbank?
-#' @param pr.sb Probability of annual survival in seed bank
-#' @param pr.est Vector \code{length=n.lc} of seedling establishment
-#'   probabilities
-#' @param sdd.max Maximum dispersal distance in cells
-#' @param sdd.rate 1/mn for exponential dispersal kernel
-#' @param pr.eat Vector \code{length=n.lc} of proportion of fruits eaten by
-#'   birds, with \code{1-pr.eat} assumed to drop directly below buckthorn
-#'   individuals
-#' @param bird.hab Vector \code{length=n.lc} of bird habitat preferences
-#' @param pr.s.bird Seed viability post-digestion
-#' @param n.ldd Number of long distance dispersal events per year
+#' @param tmax \code{100} Number of time steps per simulation
+#' @param dem.st \code{FALSE} Include stochasticity in demography?
+#' @param sdd.st \code{TRUE} Include stochasticity in short distance dispersal?
+#' @param n.cores \code{4} Number of cores for parallelizing sdd.pr calculation
+#' @param lc.r \code{100} Maximum number of rows (\code{y}) in landscape
+#' @param lc.c \code{100} Maximum number of columns (\code{x}) in landscape
+#' @param n.lc \code{6} Number of land cover categories
+#' @param N.p.t0 \code{10} Number of cells with buckthorn at t=1
+#' @param K \code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
+#'   carrying capacities for adults
+#' @param pr.s \code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
+#'   of annual juvenile survival rates
+#' @param pr.f \code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
+#'   \code{length=n.lc} of fruiting probabilities
+#' @param fec \code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
+#'   mean fruit per adult
+#' @param age.f \code{4} Vector \code{length=n.lc} or scalar of age at first
+#'   fruiting. Individuals at this age are considered adults
+#' @param bank \code{TRUE} Include seedbank?
+#' @param pr.sb \code{0.3} Probability of annual survival in seed bank
+#' @param pr.est \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
+#'   \code{length=n.lc} of seedling establishment probabilities
+#' @param sdd.max \code{15} Maximum dispersal distance in cells
+#' @param sdd.rate \code{0.1} 1/mn for exponential dispersal kernel
+#' @param n.ldd \code{1} Number of long distance dispersal events per year
+#' @param pr.eat \code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector
+#'   \code{length=n.lc} of proportion of fruits eaten by birds, with
+#'   \code{1-pr.eat} assumed to drop directly below buckthorn individuals
+#' @param bird.hab \code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
+#'   \code{length=n.lc} of bird habitat preferences
+#' @param pr.s.bird \code{0.6} Seed viability post-digestion
 #' @return Named list of global parameters including all arguments as elements
 #' @keywords initialize, set up, global, parameter
 #' @export
 
-set_g_p <- function(tmax=150, dem.st=FALSE, sdd.st=TRUE, n.cores=4, 
+set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, n.cores=4, 
                     lc.r=100, lc.c=100, n.lc=6, N.p.t0=10,
                     K=c(750, 10, 100, 100, 300, 100),
                     pr.s=c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6),
@@ -170,7 +174,7 @@ set_g_p <- function(tmax=150, dem.st=FALSE, sdd.st=TRUE, n.cores=4,
                     fec=c(200, 100, 40, 20, 20, 10),
                     age.f=4, bank=TRUE, pr.sb=0.3, 
                     pr.est=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
-                    sdd.max=15, sdd.rate=0.1, n.ldd=5,
+                    sdd.max=15, sdd.rate=0.1, n.ldd=1,
                     pr.eat=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
                     bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), pr.s.bird=0.6) {
   
@@ -190,18 +194,21 @@ set_g_p <- function(tmax=150, dem.st=FALSE, sdd.st=TRUE, n.cores=4,
 #'
 #' This function sets the buckthorn control treatment parameters for the
 #' simulation, allowing for individual elements to be reassigned.
-#' @param null_ctrl \code{Logical} Set control parameters to \code{NULL}?
-#' @param t.trt Year to start treatments
-#' @param add.owners \code{Logical} Do owners treat every year once starting a
+#' @param null_ctrl \code{TRUE} Set control parameters to \code{NULL}?
+#' @param t.trt \code{30} Year to start treatments
+#' @param add.owners \code{FALSE} Do owners treat every year once starting a
 #'   particular treatment?
-#' @param nTrt.grd Proportion of cells with ground treatments in each time step
-#' @param nTrt.man Proportion of cells with manual treatments in each time step
-#' @param grd.trt Named vector with ground treatments and associated seedling
-#'   establishment probabilities
-#' @param man.trt Named vector with manual treatments and associated mortality
-#'   (=success) rates
-#' @param lc.chg \code{Logical} Does land cover change across years?
-#' @param n.chg Proportion of cells with land cover change each year
+#' @param nTrt.grd \code{0.05} Proportion of cells with ground treatments in
+#'   each time step
+#' @param nTrt.man \code{0.05} Proportion of cells with manual treatments in
+#'   each time step
+#' @param grd.trt \code{Lit=0.005, Cov=0.01, Com=0.00001} Named vector with
+#'   ground treatments and associated seedling establishment probabilities
+#' @param man.trt \code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
+#'   treatments and associated mortality (=success) rates
+#' @param lc.chg \code{TRUE} Does land cover change across years?
+#' @param n.chg \code{0.0001} Proportion of cells with land cover change each
+#'   year
 #' @return Named list of control parameters including all arguments as elements
 #'   unless \code{null_ctrl==TRUE}, in which case the function returns
 #'   \code{NULL}
