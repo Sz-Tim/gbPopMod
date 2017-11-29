@@ -8,9 +8,9 @@
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
 #' @param g.p Named list of global parameters
-#' @param lc.new Dataframe or tibble with indexes of cells that have changed in
-#'   land cover proportions. For use within simulation; defaults to \code{NULL}
-#'   and calculates SDD neighborhoods for all cells
+#' @param lc.new Vector of indexes of cells that need to have their SDD
+#'   neighborhood recalculated; defaults to \code{NULL} and calculates SDD
+#'   neighborhoods for all cells
 #' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
 #'   dimension contains grid id's for the neighborhood or probabilities to each
 #'   target cell
