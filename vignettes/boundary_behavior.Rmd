@@ -46,9 +46,9 @@ data(lc.rct)
   buffer <- 15
   set.seed(225)
   n.sim <- 1
-  g.p <- set_g_p(tmax=100, lc.r=100, lc.c=100, n.ldd=1, n.cores=1)
+  g.p <- set_g_p(tmax=100, lc.r=200, lc.c=200, n.ldd=1, n.cores=1)
   control.p <- set_control_p()
-  g.p$edges <- c("wall", "sink", "none")[1]
+  g.p$edges <- c("wall", "sink", "none")[2]
   
 
 ##--
@@ -56,15 +56,16 @@ data(lc.rct)
 ##--
   
   # land cover
-  bottom <- 450
-  left <- 413
+  bottom <- 500
+  left <- 300
   lc.df <- lc.rct %>% 
     filter((y >= (bottom - g.p$lc.r)) & (y < bottom) &
              (x <= (left + g.p$lc.c)) & (x > left)) %>%
     mutate(id=row_number(),
            ocean=!inbd,
            inbd=((y <= max(y) - buffer) & (y >= min(y) + buffer) &
-                   (x <= max(x) - buffer) & (x >= min(x) + buffer)),
+                   (x <= max(x) - buffer) & (x >= min(x) + buffer) &
+                   !ocean),
            id.inbd=min_rank(na_if(inbd*id, 0)))
   ggplot(lc.df, aes(x=x, y=-y, fill=inbd, colour=ocean)) + 
     geom_tile() + scale_colour_manual(values=c(NA, "white"))
@@ -80,7 +81,8 @@ data(lc.rct)
   # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.inbd==i,]
   # cell indexes in sdd.pr[,,2,] correspond with lc.df$id
   # this extra complication avoids calculating many, many unnecessary cells
-  sdd.pr <- sdd_set_probs(ncell, lc.df, g.p, edges=g.p$edges)
+  sdd.pr <- sdd_set_probs(ifelse(g.p$edges=="none", ngrid, ncell), 
+                          lc.df, g.p, edges=g.p$edges)
 ```
 
 ```{r runSim}
