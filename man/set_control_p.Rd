@@ -10,26 +10,29 @@ set_control_p(null_ctrl = TRUE, t.trt = 30, add.owners = FALSE,
   n.chg = 1e-04)
 }
 \arguments{
-\item{null_ctrl}{\code{Logical} Set control parameters to \code{NULL}?}
+\item{null_ctrl}{\code{TRUE} Set control parameters to \code{NULL}?}
 
-\item{t.trt}{Year to start treatments}
+\item{t.trt}{\code{30} Year to start treatments}
 
-\item{add.owners}{\code{Logical} Do owners treat every year once starting a
+\item{add.owners}{\code{FALSE} Do owners treat every year once starting a
 particular treatment?}
 
-\item{nTrt.grd}{Proportion of cells with ground treatments in each time step}
+\item{nTrt.grd}{\code{0.05} Proportion of cells with ground treatments in
+each time step}
 
-\item{nTrt.man}{Proportion of cells with manual treatments in each time step}
+\item{nTrt.man}{\code{0.05} Proportion of cells with manual treatments in
+each time step}
 
-\item{grd.trt}{Named vector with ground treatments and associated seedling
-establishment probabilities}
+\item{grd.trt}{\code{Lit=0.005, Cov=0.01, Com=0.00001} Named vector with
+ground treatments and associated seedling establishment probabilities}
 
-\item{man.trt}{Named vector with manual treatments and associated mortality
-(=success) rates}
+\item{man.trt}{\code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
+treatments and associated mortality (=success) rates}
 
-\item{lc.chg}{\code{Logical} Does land cover change across years?}
+\item{lc.chg}{\code{TRUE} Does land cover change across years?}
 
-\item{n.chg}{Proportion of cells with land cover change each year}
+\item{n.chg}{\code{0.0001} Proportion of cells with land cover change each
+year}
 }
 \value{
 Named list of control parameters including all arguments as elements
