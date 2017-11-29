@@ -139,15 +139,16 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
     N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.ag, pr.s.bird, 
                                 sdd.pr, sdd.rate, sdd.st)
     
-    # 6. Long distance dispersal
-    cat("Dispersing far...")
-    N.seed <- ldd_disperse(ncell, id.i, N.seed, n.ldd)
-    
-    # 7. Seedling establishment
+    # 6. Seedling establishment
     cat("Establishing...")
     estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.ag, 
                                           pr.sb, dem.st, bank)
     N.sb[,t+1] <- estab.out$N.sb
+    
+    # 7. Long distance dispersal
+    cat("Dispersing far...")
+    estab.out$N.rcrt <- ldd_disperse(ncell, id.i, estab.out$N.rcrt, n.ldd)
+    
     
     # 8. Update abundances
     cat("Updating N...\n")
