@@ -182,9 +182,7 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
 
 
 ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
-  
-  require(tidyverse); require(magrittr)
-  
+
   ldd.id <- id.i$id[which(id.i$id.inbd %in% sample(1:ncell, n.ldd, replace=T))]
   N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
 
