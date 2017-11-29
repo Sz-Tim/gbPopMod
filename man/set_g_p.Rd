@@ -4,64 +4,68 @@
 \alias{set_g_p}
 \title{Set global parameters}
 \usage{
-set_g_p(tmax = 150, dem.st = FALSE, sdd.st = TRUE, n.cores = 4,
+set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, n.cores = 4,
   lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10, K = c(750, 10, 100,
   100, 300, 100), pr.s = c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6), pr.f = c(0.9, 0.1,
   0.29, 0.23, 0.2, 0.3), fec = c(200, 100, 40, 20, 20, 10), age.f = 4,
   bank = TRUE, pr.sb = 0.3, pr.est = c(0.07, 0.01, 0.08, 0.02, 0.02,
-  0.03), sdd.max = 15, sdd.rate = 0.1, n.ldd = 5, pr.eat = c(0.3, 0.1,
+  0.03), sdd.max = 15, sdd.rate = 0.1, n.ldd = 1, pr.eat = c(0.3, 0.1,
   0.2, 0.2, 0.2, 0.1), bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05),
   pr.s.bird = 0.6)
 }
 \arguments{
-\item{tmax}{Number of time steps per simulation}
+\item{tmax}{\code{100} Number of time steps per simulation}
 
-\item{dem.st}{\code{Logical} Include stochasticity in demography?}
+\item{dem.st}{\code{FALSE} Include stochasticity in demography?}
 
-\item{sdd.st}{\code{Logical} Include stochasticity in short distance
-dispersal?}
+\item{sdd.st}{\code{TRUE} Include stochasticity in short distance dispersal?}
 
-\item{n.cores}{Number of cores for parallelizing sdd.pr calculation}
+\item{n.cores}{\code{4} Number of cores for parallelizing sdd.pr calculation}
 
-\item{lc.r}{Maximum number of rows (\code{y}) in landscape}
+\item{lc.r}{\code{100} Maximum number of rows (\code{y}) in landscape}
 
-\item{lc.c}{Maximum number of columns (\code{x}) in landscape}
+\item{lc.c}{\code{100} Maximum number of columns (\code{x}) in landscape}
 
-\item{n.lc}{Number of land cover categories}
+\item{n.lc}{\code{6} Number of land cover categories}
 
-\item{N.p.t0}{Number of cells with buckthorn at t=1}
+\item{N.p.t0}{\code{10} Number of cells with buckthorn at t=1}
 
-\item{K}{Vector (length=n.lc) of carrying capacities for adults}
+\item{K}{\code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
+carrying capacities for adults}
 
-\item{pr.s}{Vector \code{length=n.lc} of annual juvenile survival rates}
+\item{pr.s}{\code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
+of annual juvenile survival rates}
 
-\item{pr.f}{Vector \code{length=n.lc} of fruiting probabilities}
+\item{pr.f}{\code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
+\code{length=n.lc} of fruiting probabilities}
 
-\item{fec}{Vector \code{length=n.lc} of mean fruit per adult}
+\item{fec}{\code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
+mean fruit per adult}
 
-\item{age.f}{Vector \code{length=n.lc} or scalar of age at first fruiting.
-Individuals at this age are considered adults}
+\item{age.f}{\code{4} Vector \code{length=n.lc} or scalar of age at first
+fruiting. Individuals at this age are considered adults}
 
-\item{bank}{\code{Logical} Include seedbank?}
+\item{bank}{\code{TRUE} Include seedbank?}
 
-\item{pr.sb}{Probability of annual survival in seed bank}
+\item{pr.sb}{\code{0.3} Probability of annual survival in seed bank}
 
-\item{pr.est}{Vector \code{length=n.lc} of seedling establishment
-probabilities}
+\item{pr.est}{\code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
+\code{length=n.lc} of seedling establishment probabilities}
 
-\item{sdd.max}{Maximum dispersal distance in cells}
+\item{sdd.max}{\code{15} Maximum dispersal distance in cells}
 
-\item{sdd.rate}{1/mn for exponential dispersal kernel}
+\item{sdd.rate}{\code{0.1} 1/mn for exponential dispersal kernel}
 
-\item{n.ldd}{Number of long distance dispersal events per year}
+\item{n.ldd}{\code{1} Number of long distance dispersal events per year}
 
-\item{pr.eat}{Vector \code{length=n.lc} of proportion of fruits eaten by
-birds, with \code{1-pr.eat} assumed to drop directly below buckthorn
-individuals}
+\item{pr.eat}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector
+\code{length=n.lc} of proportion of fruits eaten by birds, with
+\code{1-pr.eat} assumed to drop directly below buckthorn individuals}
 
-\item{bird.hab}{Vector \code{length=n.lc} of bird habitat preferences}
+\item{bird.hab}{\code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
+\code{length=n.lc} of bird habitat preferences}
 
-\item{pr.s.bird}{Seed viability post-digestion}
+\item{pr.s.bird}{\code{0.6} Seed viability post-digestion}
 }
 \value{
 Named list of global parameters including all arguments as elements
