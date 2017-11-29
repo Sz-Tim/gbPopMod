@@ -45,10 +45,10 @@ data(lc.rct)
   # the x and y buffer between the extent and boundary of the area of interest
   buffer <- 15
   set.seed(225)
-  n.sim <- 1
-  g.p <- set_g_p(tmax=100, lc.r=200, lc.c=200, n.ldd=1, n.cores=1)
+  n.sim <- 2
+  g.p <- set_g_p(tmax=100, lc.r=50, lc.c=50, n.cores=1)
   control.p <- set_control_p()
-  g.p$edges <- c("wall", "sink", "none")[2]
+  g.p$edges <- c("wall", "sink", "none")[3]
   
 
 ##--
@@ -57,7 +57,7 @@ data(lc.rct)
   
   # land cover
   bottom <- 500
-  left <- 300
+  left <- 200
   lc.df <- lc.rct %>% 
     filter((y >= (bottom - g.p$lc.r)) & (y < bottom) &
              (x <= (left + g.p$lc.c)) & (x > left)) %>%
@@ -86,9 +86,16 @@ data(lc.rct)
 ```
 
 ```{r runSim}
+out.N <- array(dim=c(ngrid, g.p$tmax+1, max(g.p$age.f), n.sim))
+out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
 for(s in 1:n.sim) {
   out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
+  out.N[,,,s] <- out$N
+  out.sb[,,s] <- out$N.sb
+  rm(out)
 }
+out <- list(N=apply(out.N, 1:3, mean),
+            N.sb=apply(out.sb, 1:2, mean))
 ```
 
 
