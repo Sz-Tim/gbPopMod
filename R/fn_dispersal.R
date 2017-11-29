@@ -56,8 +56,14 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   
   # pair cell IDs for each neighborhood; indexes match neighborhood matrix
   if(is.null(lc.new)) {
-    xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
-    yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+    if(edges=="none") {
+      xx <- map(lc.df$x, ~seq(.-sdd.max, .+sdd.max))
+      yy <- map(lc.df$y, ~seq(.-sdd.max, .+sdd.max))
+    } else {
+      xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+      yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+    }
+    
   } else {
     xx <- map(lc.df$x[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
     yy <- map(lc.df$y[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
@@ -88,7 +94,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
                                                  ncol=diff(n.x[[n]])+1,
                                                  byrow=TRUE)
     # weight by bird habitat preference & set cell ID to 0 if pr(target) == 0 
-    sdd.i[,,1,n] <- d.pr * bird.hab.ag[sdd.i[,,2,n]]
+    ib <- sdd.i[,,2,n] != 0
+    sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.ag[sdd.i[,,2,n][ib]]
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
     
     # progress update
@@ -147,10 +154,17 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
   
   if(sdd.st) {
     N.seed$N.dep <- round(N.seed$N.dep)
-    SDD.sd <- unlist(apply(N.source, 1,
-                           function(x) sample(sdd.pr[,,2,x[7]], x[5], 
-                                              replace=TRUE,
-                                              prob=sdd.pr[,,1,x[7]])))
+    if(edges=="none") {
+      SDD.sd <- unlist(apply(N.source, 1,
+                             function(x) sample(sdd.pr[,,2,x[1]], x[5], 
+                                                replace=TRUE,
+                                                prob=sdd.pr[,,1,x[1]])))
+    } else {
+      SDD.sd <- unlist(apply(N.source, 1,
+                             function(x) sample(sdd.pr[,,2,x[7]], x[5], 
+                                                replace=TRUE,
+                                                prob=sdd.pr[,,1,x[7]])))
+    }
     SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
     SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
     N.seed <- add_row(N.seed, 
@@ -158,12 +172,21 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
                       N.dep=SDD.dep[SDD.nonzero])
   } else {
     # assign emigrants to target cells & sum within each cell
-    N.seed %<>% 
-      add_row(id=apply(N.source, 1, 
-                       function(x) c(sdd.pr[,,2,x[7]])) %>% c, 
-              N.dep=apply(N.source, 1, 
-                          function(x) c(x[5] * sdd.pr[,,1,x[7]])) %>% c) %>%
-      filter(N.dep > 0)
+    if(edges=="none") {
+      N.seed %<>% 
+        add_row(id=apply(N.source, 1, 
+                         function(x) c(sdd.pr[,,2,x[1]])) %>% c, 
+                N.dep=apply(N.source, 1, 
+                            function(x) c(x[5] * sdd.pr[,,1,x[1]])) %>% c) %>%
+        filter(N.dep > 0)
+    } else {
+      N.seed %<>% 
+        add_row(id=apply(N.source, 1, 
+                         function(x) c(sdd.pr[,,2,x[7]])) %>% c, 
+                N.dep=apply(N.source, 1, 
+                            function(x) c(x[5] * sdd.pr[,,1,x[7]])) %>% c) %>%
+        filter(N.dep > 0)
+    }
   }
   
   N.seed %<>%
