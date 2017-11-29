@@ -149,7 +149,6 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
     cat("Dispersing far...")
     estab.out$N.rcrt <- ldd_disperse(ncell, id.i, estab.out$N.rcrt, n.ldd)
     
-    
     # 8. Update abundances
     cat("Updating N...\n")
     if(age.f.d) {
