@@ -100,9 +100,12 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
         # ii. cut forest & update SDD neighborhoods
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
                                                 f.c=6:9, lc.df)
-        sdd.pr[,,,chg.asn$id.chg$id.inbd] <- sdd_set_probs(nrow(chg.asn$id.chg),
-                                                           lc.df, g.p, 
-                                                           chg.asn$id.chg)
+        sdd.i <- tibble(id.inbd=unique(arrayInd(which(sdd.pr %in% 
+                                                        chg.asn$id.chg$id.inbd), 
+                                                dim(sdd.pr))[,4]), 
+                        id=id.i$id[match(id.inbd, id.i$id.inbd)])
+        sdd.pr[,,,sdd.i$id.inbd] <- sdd_set_probs(nrow(sdd.i), lc.df, 
+                                                  g.p, sdd.i)
       }
       
       # 2B. Adjust p.est

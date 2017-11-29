@@ -14,9 +14,9 @@ cell id info}
 
 \item{g.p}{Named list of global parameters}
 
-\item{lc.new}{Dataframe or tibble with indexes of cells that have changed in
-land cover proportions. For use within simulation; defaults to \code{NULL}
-and calculates SDD neighborhoods for all cells}
+\item{lc.new}{Vector of indexes of cells that need to have their SDD
+neighborhood recalculated; defaults to \code{NULL} and calculates SDD
+neighborhoods for all cells}
 
 \item{edges}{Character taking the value of one of: \code{"wall", "sink",
 "none"} where \code{"wall"} results in a dispersal probability of 0 for all
