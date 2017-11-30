@@ -43,21 +43,21 @@ data(lc.rct)
 
   # here, lc.r & lc.c are the dimensions of the full extent with buffer setting
   # the x and y buffer between the extent and boundary of the area of interest
-  buffer <- 10
-  set.seed(225)
+  buffer <- 1
   n.sim <- 10
-  g.p <- set_g_p(tmax=100, lc.r=30, lc.c=30, n.cores=1)
+  bottom <- 500
+  left <- 200
+  par.sim <- TRUE
+  g.p <- set_g_p(tmax=10, lc.r=5, lc.c=5, n.cores=4, N.p.t0=2)
   control.p <- set_control_p()
   g.p$edges <- c("wall", "sink", "none")[1]
-  
+  set.seed(225)
 
 ##--
 ## initialize landscape
 ##--
   
   # land cover
-  bottom <- 500
-  left <- 200
   lc.df <- lc.rct %>% 
     filter((y >= (bottom - g.p$lc.r)) & (y < bottom) &
              (x <= (left + g.p$lc.c)) & (x > left)) %>%
@@ -86,14 +86,29 @@ data(lc.rct)
 ```
 
 ```{r runSim}
-out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
-out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
-for(s in 1:n.sim) {
-  out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
-  out.ad[,,s] <- out$N[,,max(g.p$age.f)]
-  out.sb[,,s] <- out$N.sb
-  rm(out)
-  cat("Finished simulation", s, "of", n.sim, "\n")
+if(par.sim) {
+  require(doParallel)
+  p.c <- makeCluster(g.p$n.cores)
+  registerDoParallel(p.c)
+  out.p <- foreach(i=1:n.sim) %dopar% {
+    gbPopMod::run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, 
+                      N.init, control.p, verbose=F)
+  }
+  stopCluster(p.c)
+  out.ad <- map(out.p, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.sb <- map(out.p, ~.$N.sb) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+} else {
+  out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  for(s in 1:n.sim) {
+    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
+    out.ad[,,s] <- out$N[,,max(g.p$age.f)]
+    out.sb[,,s] <- out$N.sb
+    rm(out)
+    cat("Finished simulation", s, "of", n.sim, "\n")
+  }
 }
 ```
 
