@@ -101,7 +101,8 @@ if(par.sim) {
   out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
   out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
   for(s in 1:n.sim) {
-    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
+    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, 
+                   control.p, verbose=F)
     out.ad[,,s] <- out$N[,,max(g.p$age.f)]
     out.sb[,,s] <- out$N.sb
     rm(out)
