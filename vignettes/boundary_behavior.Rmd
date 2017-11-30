@@ -99,19 +99,14 @@ for(s in 1:n.sim) {
 
 
 ```{r plots, fig.height=8, fig.width=10}
-sb.mn <- apply(log(out.sb+1), 1:2, mean)
-sb.sd <- apply(log(out.sb+1), 1:2, sd)
-sb.pP <- apply(out.sb > 0, 1:2, mean)
 ad.mn <- apply(out.ad, 1:2, mean)
-ad.sd <- apply(out.ad, 1:2, sd)
-ad.pP <- apply(out.ad > 0, 1:2, mean)
 N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
   gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
-  mutate(sd.ad=c(ad.sd),
-         pP.ad=c(ad.pP),
-         N.sb=c(sb.mn),
-         sd.sb=c(sb.sd),
-         pP.sb=c(sb.pP),
+  mutate(sd.ad=c(apply(out.ad, 1:2, sd)),
+         pP.ad=c(apply(out.ad > 0, 1:2, mean)),
+         N.sb=c(apply(log(out.sb+1), 1:2, mean)),
+         sd.sb=c(apply(log(out.sb+1), 1:2, sd)),
+         pP.sb=c(apply(out.sb > 0, 1:2, mean)),
          N.less5=c(ad.mn > 0))
 N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
