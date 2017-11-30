@@ -1,0 +1,137 @@
+---
+title: "Sensitivity analyses"
+author: "Tim Szewczyk"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+This is a wrapper for organizing and running sensitivity analyses to assess the impact of each parameter on the resulting buckthorn distribution.
+
+```{r wd.setup, include=FALSE}
+if(!require(pacman)) {install.packages("pacman"); require(pacman)}
+p_load("tidyverse", "magrittr", "stringr", "parallel", "here", "devtools",
+       "pbapply", "fastmatch", "gganimate"); theme_set(theme_bw())
+library(gbPopMod)
+data(lc.rct)
+```
+
+
+```{r setPars}
+##---
+## set parameters
+##---
+
+  p <- "pr.sb"
+  p.seq <- seq(0.01, 0.99, length.out=5)
+  n.sim <- 2
+  g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.ldd=1, n.cores=4)
+  control.p <- set_control_p()
+  set.seed(225)
+  
+
+##--
+## initialize landscape
+##--
+  
+  # land cover
+  lc.df <- lc.rct %>% 
+    filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
+    mutate(id=row_number(), 
+           id.inbd=min_rank(na_if(inbd*id, 0)))
+  ngrid <- nrow(lc.df)
+  ncell <- sum(lc.df$inbd)
+  
+  # populations
+  # indexed 1:ngrid including rows for out-of-bounds cells
+  N.init <- pop_init(ngrid, g.p, lc.df)
+  
+  # dispersal probabilities
+  # indexed 1:ncell with only inbound cells: sdd.pr[,,,i] = ith inbound cell
+  # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.inbd==i,]
+  # cell indexes in sdd.pr[,,2,] correspond with lc.df$id
+  # this extra complication avoids calculating many, many unnecessary cells
+  sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
+```
+
+```{r setDirs}
+sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
+par.wd <- paste0(sim.wd, p, "/")
+parSet.wd <- paste0(par.wd, p.seq, "/")
+if(!dir.exists(here("out"))) dir.create(here("out"))
+if(!dir.exists(here(sim.wd))) dir.create(here(sim.wd))
+if(!dir.exists(here(par.wd))) dir.create(here(par.wd))
+```
+
+
+```{r runSim}
+ad.parSet <- vector("list", length(p.seq))
+names(ad.parSet) <- paste(p, p.seq, sep="__")
+sb.parSet <- ad.parSet
+
+require(doParallel)
+for(j in 1:length(p.seq)) {
+  # setup for particular parameter value
+  set.seed(225)
+  g.p[[p]] <- p.seq[j]
+  
+  # run n.sim simulations
+  p.c <- makeCluster(g.p$n.cores); registerDoParallel(p.c)
+  out.j <- foreach(i=1:n.sim) %dopar% {
+    gbPopMod::run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, 
+                      N.init, control.p, verbose=F)
+  }
+  stopCluster(p.c)
+  
+  # rearrange output
+  ad.parSet[[j]] <- map(out.j, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  sb.parSet[[j]] <- map(out.j, ~.$N.sb) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  
+  # store output
+  if(!dir.exists(here(parSet.wd[j]))) dir.create(here(parSet.wd[j]))
+  save_pars(parSet.wd[j], g.p, control.p)
+  save_abundances(parSet.wd[j], ad.parSet[[j]], sb.parSet[[j]])
+  
+  # progress
+  cat("Finished parameter set", j, "of", length(p.seq), "\n\n")
+}
+
+```
+
+
+```{r plots, fig.height=8, fig.width=10}
+ad.mn <- apply(out.ad, 1:2, mean)
+N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+  gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
+  mutate(sd.ad=c(apply(out.ad, 1:2, sd)),
+         pP.ad=c(apply(out.ad > 0, 1:2, mean)),
+         N.sb=c(apply(log(out.sb+1), 1:2, mean)),
+         sd.sb=c(apply(log(out.sb+1), 1:2, sd)),
+         pP.sb=c(apply(out.sb > 0, 1:2, mean)),
+         N.less5=c(ad.mn > 0))
+N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
+N.out$year <- str_pad(N.out$year, 3, "left", "0")
+
+# save plots
+make_plots_final_t(sim.wd, g.p, filter(N.out, year==max(N.out$year)))
+make_plots_gifs(sim.wd, g.p, N.out)
+make_plots_lc(sim.wd, lc.df)
+```
+
+
+
+
+
