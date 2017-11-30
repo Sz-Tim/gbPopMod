@@ -43,14 +43,12 @@ data(lc.rct)
 
   # here, lc.r & lc.c are the dimensions of the full extent with buffer setting
   # the x and y buffer between the extent and boundary of the area of interest
-  buffer <- 1
-  n.sim <- 10
-  bottom <- 500
-  left <- 200
-  par.sim <- TRUE
-  g.p <- set_g_p(tmax=10, lc.r=5, lc.c=5, n.cores=4, N.p.t0=2)
+  buffer <- 5
+  n.sim <- 20; par.sim <- TRUE
+  bottom <- 500; left <- 200
+  g.p <- set_g_p(tmax=100, lc.r=50, lc.c=50, n.cores=4, N.p.t0=2)
   control.p <- set_control_p()
-  g.p$edges <- c("wall", "sink", "none")[1]
+  g.p$edges <- c("wall", "sink", "none")[3]
   set.seed(225)
 
 ##--
