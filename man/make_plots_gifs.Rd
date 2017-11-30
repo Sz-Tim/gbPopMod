@@ -4,19 +4,18 @@
 \alias{make_plots_gifs}
 \title{Save gifs of buckthorn distribution through time}
 \usage{
-make_plots_gifs(p.wd, age.i, g.p, N.out)
+make_plots_gifs(p.wd, g.p, N.out, txt)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
-
-\item{age.i}{Age or age range at first fruiting (e.g., \code{3} or
-\code{3-5})}
 
 \item{g.p}{Named list of global parameters set with \code{\link{set_g_p}}}
 
 \item{N.out}{Dataframe or tibble with processed output from
 \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
 to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}}
+
+\item{txt}{Text to append to start of plot title}
 }
 \value{
 None

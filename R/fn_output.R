@@ -67,33 +67,32 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
 #' includes plots for presence/absence and abundance for both seeds (log
 #' abundance) and adults.
 #' @param p.wd Directory to store file in
-#' @param age.i Age or age range at first fruiting (e.g., \code{3} or
-#'   \code{3-5})
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param N.final Dataframe or tibble with processed output from
 #'   \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
 #'   to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}, filtered
 #'   to include only the final time step
+#' @param txt Text to append to start of plot title
 #' @return None
 #' @keywords plots, store, save, output
 #' @export
 
-make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
+make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
   require(ggplot2)
   
   # filenames
-  ad.ab.f <- paste0(p.wd, "Final_Ab_", age.i, ".jpg")
-  sb.ab.f <- paste0(p.wd, "Final_SB_Ab_", age.i, ".jpg")
-  ad.sd.f <- paste0(p.wd, "Final_sd_", age.i, ".jpg")
-  sb.sd.f <- paste0(p.wd, "Final_SB_sd_", age.i, ".jpg")
-  ad.pa.f <- paste0(p.wd, "Final_PA_", age.i, ".jpg")
-  sb.pa.f <- paste0(p.wd, "Final_SB_PA_", age.i, ".jpg")
+  ad.ab.f <- paste0(p.wd, "Final_ad_Ab.jpg")
+  sb.ab.f <- paste0(p.wd, "Final_sb_Ab.jpg")
+  ad.sd.f <- paste0(p.wd, "Final_ad_sd.jpg")
+  sb.sd.f <- paste0(p.wd, "Final_sb_sd.jpg")
+  ad.pa.f <- paste0(p.wd, "Final_ad_PA.jpg")
+  sb.pa.f <- paste0(p.wd, "Final_sb_PA.jpg")
   
   # Adult abundance
   ad.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.adult, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste("Adult abundance. Year", g.p$tmax+1))
+    ggtitle(paste(txt, "Adult abundance. Year", g.p$tmax+1))
   ggsave(ad.ab.f, ad.ab.fin, width=8, height=6, units="in")
   rm(ad.ab.fin)
   
@@ -101,7 +100,7 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
   sb.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.sb, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste("log seed abundance. Year", g.p$tmax+1))
+    ggtitle(paste(txt, "log seed abundance. Year", g.p$tmax+1))
   ggsave(sb.ab.f, sb.ab.fin, width=8, height=6, units="in")
   rm(sb.ab.fin)
   
@@ -109,7 +108,7 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
   ad.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.ad, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste("Adult abundance sd. Year", g.p$tmax+1))
+    ggtitle(paste(txt, "Adult abundance sd. Year", g.p$tmax+1))
   ggsave(ad.sd.f, ad.sd.fin, width=8, height=6, units="in")
   rm(ad.sd.fin)
   
@@ -117,7 +116,7 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
   sb.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.sb, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste("Seed bank abundance sd. Year", g.p$tmax+1))
+    ggtitle(paste(txt, "Seed bank abundance sd. Year", g.p$tmax+1))
   ggsave(sb.sd.f, sb.sd.fin, width=8, height=6, units="in")
   rm(sb.sd.fin)
   
@@ -125,7 +124,7 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
   adult.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=pP.ad, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste("Adult presence. Year", g.p$tmax+1))
+    ggtitle(paste(txt, "Adult presence. Year", g.p$tmax+1))
   ggsave(ad.pa.f, adult.pa.fin, width=8, height=6, units="in")
   rm(adult.pa.fin)
   
@@ -133,7 +132,7 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
   sb.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=pP.sb, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste("Seed presence. Year", g.p$tmax+1))
+    ggtitle(paste(txt, "Seed presence. Year", g.p$tmax+1))
   ggsave(sb.pa.f, sb.pa.fin, width=8, height=6, units="in")
   rm(sb.pa.fin)
   
@@ -180,33 +179,32 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
 #' adults. There is also a gif distinguishing cells with a low density of
 #' adults.
 #' @param p.wd Directory to store file in
-#' @param age.i Age or age range at first fruiting (e.g., \code{3} or
-#'   \code{3-5})
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param N.out Dataframe or tibble with processed output from
 #'   \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
 #'   to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}
+#' @param txt Text to append to start of plot title
 #' @return None
 #' @keywords plots, gif, store, save, output
 #' @export
 
-make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
+make_plots_gifs <- function(p.wd, g.p, N.out, txt) {
   require(gganimate)
   
   # filenames
-  ad.ab.f <- paste0(p.wd, "Ab_", age.i, ".gif")
-  sb.ab.f <- paste0(p.wd, "SB_Ab_", age.i, ".gif")
-  ad.sd.f <- paste0(p.wd, "sd_", age.i, ".gif")
-  sb.sd.f <- paste0(p.wd, "SB_sd_", age.i, ".gif")
-  ad.pa.f <- paste0(p.wd, "PA_", age.i, ".gif")
-  sb.pa.f <- paste0(p.wd, "SB_PA_", age.i, ".gif")
-  ad.lo.f <- paste0(p.wd, "LoDens_", age.i, ".gif")
+  ad.ab.f <- paste0(p.wd, "ad_Ab.gif")
+  sb.ab.f <- paste0(p.wd, "sb_Ab.gif")
+  ad.sd.f <- paste0(p.wd, "ad_sd.gif")
+  sb.sd.f <- paste0(p.wd, "sb_sd.gif")
+  ad.pa.f <- paste0(p.wd, "ad_PA.gif")
+  sb.pa.f <- paste0(p.wd, "sb_PA.gif")
+  ad.lo.f <- paste0(p.wd, "ad_LoDens.gif")
   
   # Adult abundance
   ad.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.adult, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle("Adult abundance. Year")
+    ggtitle(paste(txt, "Adult abundance. Year"))
   gganimate(ad.ab, ad.ab.f, interval=0.2, ani.width=800, ani.height=600)
   rm(ad.ab)
   
@@ -214,7 +212,7 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   sb.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.sb, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle("log seed abundance. Year")
+    ggtitle(paste(txt, "log seed abundance. Year"))
   gganimate(sb.ab, sb.ab.f, interval=0.2, ani.width=800, ani.height=600)
   rm(sb.ab)
   
@@ -222,7 +220,7 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   ad.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.ad, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle("Adult sd. Year")
+    ggtitle(paste(txt, "Adult sd. Year"))
   gganimate(ad.sd, ad.sd.f, interval=0.2, ani.width=800, ani.height=600)
   rm(ad.sd)
   
@@ -230,7 +228,7 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   sb.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.sb, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle("Seed bank sd. Year")
+    ggtitle(paste(txt, "Seed bank sd. Year"))
   gganimate(sb.sd, sb.sd.f, interval=0.2, ani.width=800, ani.height=600)
   rm(sb.sd)
   
@@ -238,7 +236,7 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   adult.pa <- ggplot(N.out, aes(x=x, y=-y, fill=pP.ad, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle("Adult presence. Year")
+    ggtitle(paste(txt, "Adult presence. Year"))
   gganimate(adult.pa, ad.pa.f, interval=0.2, ani.width=800, ani.height=600)
   rm(adult.pa)
   
@@ -246,13 +244,13 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   sb.pa <- ggplot(N.out, aes(x=x, y=-y, fill=pP.sb, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle("Seed presence. Year")
+    ggtitle(paste(txt, "Seed presence. Year"))
   gganimate(sb.pa, sb.pa.f, interval=0.2, ani.width=800, ani.height=600)
   rm(sb.pa)
   
   # Low adult density
   adult.lo <- ggplot(N.out, aes(x=x, y=-y, fill=N.less5, frame=year)) +
-    geom_tile() + ggtitle("Blue: Adult density ≤ 5. Year") + 
+    geom_tile() + ggtitle(paste(txt, "Blue: Adult density ≤ 5. Year")) + 
     scale_fill_gradient2(low="white", mid="blue", high="pink", midpoint=1)
   gganimate(adult.lo, ad.lo.f, interval=0.2, ani.width=800, ani.height=600)
   rm(adult.lo)

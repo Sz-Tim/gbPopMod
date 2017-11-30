@@ -4,13 +4,10 @@
 \alias{make_plots_final_t}
 \title{Save plots of final buckthorn distribution}
 \usage{
-make_plots_final_t(p.wd, age.i, g.p, N.final)
+make_plots_final_t(p.wd, g.p, N.final, txt = NULL)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
-
-\item{age.i}{Age or age range at first fruiting (e.g., \code{3} or
-\code{3-5})}
 
 \item{g.p}{Named list of global parameters set with \code{\link{set_g_p}}}
 
@@ -18,6 +15,8 @@ make_plots_final_t(p.wd, age.i, g.p, N.final)
 \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
 to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}, filtered
 to include only the final time step}
+
+\item{txt}{Text to append to start of plot title}
 }
 \value{
 None
