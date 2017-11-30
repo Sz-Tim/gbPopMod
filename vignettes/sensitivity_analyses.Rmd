@@ -76,10 +76,6 @@ if(!dir.exists(here(par.wd))) dir.create(here(par.wd))
 
 
 ```{r runSim}
-ad.parSet <- vector("list", length(p.seq))
-names(ad.parSet) <- paste(p, p.seq, sep="__")
-sb.parSet <- ad.parSet
-
 require(doParallel)
 for(j in 1:length(p.seq)) {
   # setup for particular parameter value
@@ -95,15 +91,15 @@ for(j in 1:length(p.seq)) {
   stopCluster(p.c)
   
   # rearrange output
-  ad.parSet[[j]] <- map(out.j, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
-    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
-  sb.parSet[[j]] <- map(out.j, ~.$N.sb) %>% unlist %>% 
-    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  ad.j <- map(out.j, ~.$N[,,max(g.p$age.f)]) %>% 
+    unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  sb.j <- map(out.j, ~.$N.sb) %>% 
+    unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
   
   # store output
   if(!dir.exists(here(parSet.wd[j]))) dir.create(here(parSet.wd[j]))
   save_pars(parSet.wd[j], g.p, control.p)
-  save_abundances(parSet.wd[j], ad.parSet[[j]], sb.parSet[[j]])
+  save_abundances(parSet.wd[j], ad.j, sb.j)
   
   # progress
   cat("Finished parameter set", j, "of", length(p.seq), "\n\n")
@@ -113,22 +109,34 @@ for(j in 1:length(p.seq)) {
 
 
 ```{r plots, fig.height=8, fig.width=10}
-ad.mn <- apply(out.ad, 1:2, mean)
-N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
-  gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
-  mutate(sd.ad=c(apply(out.ad, 1:2, sd)),
-         pP.ad=c(apply(out.ad > 0, 1:2, mean)),
-         N.sb=c(apply(log(out.sb+1), 1:2, mean)),
-         sd.sb=c(apply(log(out.sb+1), 1:2, sd)),
-         pP.sb=c(apply(out.sb > 0, 1:2, mean)),
-         N.less5=c(ad.mn > 0))
-N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
-N.out$year <- str_pad(N.out$year, 3, "left", "0")
-
-# save plots
-make_plots_final_t(sim.wd, g.p, filter(N.out, year==max(N.out$year)))
-make_plots_gifs(sim.wd, g.p, N.out)
-make_plots_lc(sim.wd, lc.df)
+for(j in 1:length(p.seq)) {
+  
+  # setup
+  p.j <- paste0(p, ": ", p.seq[j])
+  ad.j <- readRDS(paste0(parSet.wd[j], "abund_ad.rds"))
+  sb.j <- readRDS(paste0(parSet.wd[j], "abund_sb.rds"))
+  
+  # munge data
+  ad.mn <- apply(ad.j, 1:2, mean)
+  N.j <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+    gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
+    mutate(sd.ad=c(apply(ad.j, 1:2, sd)),
+           pP.ad=c(apply(ad.j > 0, 1:2, mean)),
+           N.sb=c(apply(log(sb.j+1), 1:2, mean)),
+           sd.sb=c(apply(log(sb.j+1), 1:2, sd)),
+           pP.sb=c(apply(sb.j > 0, 1:2, mean)),
+           N.less5=c(ad.mn > 0))
+  N.j$N.less5 <- N.j$N.less5 + c(ad.mn > 5)
+  N.j$year <- str_pad(N.j$year, 3, "left", "0")
+  
+  # save plots
+  make_plots_final_t(parSet.wd[j], g.p, filter(N.j, year==max(N.j$year)), p.j)
+  make_plots_gifs(parSet.wd[j], g.p, N.j, p.j)
+  if(j==1) make_plots_lc(sim.wd, lc.df)
+  
+  # progress
+  cat("Finished parameter set", j, "of", length(p.seq), "\n\n")
+}
 ```
 
 
