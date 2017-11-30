@@ -11,6 +11,11 @@
 #' @param lc.new Vector of indexes of cells that need to have their SDD
 #'   neighborhood recalculated; defaults to \code{NULL} and calculates SDD
 #'   neighborhoods for all cells
+#' @param edges Character taking the value of one of: \code{"wall", "sink",
+#'   "none"} where \code{"wall"} results in a dispersal probability of 0 for all
+#'   out-of-bound cells with no populations modeled, \code{"sink"} results in
+#'   dispersal of seeds to out-of-bound cells but no populations modeled, and
+#'   \code{"none"} results in dispersal of seeds and populations modeled
 #' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
 #'   dimension contains grid id's for the neighborhood or probabilities to each
 #'   target cell
@@ -32,6 +37,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   nbr <- 2 * sdd.max + 1
   sdd.i <- array(0, dim=c(nbr, nbr, 2, ncell))
   bird.hab.ag <- as.matrix(lc.df[,4:9]) %*% (bird.hab %>% divide_by(sum(.)))
+  if(edges=="wall") bird.hab.ag[!lc.df$inbd] <- 0
+  
   
   # generate default dispersal probability matrix
   d.pr <- matrix(0, nbr, nbr)
@@ -49,8 +56,14 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   
   # pair cell IDs for each neighborhood; indexes match neighborhood matrix
   if(is.null(lc.new)) {
-    xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
-    yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+    if(edges=="none") {
+      xx <- map(lc.df$x, ~seq(.-sdd.max, .+sdd.max))
+      yy <- map(lc.df$y, ~seq(.-sdd.max, .+sdd.max))
+    } else {
+      xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+      yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
+    }
+    
   } else {
     xx <- map(lc.df$x[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
     yy <- map(lc.df$y[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
@@ -80,11 +93,11 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
           n.x[[n]][1]:n.x[[n]][2],2,n] <- matrix(c.i[[n]], 
                                                  ncol=diff(n.x[[n]])+1,
                                                  byrow=TRUE)
-    # weight by bird habitat preference
-    ib <- sdd.i[,,2,n] != 0  # inbounds neighbors
+    # weight by bird habitat preference & set cell ID to 0 if pr(target) == 0 
+    ib <- sdd.i[,,2,n] != 0
     sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.ag[sdd.i[,,2,n][ib]]
-    # set cell ID to 0 if pr(target) == 0 
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
+    
     # progress update
     if(n %% 5000 == 0) {
       if(is.null(lc.new)) cat("finished cell", n, "\n")
@@ -116,12 +129,17 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
 #' @param sdd.rate Rate parameter for SDD exponential kernel
 #' @param sdd.st \code{Logical} denoting whether to implement short distance
 #'   dispersal stochastically
+#' @param edges Character taking the value of one of: \code{"wall", "sink",
+#'   "none"} where \code{"wall"} results in a dispersal probability of 0 for all
+#'   out-of-bound cells with no populations modeled, \code{"sink"} results in
+#'   dispersal of seeds to out-of-bound cells but no populations modeled, and
+#'   \code{"none"} results in dispersal of seeds and populations modeled
 #' @return Tibble with grid id and number of seeds in each cell
 #' @keywords dispersal, SDD
 #' @export
 
 sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird, 
-                         sdd.pr, sdd.rate, sdd.st=F) {
+                         sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
   
   require(tidyverse); require(magrittr)
   
@@ -136,10 +154,17 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
   
   if(sdd.st) {
     N.seed$N.dep <- round(N.seed$N.dep)
-    SDD.sd <- unlist(apply(N.source, 1,
-                           function(x) sample(sdd.pr[,,2,x[7]], x[5], 
-                                              replace=TRUE,
-                                              prob=sdd.pr[,,1,x[7]])))
+    if(edges=="none") {
+      SDD.sd <- unlist(apply(N.source, 1,
+                             function(x) sample(sdd.pr[,,2,x[1]], x[5], 
+                                                replace=TRUE,
+                                                prob=sdd.pr[,,1,x[1]])))
+    } else {
+      SDD.sd <- unlist(apply(N.source, 1,
+                             function(x) sample(sdd.pr[,,2,x[7]], x[5], 
+                                                replace=TRUE,
+                                                prob=sdd.pr[,,1,x[7]])))
+    }
     SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
     SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
     N.seed <- add_row(N.seed, 
@@ -147,18 +172,28 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
                       N.dep=SDD.dep[SDD.nonzero])
   } else {
     # assign emigrants to target cells & sum within each cell
-    N.seed %<>% 
-      add_row(id=apply(N.source, 1, 
-                       function(x) c(sdd.pr[,,2,x[7]])) %>% c, 
-              N.dep=apply(N.source, 1, 
-                          function(x) c(x[5] * sdd.pr[,,1,x[7]])) %>% c) %>%
-      filter(N.dep > 0)
+    if(edges=="none") {
+      N.seed %<>% 
+        add_row(id=apply(N.source, 1, 
+                         function(x) c(sdd.pr[,,2,x[1]])) %>% c, 
+                N.dep=apply(N.source, 1, 
+                            function(x) c(x[5] * sdd.pr[,,1,x[1]])) %>% c) %>%
+        filter(N.dep > 0)
+    } else {
+      N.seed %<>% 
+        add_row(id=apply(N.source, 1, 
+                         function(x) c(sdd.pr[,,2,x[7]])) %>% c, 
+                N.dep=apply(N.source, 1, 
+                            function(x) c(x[5] * sdd.pr[,,1,x[7]])) %>% c) %>%
+        filter(N.dep > 0)
+    }
   }
   
   N.seed %<>%
     group_by(id) %>% 
     summarise(N=sum(N.dep) %>% round) %>%
-    filter(!is.na(id.i$id.inbd[id]) & N > 0)
+    filter(N > 0)
+  if(edges=="wall") N.seed %<>% filter(!is.na(id.i$id.inbd[id]))
   
   return(N.seed)
 }
@@ -182,9 +217,10 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
 
 
 ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
-
+  
   ldd.id <- id.i$id[which(id.i$id.inbd %in% sample(1:ncell, n.ldd, replace=T))]
   N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
 
   return(N.rcrt)
 }
+

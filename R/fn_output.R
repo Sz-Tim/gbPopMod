@@ -49,33 +49,55 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
   # filenames
   ad.ab.f <- paste0(p.wd, "Final_Ab_", age.i, ".jpg")
   sb.ab.f <- paste0(p.wd, "Final_SB_Ab_", age.i, ".jpg")
+  ad.sd.f <- paste0(p.wd, "Final_sd_", age.i, ".jpg")
+  sb.sd.f <- paste0(p.wd, "Final_SB_sd_", age.i, ".jpg")
   ad.pa.f <- paste0(p.wd, "Final_PA_", age.i, ".jpg")
   sb.pa.f <- paste0(p.wd, "Final_SB_PA_", age.i, ".jpg")
   
   # Adult abundance
-  ad.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.adult)) +
+  ad.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.adult, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste("Adult abundance. Year", g.p$tmax+1))
   ggsave(ad.ab.f, ad.ab.fin, width=8, height=6, units="in")
   rm(ad.ab.fin)
   
   # Seed bank log abundance
-  sb.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.sb)) +
+  sb.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.sb, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste("log seed abundance. Year", g.p$tmax+1))
   ggsave(sb.ab.f, sb.ab.fin, width=8, height=6, units="in")
   rm(sb.ab.fin)
   
+  # Adult variability
+  ad.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.ad, colour=inbd)) +
+    geom_tile() + scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA)) + 
+    ggtitle(paste("Adult abundance sd. Year", g.p$tmax+1))
+  ggsave(ad.sd.f, ad.sd.fin, width=8, height=6, units="in")
+  rm(ad.sd.fin)
+  
+  # Adult variability
+  sb.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.sb, colour=inbd)) +
+    geom_tile() + scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA)) + 
+    ggtitle(paste("Seed bank abundance sd. Year", g.p$tmax+1))
+  ggsave(sb.sd.f, sb.sd.fin, width=8, height=6, units="in")
+  rm(sb.sd.fin)
+  
   # Adult presence/absence
-  adult.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.adult>0)) +
-    geom_tile() + scale_fill_manual(values=c("FALSE"="white", "TRUE"="red")) + 
+  adult.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=pP.ad, colour=inbd)) +
+    geom_tile() + scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste("Adult presence. Year", g.p$tmax+1))
   ggsave(ad.pa.f, adult.pa.fin, width=8, height=6, units="in")
   rm(adult.pa.fin)
   
   # Seed bank presence/absence
-  sb.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.sb>0)) +
-    geom_tile() + scale_fill_manual(values=c("FALSE"="white", "TRUE"="red")) +
+  sb.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=pP.sb, colour=inbd)) +
+    geom_tile() + scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste("Seed presence. Year", g.p$tmax+1))
   ggsave(sb.pa.f, sb.pa.fin, width=8, height=6, units="in")
   rm(sb.pa.fin)
@@ -90,6 +112,16 @@ make_plots_final_t <- function(p.wd, age.i, g.p, N.final) {
     cat("Final seed bank abundance saved as", sb.ab.f, "\n") 
   } else {
     cat("--- Error: Final seed bank abundance not saved! \n")
+  }
+  if(file.exists(ad.sd.f)) { 
+    cat("Final adult sd saved as", ad.sd.f, "\n") 
+  } else {
+    cat("--- Error: Final adult sd not saved! \n")
+  }
+  if(file.exists(sb.sd.f)) { 
+    cat("Final seed bank sd saved as", sb.sd.f, "\n") 
+  } else {
+    cat("--- Error: Final seedbank sd not saved! \n")
   }
   if(file.exists(ad.pa.f)) { 
     cat("Final adult presence saved as", ad.pa.f, "\n") 
@@ -129,34 +161,56 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   # filenames
   ad.ab.f <- paste0(p.wd, "Ab_", age.i, ".gif")
   sb.ab.f <- paste0(p.wd, "SB_Ab_", age.i, ".gif")
+  ad.sd.f <- paste0(p.wd, "sd_", age.i, ".gif")
+  sb.sd.f <- paste0(p.wd, "SB_sd_", age.i, ".gif")
   ad.pa.f <- paste0(p.wd, "PA_", age.i, ".gif")
   sb.pa.f <- paste0(p.wd, "SB_PA_", age.i, ".gif")
   ad.lo.f <- paste0(p.wd, "LoDens_", age.i, ".gif")
   
   # Adult abundance
-  ad.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.adult, frame=year)) + 
+  ad.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.adult, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle("Adult abundance. Year")
   gganimate(ad.ab, ad.ab.f, interval=0.2, ani.width=800, ani.height=600)
   rm(ad.ab)
   
   # Seed bank log abundance
-  sb.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.sb, frame=year)) + 
+  sb.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.sb, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle("log seed abundance. Year")
   gganimate(sb.ab, sb.ab.f, interval=0.2, ani.width=800, ani.height=600)
   rm(sb.ab)
   
+  # Adult variability
+  ad.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.ad, frame=year, colour=inbd)) + 
+    geom_tile() + scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA)) + 
+    ggtitle("Adult sd. Year")
+  gganimate(ad.sd, ad.sd.f, interval=0.2, ani.width=800, ani.height=600)
+  rm(ad.sd)
+  
+  # Seed bank variability
+  sb.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.sb, frame=year, colour=inbd)) + 
+    geom_tile() + scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA)) + 
+    ggtitle("Seed bank sd. Year")
+  gganimate(sb.sd, sb.sd.f, interval=0.2, ani.width=800, ani.height=600)
+  rm(sb.sd)
+  
   # Adult presence/absence
-  adult.pa <- ggplot(N.out, aes(x=x, y=-y, fill=N.adult>0, frame=year)) + 
-    geom_tile() + scale_fill_manual(values=c("white","red")) + 
+  adult.pa <- ggplot(N.out, aes(x=x, y=-y, fill=pP.ad, frame=year, colour=inbd)) + 
+    geom_tile() + scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle("Adult presence. Year")
   gganimate(adult.pa, ad.pa.f, interval=0.2, ani.width=800, ani.height=600)
   rm(adult.pa)
   
   # Seed bank presence/absence
-  sb.pa <- ggplot(N.out, aes(x=x, y=-y, fill=N.sb > 0, frame=year)) + 
-    geom_tile() + scale_fill_manual(values=c("white","red")) + 
+  sb.pa <- ggplot(N.out, aes(x=x, y=-y, fill=pP.sb, frame=year, colour=inbd)) + 
+    geom_tile() + scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA)) + 
     ggtitle("Seed presence. Year")
   gganimate(sb.pa, sb.pa.f, interval=0.2, ani.width=800, ani.height=600)
   rm(sb.pa)
@@ -178,6 +232,16 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
     cat("Seed bank abundance saved as", sb.ab.f, "\n") 
   } else {
     cat("--- Error: Seed bank abundance not saved! \n")
+  }
+  if(file.exists(ad.sd.f)) { 
+    cat("Final adult sd saved as", ad.sd.f, "\n") 
+  } else {
+    cat("--- Error: Final adult sd not saved! \n")
+  }
+  if(file.exists(sb.sd.f)) { 
+    cat("Final seed bank sd saved as", sb.sd.f, "\n") 
+  } else {
+    cat("--- Error: Final seedbank sd not saved! \n")
   }
   if(file.exists(ad.pa.f)) { 
     cat("Adult presence saved as", ad.pa.f, "\n") 
@@ -220,32 +284,38 @@ make_plots_lc <- function(p.wd, lc.df) {
   evg.f <- paste0(p.wd, "LC_Evg.jpg")
   mxd.f <- paste0(p.wd, "LC_Mxd.jpg")
   
-  p.opi <- ggplot(lc.df, aes(x=x, y=-y, fill=OpI)) + geom_tile() +
+  p.opi <- ggplot(lc.df, aes(x=x, y=-y, fill=OpI, colour=inbd)) + geom_tile() +
+    scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="red", limits=c(0,1))
   ggsave(opi.f, p.opi, width=10, height=7)
   rm(p.opi)
   
-  p.oth <- ggplot(lc.df, aes(x=x, y=-y, fill=Oth)) + geom_tile() +
+  p.oth <- ggplot(lc.df, aes(x=x, y=-y, fill=Oth, colour=inbd)) + geom_tile() +
+    scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="gray30", limits=c(0,1))
   ggsave(oth.f, p.oth, width=10, height=7)
   rm(p.oth)
   
-  p.dec <- ggplot(lc.df, aes(x=x, y=-y, fill=Dec)) + geom_tile() +
+  p.dec <- ggplot(lc.df, aes(x=x, y=-y, fill=Dec, colour=inbd)) + geom_tile() +
+    scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="green3", limits=c(0,1))
   ggsave(dec.f, p.dec, width=10, height=7)
   rm(p.dec)
   
-  p.wp <- ggplot(lc.df, aes(x=x, y=-y, fill=WP)) + geom_tile() +
+  p.wp <- ggplot(lc.df, aes(x=x, y=-y, fill=WP, colour=inbd)) + geom_tile() +
+    scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="orchid", limits=c(0,1))
   ggsave(wp.f, p.wp, width=10, height=7)
   rm(p.wp)
   
-  p.evg <- ggplot(lc.df, aes(x=x, y=-y, fill=Evg)) + geom_tile() +
+  p.evg <- ggplot(lc.df, aes(x=x, y=-y, fill=Evg, colour=inbd)) + geom_tile() +
+    scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="darkgreen", limits=c(0,1))
   ggsave(evg.f, p.evg, width=10, height=7)
   rm(p.evg)
   
-  p.mxd <- ggplot(lc.df, aes(x=x, y=-y, fill=Mxd)) + geom_tile() +
+  p.mxd <- ggplot(lc.df, aes(x=x, y=-y, fill=Mxd, colour=inbd)) + geom_tile() +
+    scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="yellowgreen", limits=c(0,1))
   ggsave(mxd.f, p.mxd, width=10, height=7)
   rm(p.mxd)

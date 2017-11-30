@@ -4,7 +4,8 @@
 \alias{sdd_disperse}
 \title{Short distance dispersal}
 \usage{
-sdd_disperse(id.i, N.f, pr.eat.ag, pr.s.bird, sdd.pr, sdd.rate, sdd.st = F)
+sdd_disperse(id.i, N.f, pr.eat.ag, pr.s.bird, sdd.pr, sdd.rate, sdd.st = F,
+  edges = "wall")
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
@@ -25,6 +26,12 @@ from \code{\link{sdd_set_probs}}}
 
 \item{sdd.st}{\code{Logical} denoting whether to implement short distance
 dispersal stochastically}
+
+\item{edges}{Character taking the value of one of: \code{"wall", "sink",
+"none"} where \code{"wall"} results in a dispersal probability of 0 for all
+out-of-bound cells with no populations modeled, \code{"sink"} results in
+dispersal of seeds to out-of-bound cells but no populations modeled, and
+\code{"none"} results in dispersal of seeds and populations modeled}
 }
 \value{
 Tibble with grid id and number of seeds in each cell

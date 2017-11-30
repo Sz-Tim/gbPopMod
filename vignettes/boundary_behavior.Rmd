@@ -1,0 +1,144 @@
+---
+title: "Boundary behavior"
+author: "Tim Szewczyk"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+This vignette explores the options for how the model behaves at the boundaries. The study extent includes southern New Hampshire and southern Maine. As a consequence, there are three boundary types: ocean, terrestrial with GRANIT proportions, and terrestrial with NLCD proportions. In the context of this vignette, we will ignore the GRANIT vs NLCD distinction, and instead compare models using only the GRANIT proportions in a reduced study extent, such that there is a buffer with known land cover proportions surrounding the area of interest. These are the boundary behaviors explored here:  
+  
+1. *wall:* Hard boundaries on all edges. No seeds are exported to or imported from out-of-bounds (OOB) cells. All of the seeds produced in cells that include OOB cells in their SDD neighborhood are instead dispersed among the inbound cells in the neighborhood.  
+2. *sink:* Soft boundaries on all edges (or on terrestrial edges with hard boundaries on ocean edges). Seeds may be exported to OOB cells, but no populations are modeled OOB and so no seeds are imported from OOB cells. OOB cells act as seed sinks.  
+3. *none:* No boundaries on terrestrial edges with hard boundaries on ocean edges. Seeds may be exported to OOB cells, and populations are modeled OOB with seeds imported from OOB cells. The terrestrial boundaries are thus arbitrary.  
+  
+To successfully model behavior 3, we model a landscape with *wall* boundaries, but larger than the area of interest such that the buffer is larger than effects of the true boundary. For a direct comparison, we will use the same full landscape and smaller area of interest. Both will be rectangular and include ocean cells. Thus, `lc.df` includes columns identifying: `x`, `y`, `x_y`, `id`, `inbd`, `id.inbd`, and `ocean` in addition to the associated land cover proportions. The `inbd` and `ocean` columns are logical.  
+
+For *sink* boundaries, the establishment probabilities will be set to 0, though dispersal probabilities will be based on the land cover based bird habitat preferences.
+
+```{r wd.setup, include=FALSE}
+if(!require(pacman)) {install.packages("pacman"); require(pacman)}
+p_load("tidyverse", "magrittr", "stringr", "parallel", "here", 
+       "pbapply", "fastmatch", "gganimate"); theme_set(theme_bw())
+library(gbPopMod)
+data(lc.rct)
+```
+
+
+```{r setPars}
+##---
+## set parameters
+##---
+
+  # here, lc.r & lc.c are the dimensions of the full extent with buffer setting
+  # the x and y buffer between the extent and boundary of the area of interest
+  buffer <- 5
+  n.sim <- 20; par.sim <- TRUE
+  bottom <- 500; left <- 200
+  g.p <- set_g_p(tmax=100, lc.r=50, lc.c=50, n.cores=4, N.p.t0=2)
+  control.p <- set_control_p()
+  g.p$edges <- c("wall", "sink", "none")[3]
+  set.seed(225)
+
+##--
+## initialize landscape
+##--
+  
+  # land cover
+  lc.df <- lc.rct %>% 
+    filter((y >= (bottom - g.p$lc.r)) & (y < bottom) &
+             (x <= (left + g.p$lc.c)) & (x > left)) %>%
+    mutate(id=row_number(),
+           ocean=!inbd,
+           inbd=((y <= max(y) - buffer) & (y >= min(y) + buffer) &
+                   (x <= max(x) - buffer) & (x >= min(x) + buffer) &
+                   !ocean),
+           id.inbd=min_rank(na_if(inbd*id, 0)))
+  ggplot(lc.df, aes(x=x, y=-y, fill=inbd, colour=ocean)) + 
+    geom_tile() + scale_colour_manual(values=c(NA, "white"))
+  ngrid <- nrow(lc.df)
+  ncell <- sum(lc.df$inbd)
+  
+  # populations
+  # indexed 1:ngrid including rows for out-of-bounds cells
+  N.init <- pop_init(ngrid, g.p, lc.df)
+  
+  # dispersal probabilities
+  # indexed 1:ncell with only inbound cells: sdd.pr[,,,i] = ith inbound cell
+  # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.inbd==i,]
+  # cell indexes in sdd.pr[,,2,] correspond with lc.df$id
+  # this extra complication avoids calculating many, many unnecessary cells
+  sdd.pr <- sdd_set_probs(ifelse(g.p$edges=="none", ngrid, ncell), 
+                          lc.df, g.p, edges=g.p$edges)
+```
+
+```{r runSim}
+if(par.sim) {
+  require(doParallel)
+  p.c <- makeCluster(g.p$n.cores)
+  registerDoParallel(p.c)
+  out.p <- foreach(i=1:n.sim) %dopar% {
+    gbPopMod::run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, 
+                      N.init, control.p, verbose=F)
+  }
+  stopCluster(p.c)
+  out.ad <- map(out.p, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.sb <- map(out.p, ~.$N.sb) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+} else {
+  out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  for(s in 1:n.sim) {
+    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
+    out.ad[,,s] <- out$N[,,max(g.p$age.f)]
+    out.sb[,,s] <- out$N.sb
+    rm(out)
+    cat("Finished simulation", s, "of", n.sim, "\n")
+  }
+}
+```
+
+
+```{r plots, fig.height=8, fig.width=10}
+ad.mn <- apply(out.ad, 1:2, mean)
+N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+  gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
+  mutate(sd.ad=c(apply(out.ad, 1:2, sd)),
+         pP.ad=c(apply(out.ad > 0, 1:2, mean)),
+         N.sb=c(apply(log(out.sb+1), 1:2, mean)),
+         sd.sb=c(apply(log(out.sb+1), 1:2, sd)),
+         pP.sb=c(apply(out.sb > 0, 1:2, mean)),
+         N.less5=c(ad.mn > 0))
+N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
+N.out$year <- str_pad(N.out$year, 3, "left", "0")
+
+# prepare plot paths & filenames
+p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "_", g.p$edges, "/")
+if(!dir.exists(here::here("out"))) dir.create(here::here("out"))
+if(!dir.exists(here::here(p.wd))) dir.create(here::here(p.wd))
+age.i <- ifelse(length(g.p$age.f)==1, 
+                paste0("age", g.p$age.f, ""),
+                paste0("ages", min(g.p$age.f), "-", max(g.p$age.f), ""))
+
+# save plots
+save_pars(p.wd, age.i, g.p, control.p)
+make_plots_final_t(p.wd, age.i, g.p, filter(N.out, year==max(N.out$year)))
+make_plots_gifs(p.wd, age.i, g.p, N.out)
+make_plots_lc(p.wd, lc.df)
+```
+
+
+
+
