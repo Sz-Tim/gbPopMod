@@ -52,8 +52,8 @@ data(lc.rct)
 ##---
 
   set.seed(225)
-  n.sim <- 1
-  g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.ldd=1)
+  n.sim <- 4; par.sim <- FALSE
+  g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.ldd=1, n.cores=4)
   control.p <- set_control_p()
   
 
@@ -82,23 +82,49 @@ data(lc.rct)
 ```
 
 ```{r runSim}
-for(s in 1:n.sim) {
-  out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
+if(par.sim) {
+  require(doParallel)
+  p.c <- makeCluster(g.p$n.cores)
+  registerDoParallel(p.c)
+  out.p <- foreach(i=1:n.sim) %dopar% {
+    gbPopMod::run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, 
+                      N.init, control.p, verbose=F)
+  }
+  stopCluster(p.c)
+  out.ad <- map(out.p, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.sb <- map(out.p, ~.$N.sb) %>% unlist %>% 
+    array(., dim=c(ngrid, g.p$tmax+1, n.sim))
+} else {
+  out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  for(s in 1:n.sim) {
+    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, 
+                   control.p, verbose=F)
+    out.ad[,,s] <- out$N[,,max(g.p$age.f)]
+    out.sb[,,s] <- out$N.sb
+    rm(out)
+    cat("Finished simulation", s, "of", n.sim, "\n")
+  }
 }
 ```
 
 
 ```{r plots, fig.height=8, fig.width=10}
-out.ad <- out$N[,,max(g.p$age.f)]
-N.out <- cbind(lc.df, out.ad) %>% as.tibble %>%
-  gather(year, N.adult, (1:ncol(out.ad)) + ncol(lc.df)) %>%
-  mutate(N.sb=c(log(out$N.sb+1)),
-         N.less5=c(out.ad > 0))
-N.out$N.less5 <- N.out$N.less5 + c(out.ad > 5)
+ad.mn <- apply(out.ad, 1:2, mean)
+N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+  gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
+  mutate(sd.ad=c(apply(out.ad, 1:2, sd)),
+         pP.ad=c(apply(out.ad > 0, 1:2, mean)),
+         N.sb=c(apply(log(out.sb+1), 1:2, mean)),
+         sd.sb=c(apply(log(out.sb+1), 1:2, sd)),
+         pP.sb=c(apply(out.sb > 0, 1:2, mean)),
+         N.less5=c(ad.mn > 0))
+N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
 # prepare plot paths & filenames
-p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
+p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "_", g.p$edges, "/")
 if(!dir.exists(here::here("out"))) dir.create(here::here("out"))
 if(!dir.exists(here::here(p.wd))) dir.create(here::here(p.wd))
 age.i <- ifelse(length(g.p$age.f)==1, 
@@ -106,7 +132,6 @@ age.i <- ifelse(length(g.p$age.f)==1,
                 paste0("ages", min(g.p$age.f), "-", max(g.p$age.f), ""))
 
 # save plots
-rm(sdd.pr); rm(out.ad); rm(out)
 save_pars(p.wd, age.i, g.p, control.p)
 make_plots_final_t(p.wd, age.i, g.p, filter(N.out, year==max(N.out$year)))
 make_plots_gifs(p.wd, age.i, g.p, N.out)
