@@ -87,7 +87,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     }
     
     # 2. Implement management
-    if(!is.null(control.p) & t >= t.trt) {
+    if(!is.null(control.p) && t >= t.trt) {
       # run functions to implement management controls
       # For future complexity, manual.trt could also push a proportion of
       # the adults back to a previous age so they don't fruit for a number
