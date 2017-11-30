@@ -188,7 +188,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
 #' @keywords plots, gif, store, save, output
 #' @export
 
-make_plots_gifs <- function(p.wd, g.p, N.out, txt) {
+make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
   require(gganimate)
   
   # filenames

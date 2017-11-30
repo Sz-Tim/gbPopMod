@@ -4,7 +4,7 @@
 \alias{make_plots_gifs}
 \title{Save gifs of buckthorn distribution through time}
 \usage{
-make_plots_gifs(p.wd, g.p, N.out, txt)
+make_plots_gifs(p.wd, g.p, N.out, txt = NULL)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
