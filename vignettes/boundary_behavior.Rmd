@@ -43,12 +43,12 @@ data(lc.rct)
 
   # here, lc.r & lc.c are the dimensions of the full extent with buffer setting
   # the x and y buffer between the extent and boundary of the area of interest
-  buffer <- 15
+  buffer <- 10
   set.seed(225)
-  n.sim <- 2
-  g.p <- set_g_p(tmax=100, lc.r=50, lc.c=50, n.cores=1)
+  n.sim <- 10
+  g.p <- set_g_p(tmax=100, lc.r=30, lc.c=30, n.cores=1)
   control.p <- set_control_p()
-  g.p$edges <- c("wall", "sink", "none")[3]
+  g.p$edges <- c("wall", "sink", "none")[1]
   
 
 ##--
@@ -86,27 +86,34 @@ data(lc.rct)
 ```
 
 ```{r runSim}
-out.N <- array(dim=c(ngrid, g.p$tmax+1, max(g.p$age.f), n.sim))
+out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
 out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
 for(s in 1:n.sim) {
-  out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
-  out.N[,,,s] <- out$N
+  out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
+  out.ad[,,s] <- out$N[,,max(g.p$age.f)]
   out.sb[,,s] <- out$N.sb
   rm(out)
+  cat("Finished simulation", s, "of", n.sim, "\n")
 }
-out <- list(N=apply(out.N, 1:3, mean),
-            N.sb=apply(out.sb, 1:2, mean))
 ```
 
 
 ```{r plots, fig.height=8, fig.width=10}
-out.sb <- log(out$N.sb+1)
-out.ad <- out$N[,,max(g.p$age.f)]
-N.out <- cbind(lc.df, out.ad) %>% as.tibble %>%
-  gather(year, N.adult, (1:ncol(out.ad)) + ncol(lc.df)) %>%
-  mutate(N.sb=c(out.sb),
-         N.less5=c(out.ad > 0))
-N.out$N.less5 <- N.out$N.less5 + c(out.ad > 5)
+sb.mn <- apply(log(out.sb+1), 1:2, mean)
+sb.sd <- apply(log(out.sb+1), 1:2, sd)
+sb.pP <- apply(out.sb > 0, 1:2, mean)
+ad.mn <- apply(out.ad, 1:2, mean)
+ad.sd <- apply(out.ad, 1:2, sd)
+ad.pP <- apply(out.ad > 0, 1:2, mean)
+N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+  gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
+  mutate(sd.ad=c(ad.sd),
+         pP.ad=c(ad.pP),
+         N.sb=c(sb.mn),
+         sd.sb=c(sb.sd),
+         pP.sb=c(sb.pP),
+         N.less5=c(ad.mn > 0))
+N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
 # prepare plot paths & filenames
