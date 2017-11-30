@@ -192,7 +192,7 @@ make_plots_gifs <- function(p.wd, age.i, g.p, N.out) {
   rm(ad.sd)
   
   # Seed bank variability
-  ad.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.sb, frame=year, colour=inbd)) + 
+  sb.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.sb, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle("Seed bank sd. Year")
