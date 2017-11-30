@@ -1,25 +1,60 @@
-#' Save global and control parameters as RData files
+#' Save global and control parameters as .rds files
 #'
 #' This function saves both the global and buckthorn control parameters used in
-#' a particular simulation run as a \code{.RData} file in the same directory as
+#' a particular simulation run as a \code{.rds} file in the same directory as
 #' the associated plots.
 #' @param p.wd Directory to store file in
-#' @param age.i Age or age range at first fruiting (e.g., \code{3} or
-#'   \code{3-5})
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
+#' @param verbose \code{TRUE} Confirm file creation?
 #' @return None
 #' @keywords parameters, store, save, output
 #' @export
 
-save_pars <- function(p.wd, age.i, g.p, control.p) {
-  f <- paste0(p.wd, "pars_", age.i, ".RData")
-  save(g.p, control.p, file=f)
-  if(file.exists(f)) { 
-    cat("Parameters stored in", f, "\n") 
-  } else {
-    cat("--- Error: Parameters not stored \n")
+save_pars <- function(p.wd, g.p, control.p, verbose=TRUE) {
+  gp_f <- paste0(p.wd, "pars_glbl.rds")
+  cp_f <- paste0(p.wd, "pars_ctrl.rds")
+  saveRDS(g.p, file=gp_f)
+  saveRDS(control.p, file=cp_f)
+  if(verbose) {
+    if(file.exists(gp_f) & file.exists(cp_f)) { 
+      cat("Parameters stored in", p.wd, "\n") 
+    } else {
+      cat("--- Error: Parameters not stored \n")
+    }
+  }
+}
+
+
+
+
+#' Save simulation output as .rds files
+#'
+#' This function saves both the global and buckthorn control parameters used in
+#' a particular simulation run as a \code{.rds} file in the same directory as
+#' the associated plots.
+#' @param p.wd Directory to store file in
+#' @param ad.N Array of adult abundances with \code{dim=c(ngrid, tmax+1, n.sim)}
+#'   generated with a call or calls to \code{\link{run_sim}}
+#' @param ad.N Array of seed bank abundances with \code{dim=c(ngrid, tmax+1,
+#'   n.sim)} generated with a call or calls to \code{\link{run_sim}}
+#' @param verbose \code{TRUE} Confirm file creation?
+#' @return None
+#' @keywords abundances, store, save, output
+#' @export
+
+save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
+  ad_f <- paste0(p.wd, "abund_ad.rds")
+  sb_f <- paste0(p.wd, "abund_sb.rds")
+  saveRDS(ad.N, file=ad_f)
+  saveRDS(sb.N, file=sb_f)
+  if(verbose) {
+    if(file.exists(ad_f) & file.exists(sb_f)) { 
+      cat("Abundances stored in", p.wd, "\n") 
+    } else {
+      cat("--- Error: Abundances not stored \n")
+    }
   }
 }
 
