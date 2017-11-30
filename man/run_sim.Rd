@@ -4,7 +4,7 @@
 \alias{run_sim}
 \title{Run simulation}
 \usage{
-run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
+run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose = TRUE)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -24,6 +24,8 @@ cell id info}
 
 \item{control.p}{NULL or named list of buckthorn control treatment parameters 
 set with \code{\link{set_control_p}}}
+
+\item{verbose}{\code{TRUE} Give updates for each year & process?}
 }
 \value{
 Array of abundances for each cell and age group

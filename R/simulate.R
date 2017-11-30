@@ -15,11 +15,13 @@
 #'   \code{\link{pop_init}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters 
 #'   set with \code{\link{set_control_p}}
+#' @param verbose \code{TRUE} Give updates for each year & process? 
 #' @return Array of abundances for each cell and age group
 #' @keywords run, simulate
 #' @export
 
-run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
+run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, 
+                    control.p, verbose=TRUE) {
   
   require(tidyverse); require(magrittr)
   
@@ -77,7 +79,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
   }
   
   for(t in 1:tmax) {
-    cat("Year", t, "")
+    if(verbose) cat("Year", t, "")
     if(age.f.d) {
       N.t <- N[,t,,]
     } else {
@@ -93,7 +95,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
       
       # 2A. Adjust LC %
       if(lc.chg) {
-        cat("Changing LC...")
+        if(verbose) cat("Changing LC...")
         # i. decide which cells change and how much of each kind of forest
         chg.asn <- cut_assign(n.chg, ncell, lc.df, f.c=6:9)
         
@@ -110,7 +112,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
       
       # 2B. Adjust p.est
       if(nTrt.grd > 0) {
-        cat("Covering...")
+        if(verbose) cat("Covering...")
         est.trt <- trt_assign(id.i, ncell, nTrt.grd, grd.trt, 
                                         addOwners=add.owners, trt.m1=est.trt)
         pr.est.trt <- trt_ground(est.trt, grd.trt)
@@ -118,7 +120,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
       
       # 2C. Adjust N
       if(nTrt.man > 0) {
-        cat("Cutting & spraying...")
+        if(verbose) cat("Cutting & spraying...")
         N.trt <- trt_assign(id.i, ncell, nTrt.man, man.trt, 
                                       addOwners=add.owners, trt.m1=N.trt)
         if(age.f.d) {
@@ -134,27 +136,27 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p) {
                                  pr.eat, pr.est, pr.est.trt, edges=edges)
     
     # 4. Local fruit production
-    cat("Fruiting...")
+    if(verbose) cat("Fruiting...")
     N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.ag, pm$pr.f.ag,
                                   y.ad, age.f.d, dem.st)
     
     # 5. Short distance dispersal
-    cat("Dispersing near...")
+    if(verbose) cat("Dispersing near...")
     N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.ag, pr.s.bird, 
                                 sdd.pr, sdd.rate, sdd.st, edges=edges)
     
     # 6. Seedling establishment
-    cat("Establishing...")
+    if(verbose) cat("Establishing...")
     estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.ag, 
                                pr.sb, dem.st, bank)
     N.sb[,t+1] <- estab.out$N.sb
     
     # 7. Long distance dispersal
-    cat("Dispersing far...")
+    if(verbose) cat("Dispersing far...")
     estab.out$N.rcrt <- ldd_disperse(ncell, id.i, estab.out$N.rcrt, n.ldd)
     
     # 8. Update abundances
-    cat("Updating N...\n")
+    if(verbose) cat("Updating N...\n")
     if(age.f.d) {
       for(l in 1:n.lc) {
         N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad] + 
