@@ -11,7 +11,7 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, n.cores = 4,
   bank = TRUE, pr.sb = 0.3, pr.est = c(0.07, 0.01, 0.08, 0.02, 0.02,
   0.03), sdd.max = 15, sdd.rate = 0.1, n.ldd = 1, pr.eat = c(0.3, 0.1,
   0.2, 0.2, 0.2, 0.1), bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05),
-  pr.s.bird = 0.6)
+  pr.s.bird = 0.6, edges = "wall")
 }
 \arguments{
 \item{tmax}{\code{100} Number of time steps per simulation}
@@ -66,6 +66,9 @@ fruiting. Individuals at this age are considered adults}
 \code{length=n.lc} of bird habitat preferences}
 
 \item{pr.s.bird}{\code{0.6} Seed viability post-digestion}
+
+\item{edges}{\code{wall} Boundary behavior, taking values of \code{wall},
+\code{sink}, or \code{none}. See boundary_behavior.Rmd for descriptions}
 }
 \value{
 Named list of global parameters including all arguments as elements

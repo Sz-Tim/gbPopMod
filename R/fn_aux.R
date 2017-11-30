@@ -162,6 +162,8 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #' @param bird.hab \code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
 #'   \code{length=n.lc} of bird habitat preferences
 #' @param pr.s.bird \code{0.6} Seed viability post-digestion
+#' @param edges \code{wall} Boundary behavior, taking values of \code{wall},
+#'   \code{sink}, or \code{none}. See boundary_behavior.Rmd for descriptions
 #' @return Named list of global parameters including all arguments as elements
 #' @keywords initialize, set up, global, parameter
 #' @export
@@ -176,13 +178,15 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, n.cores=4,
                     pr.est=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
                     sdd.max=15, sdd.rate=0.1, n.ldd=1,
                     pr.eat=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
-                    bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), pr.s.bird=0.6) {
+                    bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), pr.s.bird=0.6,
+                    edges="wall") {
   
   g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, n.cores=n.cores, 
               lc.r=lc.r, lc.c=lc.c, n.lc=n.lc, N.p.t0=N.p.t0, K=K, pr.s=pr.s,
               pr.f=pr.f, fec=fec, age.f=age.f, bank=bank, pr.sb=pr.sb,
               pr.est=pr.est, sdd.max=sdd.max, sdd.rate=sdd.rate, n.ldd=n.ldd,
-              pr.eat=pr.eat, bird.hab=bird.hab, pr.s.bird=pr.s.bird)
+              pr.eat=pr.eat, bird.hab=bird.hab, pr.s.bird=pr.s.bird,
+              edges=edges)
   
   return(g.p)
 }
