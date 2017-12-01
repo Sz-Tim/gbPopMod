@@ -111,7 +111,7 @@ for(j in 1:length(p.seq)) {
 ```{r plots, fig.height=8, fig.width=10}
 p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
 foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
-  require(tidyverse)
+  require(tidyverse); require(gbPopMod)
   # setup
   p.j <- paste0(p, ": ", p.seq[j])
   ad.j <- readRDS(paste0(parSet.wd[j], "abund_ad.rds"))
@@ -131,10 +131,9 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   N.j$year <- str_pad(N.j$year, 3, "left", "0")
   
   # save plots
-  # gbPopMod::make_plots_final_t(parSet.wd[j], g.p, 
-                               # filter(N.j, year==max(N.j$year)), p.j)
-  # gbPopMod::make_plots_gifs(parSet.wd[j], g.p, N.j, p.j)
-  if(j==1) gbPopMod::make_plots_lc(sim.wd, lc.df)
+  make_plots_final_t(parSet.wd[j], g.p,  filter(N.j, year==max(N.j$year)), p.j)
+  make_plots_gifs(parSet.wd[j], g.p, N.j, p.j)
+  if(j==1) make_plots_lc(sim.wd, lc.df)
   paste("Finished parameter set", j, "of", length(p.seq))
 }
 stopCluster(p.c)
