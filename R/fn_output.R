@@ -78,7 +78,7 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
 #' @export
 
 make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
-  require(ggplot2)
+  require(ggplot2); theme_set(theme_bw())
   
   # filenames
   ad.ab.f <- paste0(p.wd, "Final_ad_Ab.jpg")
@@ -189,7 +189,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
 #' @export
 
 make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
-  require(gganimate)
+  require(gganimate); theme_set(theme_bw())
   
   # filenames
   ad.ab.f <- paste0(p.wd, "ad_Ab.gif")
@@ -307,7 +307,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
 #' @export
 
 make_plots_lc <- function(p.wd, lc.df) {
-  require(ggplot2)
+  require(ggplot2); theme_set(theme_bw())
   
   # filenames
   opi.f <- paste0(p.wd, "LC_OpI.jpg")
