@@ -111,7 +111,7 @@ for(j in 1:length(p.seq)) {
 ```{r plots, fig.height=8, fig.width=10}
 p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
 foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
-  require(tidyverse); require(gbPopMod)
+  require(tidyverse); require(stringr); require(gbPopMod)
   # setup
   p.j <- paste0(p, ": ", p.seq[j])
   ad.j <- readRDS(paste0(parSet.wd[j], "abund_ad.rds"))
