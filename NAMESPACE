@@ -3,6 +3,8 @@
 export(cell_agg)
 export(cut_assign)
 export(cut_forest)
+export(expand_LCs)
+export(expand_cnpy)
 export(expand_v)
 export(ldd_disperse)
 export(make_fruits)

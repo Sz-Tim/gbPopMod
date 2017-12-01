@@ -19,6 +19,64 @@ expand_v <- function(x, y, sep="_") {
 
 
 
+#' Expand to all combinations of land cover parameter ranges
+#'
+#' This function is similar to \code{\link[base]{expand.grid}} but inputs six
+#' vectors with min and max parameter values (one set for each land cover
+#' category) in addition to a length.out parameter, and returns a list of
+#' vectors, with an element for each combination of land cover parameters.
+#' @param OpI Vector of min & max for Open Invasible
+#' @param Oth Vector of min & max for Other
+#' @param Dec Vector of min & max for Deciduous Forest
+#' @param WP Vector of min & max for White Pine Forest
+#' @param Evg Vector of min & max for Evergreen Forest
+#' @param Mxd Vector of min & max for Mixed Forest
+#' @param length.out Number of parameter values per land cover category
+#' @return List of vectors, each length 6
+#' @keywords expand.grid, sensitivity
+#' @export
+
+expand_LCs <- function(OpI=c(0.01, 0.99), Oth=c(0.01, 0.99), Dec=c(0.01, 0.99),
+                       WP=c(0.01, 0.99), Evg=c(0.01, 0.99), Mxd=c(0.01, 0.99),
+                       length_out=2) {
+  g <- as.matrix(expand.grid(OpI=seq(OpI[1], OpI[2], length.out=length_out),
+                             Oth=seq(Oth[1], Oth[2], length.out=length_out),
+                             Dec=seq(Dec[1], Dec[2], length.out=length_out),
+                             WP=seq(WP[1], WP[2], length.out=length_out),
+                             Evg=seq(Evg[1], Evg[2], length.out=length_out),
+                             Mxd=seq(Mxd[1], Mxd[2], length.out=length_out)))
+  return(l=lapply(seq_len(nrow(g)), function(i) g[i,]))
+}
+
+
+
+
+#' Expand to all combinations of canopy parameter ranges
+#'
+#' This function is similar to \code{\link[base]{expand.grid}} but inputs two
+#' vectors with min and max parameter values (one set for open canopy and one
+#' set for closed canopy) in addition to a length.out parameter, and returns a
+#' list of vectors, with an element for each combination of land cover
+#' parameters.
+#' @param Open Vector of min & max for open canopy categories (open invasible
+#'   and other)
+#' @param Closed Vector of min & max for closed canopy categories (deciduous,
+#'   white pine, other evergreen, and mixed forests)
+#' @param length.out Number of parameter values per land cover category
+#' @return List of vectors, each length 6
+#' @keywords expand.grid, sensitivity
+#' @export
+
+expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
+  g <- expand.grid(Op=seq(Op[1], Op[2], length.out=length_out),
+                   Cl=seq(Cl[1], Cl[2], length.out=length_out))
+  g <- t(apply(g, 1, function(i) rep(i, times=c(2,4))))
+  return(l=lapply(seq_len(nrow(g)), function(i) g[i,]))
+}
+
+
+
+
 #' Aggregate compositional data within each cell
 #'
 #' This function reformats and calculates cell-means based on land cover

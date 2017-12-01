@@ -33,10 +33,10 @@ data(lc.rct)
 ## set parameters
 ##---
 
-  p <- "pr.sb"
-  p.seq <- seq(0.01, 0.99, length.out=5)
-  n.sim <- 2
-  g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.ldd=1, n.cores=4)
+  p <- "pr.s"
+  p.seq <- expand_cnpy(Op=c(0.01, 0.99), Cl=c(0.01, 0.99), length_out=3)
+  n.sim <- 3
+  g.p <- set_g_p(tmax=10, lc.r=30, lc.c=30, n.ldd=1, n.cores=3)
   control.p <- set_control_p()
   set.seed(225)
   
@@ -80,7 +80,7 @@ require(doSNOW)
 for(j in 1:length(p.seq)) {
   # setup for particular parameter value
   set.seed(225)
-  g.p[[p]] <- p.seq[j]
+  g.p[[p]] <- p.seq[[j]]
   
   # run n.sim simulations
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
