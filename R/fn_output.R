@@ -312,5 +312,100 @@ make_plots_lc <- function(p.wd, lc.df) {
 
 
 
+#' Save plots of buckthorn distribution summaries
+#'
+#' This function saves plots of buckthorn distribution summary statistics for
+#' the whole grid across simulations. This includes plots for the mean and sd of
+#' the proportion of cells occupied, of the proportion of low density cells, and
+#' of proportion of occupied cells at carrying capacity.
+#' @param par.wd Directory to store file in
+#' @param grid.sum Dataframe or tibble with processed output for whole-grid summaries
+#' @param txt Text to append to start of plot title
+#' @return None
+#' @keywords plots, store, save, output
+#' @export
+
+make_plots_gridSummary <- function(p.wd, grid.sum, txt=NULL) {
+  require(scales); require(ggplot2); theme_set(theme_bw())
+  p.col <- seq_gradient_pal(low="dodgerblue", 
+                            high="darkgreen")(as.numeric(levels(grid.sum$p.j)))
+  
+  # filenames
+  f.ls <- list(paste0(p.wd, "pOcc_ad_mn.jpg"),
+               paste0(p.wd, "pOcc_ad_sd.jpg"),
+               paste0(p.wd, "pOcc_sb_mn.jpg"),
+               paste0(p.wd, "pOcc_sb_sd.jpg"),
+               paste0(p.wd, "pLess5_mn.jpg"),
+               paste0(p.wd, "pLess5_sd.jpg"),
+               paste0(p.wd, "pK_Occ_mn.jpg"),
+               paste0(p.wd, "pK_Occ_sd.jpg"))
+  
+  # Adult occupancy
+  ad.o.mn <- ggplot(grid.sum, aes(x=year, y=prOcc.ad.mn, colour=p.j)) + 
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) + 
+    labs(x="Year", y="Mean proportion of occupied cells (adults)")
+  ggsave(f.ls[[1]], ad.o.mn, width=8, height=6)
+  rm(ad.o.mn)
+  
+  # Adult occupancy
+  ad.o.sd <- ggplot(grid.sum, aes(x=year, y=prOcc.ad.sd, colour=p.j)) + 
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
+    labs(x="Year", y="Std dev of proportion of occupied cells (adults)")
+  ggsave(f.ls[[2]], ad.o.sd, width=8, height=6)
+  rm(ad.o.sd)
+
+  # Seed occupancy
+  sb.o.mn <- ggplot(grid.sum, aes(x=year, y=prOcc.sb.mn, colour=p.j)) +
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) +  
+    labs(x="Year", y="Mean proportion of occupied cells (seeds)")
+  ggsave(f.ls[[3]], sb.o.mn, width=8, height=6)
+  rm(sb.o.mn)
+  
+  # Seed occupancy
+  sb.o.sd <- ggplot(grid.sum, aes(x=year, y=prOcc.sb.sd, colour=p.j)) + 
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
+    labs(x="Year", y="Std dev of proportion of occupied cells (seeds)")
+  ggsave(f.ls[[4]], sb.o.sd, width=8, height=6)
+  rm(sb.o.sd)
+  
+  # Low density cells
+  LD.mn <- ggplot(grid.sum, aes(x=year, y=prLess5.mn, colour=p.j)) + 
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) + 
+    labs(x="Year", y="Mean proportion of low density cells (≤5 adults)")
+  ggsave(f.ls[[5]], LD.mn, width=8, height=6)
+  rm(LD.mn)
+  
+  # Low density cells
+  LD.sd <- ggplot(grid.sum, aes(x=year, y=prLess5.sd, colour=p.j)) + 
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
+    labs(x="Year", y="Std dev of proportion of low density cells (≤5 adults)")
+  ggsave(f.ls[[6]], LD.sd, width=8, height=6)
+  rm(LD.sd)
+  
+  # Occupied cells at K
+  K.mn <- ggplot(grid.sum, aes(x=year, y=K.Occ.mn, colour=p.j)) +
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) + 
+    labs(x="Year", y="Mean proportion of occupied cells at K")
+  ggsave(f.ls[[7]], K.mn, width=8, height=6)
+  rm(K.mn)
+  
+  # Occupied cells at K
+  K.sd <- ggplot(grid.sum, aes(x=year, y=K.Occ.sd, colour=p.j)) + 
+    geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
+    labs(x="Year", y="Std dev of proportion of occupied cells at K")
+  ggsave(f.ls[[8]], K.sd, width=8, height=6)
+  rm(K.sd)
+
+  
+  # Check for success
+  for(f in 1:length(f.ls)) {
+    if(file.exists(f.ls[[f]])) { 
+      cat(f.ls[[f]], "saved\n")
+    } else { 
+      cat("--- Error:", f.ls[[f]], "not saved! \n") }
+  }
+}
+
+
 
 
