@@ -81,19 +81,19 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
   require(ggplot2); theme_set(theme_bw())
   
   # filenames
-  ad.ab.f <- paste0(p.wd, "Final_ad_Ab.jpg")
-  sb.ab.f <- paste0(p.wd, "Final_sb_Ab.jpg")
-  ad.sd.f <- paste0(p.wd, "Final_ad_sd.jpg")
-  sb.sd.f <- paste0(p.wd, "Final_sb_sd.jpg")
-  ad.pa.f <- paste0(p.wd, "Final_ad_PA.jpg")
-  sb.pa.f <- paste0(p.wd, "Final_sb_PA.jpg")
+  f.ls <- list(paste0(p.wd, "Final_ad_Ab.jpg"), 
+               paste0(p.wd, "Final_sb_Ab.jpg"), 
+               paste0(p.wd, "Final_ad_sd.jpg"), 
+               paste0(p.wd, "Final_sb_sd.jpg"),
+               paste0(p.wd, "Final_ad_PA.jpg"),
+               paste0(p.wd, "Final_sb_PA.jpg"))
   
   # Adult abundance
   ad.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.adult, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Adult abundance. Year", g.p$tmax+1))
-  ggsave(ad.ab.f, ad.ab.fin, width=8, height=6, units="in")
+  ggsave(f.ls[[1]], ad.ab.fin, width=8, height=6, units="in")
   rm(ad.ab.fin)
   
   # Seed bank log abundance
@@ -101,7 +101,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "log seed abundance. Year", g.p$tmax+1))
-  ggsave(sb.ab.f, sb.ab.fin, width=8, height=6, units="in")
+  ggsave(f.ls[[2]], sb.ab.fin, width=8, height=6, units="in")
   rm(sb.ab.fin)
   
   # Adult variability
@@ -109,15 +109,15 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Adult abundance sd. Year", g.p$tmax+1))
-  ggsave(ad.sd.f, ad.sd.fin, width=8, height=6, units="in")
+  ggsave(f.ls[[3]], ad.sd.fin, width=8, height=6, units="in")
   rm(ad.sd.fin)
   
-  # Adult variability
+  # Seed bank variability
   sb.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.sb, colour=inbd)) +
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Seed bank abundance sd. Year", g.p$tmax+1))
-  ggsave(sb.sd.f, sb.sd.fin, width=8, height=6, units="in")
+  ggsave(f.ls[[4]], sb.sd.fin, width=8, height=6, units="in")
   rm(sb.sd.fin)
   
   # Adult presence/absence
@@ -125,7 +125,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Adult presence. Year", g.p$tmax+1))
-  ggsave(ad.pa.f, adult.pa.fin, width=8, height=6, units="in")
+  ggsave(f.ls[[5]], adult.pa.fin, width=8, height=6, units="in")
   rm(adult.pa.fin)
   
   # Seed bank presence/absence
@@ -133,39 +133,15 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") +
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Seed presence. Year", g.p$tmax+1))
-  ggsave(sb.pa.f, sb.pa.fin, width=8, height=6, units="in")
+  ggsave(f.ls[[6]], sb.pa.fin, width=8, height=6, units="in")
   rm(sb.pa.fin)
   
   # Check for success
-  if(file.exists(ad.ab.f)) { 
-    cat("Final adult abundance saved as", ad.ab.f, "\n") 
-  } else {
-    cat("--- Error: Final adult abundance not saved! \n")
-  }
-  if(file.exists(sb.ab.f)) { 
-    cat("Final seed bank abundance saved as", sb.ab.f, "\n") 
-  } else {
-    cat("--- Error: Final seed bank abundance not saved! \n")
-  }
-  if(file.exists(ad.sd.f)) { 
-    cat("Final adult sd saved as", ad.sd.f, "\n") 
-  } else {
-    cat("--- Error: Final adult sd not saved! \n")
-  }
-  if(file.exists(sb.sd.f)) { 
-    cat("Final seed bank sd saved as", sb.sd.f, "\n") 
-  } else {
-    cat("--- Error: Final seedbank sd not saved! \n")
-  }
-  if(file.exists(ad.pa.f)) { 
-    cat("Final adult presence saved as", ad.pa.f, "\n") 
-  } else {
-    cat("--- Error: Final adult presence not saved! \n")
-  }
-  if(file.exists(sb.pa.f)) { 
-    cat("Final seed bank presence saved as", sb.pa.f, "\n") 
-  } else {
-    cat("--- Error: Final seed bank presence not saved! \n")
+  for(f in 1:length(f.ls)) {
+    if(file.exists(f.ls[[f]])) { 
+      cat(f.ls[[f]], "saved\n")
+    } else { 
+      cat("--- Error:", f.ls[[f]], "not saved! \n") }
   }
 }
 
@@ -192,20 +168,20 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
   require(gganimate); theme_set(theme_bw())
   
   # filenames
-  ad.ab.f <- paste0(p.wd, "ad_Ab.gif")
-  sb.ab.f <- paste0(p.wd, "sb_Ab.gif")
-  ad.sd.f <- paste0(p.wd, "ad_sd.gif")
-  sb.sd.f <- paste0(p.wd, "sb_sd.gif")
-  ad.pa.f <- paste0(p.wd, "ad_PA.gif")
-  sb.pa.f <- paste0(p.wd, "sb_PA.gif")
-  ad.lo.f <- paste0(p.wd, "ad_LoDens.gif")
+  f.ls <- list(paste0(p.wd, "ad_Ab.gif"),
+               paste0(p.wd, "sb_Ab.gif"),
+               paste0(p.wd, "ad_sd.gif"),
+               paste0(p.wd, "sb_sd.gif"),
+               paste0(p.wd, "ad_PA.gif"),
+               paste0(p.wd, "sb_PA.gif"),
+               paste0(p.wd, "ad_LoDens.gif"))
   
   # Adult abundance
   ad.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.adult, frame=year, colour=inbd)) + 
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Adult abundance. Year"))
-  gganimate(ad.ab, ad.ab.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(ad.ab, f.ls[[1]], interval=0.2, ani.width=800, ani.height=600)
   rm(ad.ab)
   
   # Seed bank log abundance
@@ -213,7 +189,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "log seed abundance. Year"))
-  gganimate(sb.ab, sb.ab.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(sb.ab, f.ls[[2]], interval=0.2, ani.width=800, ani.height=600)
   rm(sb.ab)
   
   # Adult variability
@@ -221,7 +197,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Adult sd. Year"))
-  gganimate(ad.sd, ad.sd.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(ad.sd, f.ls[[3]], interval=0.2, ani.width=800, ani.height=600)
   rm(ad.sd)
   
   # Seed bank variability
@@ -229,7 +205,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Seed bank sd. Year"))
-  gganimate(sb.sd, sb.sd.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(sb.sd, f.ls[[4]], interval=0.2, ani.width=800, ani.height=600)
   rm(sb.sd)
   
   # Adult presence/absence
@@ -237,7 +213,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Adult presence. Year"))
-  gganimate(adult.pa, ad.pa.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(adult.pa, f.ls[[5]], interval=0.2, ani.width=800, ani.height=600)
   rm(adult.pa)
   
   # Seed bank presence/absence
@@ -245,51 +221,22 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
     geom_tile() + scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA)) + 
     ggtitle(paste(txt, "Seed presence. Year"))
-  gganimate(sb.pa, sb.pa.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(sb.pa, f.ls[[6]], interval=0.2, ani.width=800, ani.height=600)
   rm(sb.pa)
   
   # Low adult density
   adult.lo <- ggplot(N.out, aes(x=x, y=-y, fill=N.less5, frame=year)) +
     geom_tile() + ggtitle(paste(txt, "Blue: Adult density ≤ 5. Year")) + 
     scale_fill_gradient2(low="white", mid="blue", high="pink", midpoint=1)
-  gganimate(adult.lo, ad.lo.f, interval=0.2, ani.width=800, ani.height=600)
+  gganimate(adult.lo, f.ls[[7]], interval=0.2, ani.width=800, ani.height=600)
   rm(adult.lo)
   
   # Check for success
-  if(file.exists(ad.ab.f)) { 
-    cat("Adult abundance saved as", ad.ab.f, "\n") 
-  } else {
-    cat("--- Error: Adult abundance not saved! \n")
-  }
-  if(file.exists(sb.ab.f)) { 
-    cat("Seed bank abundance saved as", sb.ab.f, "\n") 
-  } else {
-    cat("--- Error: Seed bank abundance not saved! \n")
-  }
-  if(file.exists(ad.sd.f)) { 
-    cat("Final adult sd saved as", ad.sd.f, "\n") 
-  } else {
-    cat("--- Error: Final adult sd not saved! \n")
-  }
-  if(file.exists(sb.sd.f)) { 
-    cat("Final seed bank sd saved as", sb.sd.f, "\n") 
-  } else {
-    cat("--- Error: Final seedbank sd not saved! \n")
-  }
-  if(file.exists(ad.pa.f)) { 
-    cat("Adult presence saved as", ad.pa.f, "\n") 
-  } else {
-    cat("--- Error: Adult presence not saved! \n")
-  }
-  if(file.exists(sb.pa.f)) { 
-    cat("Seed bank presence saved as", sb.pa.f, "\n") 
-  } else {
-    cat("--- Error: Seed bank presence not saved! \n")
-  }
-  if(file.exists(ad.lo.f)) { 
-    cat("Low adult abundance saved as", ad.lo.f, "\n") 
-  } else {
-    cat("--- Error: Low adult abundance not saved! \n")
+  for(f in 1:length(f.ls)) {
+    if(file.exists(f.ls[[f]])) { 
+      cat(f.ls[[f]], "saved\n")
+    } else { 
+      cat("--- Error:", f.ls[[f]], "not saved! \n") }
   }
 }
 
@@ -310,79 +257,55 @@ make_plots_lc <- function(p.wd, lc.df) {
   require(ggplot2); theme_set(theme_bw())
   
   # filenames
-  opi.f <- paste0(p.wd, "LC_OpI.jpg")
-  oth.f <- paste0(p.wd, "LC_Oth.jpg")
-  dec.f <- paste0(p.wd, "LC_Dec.jpg")
-  wp.f <- paste0(p.wd, "LC_WP.jpg")
-  evg.f <- paste0(p.wd, "LC_Evg.jpg")
-  mxd.f <- paste0(p.wd, "LC_Mxd.jpg")
+  f.ls <- list(paste0(p.wd, "LC_OpI.jpg"),
+               paste0(p.wd, "LC_Oth.jpg"),
+               paste0(p.wd, "LC_Dec.jpg"),
+               paste0(p.wd, "LC_WP.jpg"),
+               paste0(p.wd, "LC_Evg.jpg"),
+               paste0(p.wd, "LC_Mxd.jpg"))
   
   p.opi <- ggplot(lc.df, aes(x=x, y=-y, fill=OpI, colour=inbd)) + geom_tile() +
     scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="red", limits=c(0,1))
-  ggsave(opi.f, p.opi, width=10, height=7)
+  ggsave(f.ls[[1]], p.opi, width=10, height=7)
   rm(p.opi)
   
   p.oth <- ggplot(lc.df, aes(x=x, y=-y, fill=Oth, colour=inbd)) + geom_tile() +
     scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="gray30", limits=c(0,1))
-  ggsave(oth.f, p.oth, width=10, height=7)
+  ggsave(f.ls[[2]], p.oth, width=10, height=7)
   rm(p.oth)
   
   p.dec <- ggplot(lc.df, aes(x=x, y=-y, fill=Dec, colour=inbd)) + geom_tile() +
     scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="green3", limits=c(0,1))
-  ggsave(dec.f, p.dec, width=10, height=7)
+  ggsave(f.ls[[3]], p.dec, width=10, height=7)
   rm(p.dec)
   
   p.wp <- ggplot(lc.df, aes(x=x, y=-y, fill=WP, colour=inbd)) + geom_tile() +
     scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="orchid", limits=c(0,1))
-  ggsave(wp.f, p.wp, width=10, height=7)
+  ggsave(f.ls[[4]], p.wp, width=10, height=7)
   rm(p.wp)
   
   p.evg <- ggplot(lc.df, aes(x=x, y=-y, fill=Evg, colour=inbd)) + geom_tile() +
     scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="darkgreen", limits=c(0,1))
-  ggsave(evg.f, p.evg, width=10, height=7)
+  ggsave(f.ls[[5]], p.evg, width=10, height=7)
   rm(p.evg)
   
   p.mxd <- ggplot(lc.df, aes(x=x, y=-y, fill=Mxd, colour=inbd)) + geom_tile() +
     scale_colour_manual(values=c("gray", NA)) + 
     scale_fill_gradient(low="white", high="yellowgreen", limits=c(0,1))
-  ggsave(mxd.f, p.mxd, width=10, height=7)
+  ggsave(f.ls[[6]], p.mxd, width=10, height=7)
   rm(p.mxd)
   
   # Check for success
-  if(file.exists(opi.f)) { 
-    cat("Open invasible proportions saved as", opi.f, "\n") 
-  } else {
-    cat("--- Error: Open invasible proportions not saved! \n")
-  }
-  if(file.exists(oth.f)) { 
-    cat("Other proportions saved as", oth.f, "\n") 
-  } else {
-    cat("--- Error: Other proportions not saved! \n")
-  }
-  if(file.exists(dec.f)) { 
-    cat("Deciduous forest proportions saved as", dec.f, "\n") 
-  } else {
-    cat("--- Error: Deciduous forest proportions not saved! \n")
-  }
-  if(file.exists(wp.f)) { 
-    cat("White pine forest proportions saved as", wp.f, "\n") 
-  } else {
-    cat("--- Error: White pine forest proportions not saved! \n")
-  }
-  if(file.exists(evg.f)) { 
-    cat("Evergreen forest proportions saved as", evg.f, "\n") 
-  } else {
-    cat("--- Error: Evergreen forest proportions not saved! \n")
-  }
-  if(file.exists(mxd.f)) { 
-    cat("Mixed forest proportions saved as", mxd.f, "\n") 
-  } else {
-    cat("--- Error: Mixed forest proportions not saved! \n")
+  for(f in 1:length(f.ls)) {
+    if(file.exists(f.ls[[f]])) { 
+      cat(f.ls[[f]], "saved\n")
+    } else { 
+      cat("--- Error:", f.ls[[f]], "not saved! \n") }
   }
 }
 
