@@ -117,10 +117,12 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   p.j <- paste0(p, ": ", p.seq[j])
   ad.j <- readRDS(paste0(parSet.wd[j], "abund_ad.rds"))
   sb.j <- readRDS(paste0(parSet.wd[j], "abund_sb.rds"))
+  g.p <- readRDS(paste0(parSet.wd[j], "pars_glbl.rds"))
   
   # munge data
+  ## cell summaries
   ad.mn <- apply(ad.j, 1:2, mean)
-  N.j <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+  cell.j <- cbind(lc.df, ad.mn) %>% as.tibble %>%
     gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
     mutate(sd.ad=c(apply(ad.j, 1:2, sd)),
            pP.ad=c(apply(ad.j > 0, 1:2, mean)),
@@ -128,16 +130,46 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
            sd.sb=c(apply(log(sb.j+1), 1:2, sd)),
            pP.sb=c(apply(sb.j > 0, 1:2, mean)),
            N.less5=c(ad.mn > 0))
-  N.j$N.less5 <- N.j$N.less5 + c(ad.mn > 5)
-  N.j$year <- str_pad(N.j$year, 3, "left", "0")
+  cell.j$N.less5 <- cell.j$N.less5 + c(ad.mn > 5)
+  cell.j$year <- str_pad(cell.j$year, 3, "left", "0")
+  cell.j$p <- p
+  cell.j$p.j <- p.seq[j]
+  ## landscape summaries
+  occ.s.ad <- apply(ad.j[lc.df$inbd,,]>0, 2:3, mean)
+  occ.s.sb <- apply(sb.j[lc.df$inbd,,]>0, 2:3, mean)
+  less5.s <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5, 2:3, mean)
+  K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
+  K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 2:3, mean)/occ.s.ad
+  grid.j <- tibble(year=unique(cell.j$year),
+                   p=p,
+                   p.j=p.seq[j],
+                   prOcc.ad.mn=apply(occ.s.ad, 1, mean),
+                   prOcc.ad.sd=apply(occ.s.ad, 1, sd),
+                   prOcc.sb.mn=apply(occ.s.sb, 1, mean),
+                   prOcc.sb.sd=apply(occ.s.sb, 1, sd),
+                   prLess5.mn=apply(less5.s, 1, mean),
+                   prLess5.sd=apply(less5.s, 1, sd),
+                   K.Occ.mn=apply(K.s, 1, mean),
+                   K.Occ.sd=apply(K.s, 1, sd))
+  
+  # save data summaries
+  write_csv(cell.j, paste0(parSet.wd[j], "cell_j.csv"))
+  write_csv(grid.j, paste0(parSet.wd[j], "grid_j.csv"))
+  rm(ad.j); rm(sb.j)
   
   # save plots
-  make_plots_final_t(parSet.wd[j], g.p,  filter(N.j, year==max(N.j$year)), p.j)
-  make_plots_gifs(parSet.wd[j], g.p, N.j, p.j)
+  make_plots_final_t(parSet.wd[j], g.p,  
+                     filter(cell.j, year==max(cell.j$year)), p.j)
+  make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
   if(j==1) make_plots_lc(sim.wd, lc.df)
   paste("Finished parameter set", j, "of", length(p.seq))
 }
 stopCluster(p.c)
+
+# grid summary plots
+grid.sum <- map_df(parSet.wd, ~(read_csv(paste0(., "grid_j.csv")))) %>%
+  mutate(p.j=as.factor(p.j), year=as.numeric(year))
+make_plots_gridSummary(par.wd, grid.sum)
 ```
 
 
