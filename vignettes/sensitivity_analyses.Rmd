@@ -33,10 +33,10 @@ data(lc.rct)
 ## set parameters
 ##---
 
-  p <- "pr.s"
-  p.seq <- expand_cnpy(Op=c(0.01, 0.99), Cl=c(0.01, 0.99), length_out=3)
-  n.sim <- 3
-  g.p <- set_g_p(tmax=10, lc.r=30, lc.c=30, n.ldd=1, n.cores=3)
+  p <- "pr.eat"
+  p.seq <- expand_cnpy(Op=c(0.1, 0.99), Cl=c(0.1, 0.99), length_out=5)
+  n.sim <- 20
+  g.p <- set_g_p(tmax=100, lc.r=200, lc.c=200, n.ldd=1, n.cores=8)
   control.p <- set_control_p()
   set.seed(225)
   
