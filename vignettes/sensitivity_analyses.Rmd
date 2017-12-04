@@ -50,6 +50,8 @@ data(lc.rct)
     filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
     mutate(id=row_number(), 
            id.inbd=min_rank(na_if(inbd*id, 0)))
+  ggplot(lc.df, aes(x=x, y=-y, fill=inbd)) + geom_tile() +
+    scale_fill_manual("Inbounds", values=c("gray", "#543005"))
   ngrid <- nrow(lc.df)
   ncell <- sum(lc.df$inbd)
   
@@ -133,7 +135,17 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   cell.j$N.less5 <- cell.j$N.less5 + c(ad.mn > 5)
   cell.j$year <- str_pad(cell.j$year, 3, "left", "0")
   cell.j$p <- p
-  cell.j$p.j <- p.seq[j]
+  if(length(p.seq[[j]])==1) {
+    cell.j$p.j <- p.seq[j]
+  } else {
+    cell.j$p.j <- as.character(p.seq[j])
+    cell.j$p.j.OpI <- p.seq[[j]][1]
+    cell.j$p.j.Oth <- p.seq[[j]][2]
+    cell.j$p.j.Dec <- p.seq[[j]][3]
+    cell.j$p.j.WP <- p.seq[[j]][4]
+    cell.j$p.j.Evg <- p.seq[[j]][5]
+    cell.j$p.j.Mxd <- p.seq[[j]][6]
+  }
   ## landscape summaries
   occ.s.ad <- apply(ad.j[lc.df$inbd,,]>0, 2:3, mean)
   occ.s.sb <- apply(sb.j[lc.df$inbd,,]>0, 2:3, mean)
@@ -141,8 +153,6 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
   K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 2:3, mean)/occ.s.ad
   grid.j <- tibble(year=unique(cell.j$year),
-                   p=p,
-                   p.j=p.seq[j],
                    prOcc.ad.mn=apply(occ.s.ad, 1, mean),
                    prOcc.ad.sd=apply(occ.s.ad, 1, sd),
                    prOcc.sb.mn=apply(occ.s.sb, 1, mean),
@@ -150,7 +160,20 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
                    prLess5.mn=apply(less5.s, 1, mean),
                    prLess5.sd=apply(less5.s, 1, sd),
                    K.Occ.mn=apply(K.s, 1, mean),
-                   K.Occ.sd=apply(K.s, 1, sd))
+                   K.Occ.sd=apply(K.s, 1, sd),
+                   p=p)
+  if(length(p.seq[[j]])==1) {
+    grid.j$p.j <- p.seq[j]
+  } else {
+    grid.j$p.j <- as.character(p.seq[j])
+    grid.j$p.j.OpI <- p.seq[[j]][1]
+    grid.j$p.j.Oth <- p.seq[[j]][2]
+    grid.j$p.j.Dec <- p.seq[[j]][3]
+    grid.j$p.j.WP <- p.seq[[j]][4]
+    grid.j$p.j.Evg <- p.seq[[j]][5]
+    grid.j$p.j.Mxd <- p.seq[[j]][6]
+  }
+                   
   
   # save data summaries
   write_csv(cell.j, paste0(parSet.wd[j], "cell_j.csv"))
@@ -160,7 +183,7 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   # save plots
   make_plots_final_t(parSet.wd[j], g.p,  
                      filter(cell.j, year==max(cell.j$year)), p.j)
-  make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
+  # make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
   if(j==1) make_plots_lc(sim.wd, lc.df)
   paste("Finished parameter set", j, "of", length(p.seq))
 }
@@ -168,8 +191,9 @@ stopCluster(p.c)
 
 # grid summary plots
 grid.sum <- map_df(parSet.wd, ~(read_csv(paste0(., "grid_j.csv")))) %>%
-  mutate(p.j=as.factor(p.j), year=as.numeric(year))
-make_plots_gridSummary(par.wd, grid.sum)
+  mutate(year=as.numeric(year)) %>%
+  mutate_at(vars(p.j:p.j.Mxd), as.factor)
+make_plots_gridSummary(par.wd, grid.sum, byLC=(length(p.seq[[1]])>1))
 ```
 
 
