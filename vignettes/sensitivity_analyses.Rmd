@@ -100,6 +100,7 @@ for(j in 1:length(p.seq)) {
   if(!dir.exists(here(parSet.wd[j]))) dir.create(here(parSet.wd[j]))
   save_pars(parSet.wd[j], g.p, control.p)
   save_abundances(parSet.wd[j], ad.j, sb.j)
+  rm(ad.j); rm(sb.j)
   
   # progress
   cat("Finished parameter set", j, "of", length(p.seq), "\n\n")
