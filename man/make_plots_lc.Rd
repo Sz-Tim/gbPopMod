@@ -4,13 +4,17 @@
 \alias{make_plots_lc}
 \title{Save plots of initial land cover proportions}
 \usage{
-make_plots_lc(p.wd, lc.df)
+make_plots_lc(p.wd, lc.df, w = 10, h = 7)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
 
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
+
+\item{w}{Figure output width (inches)}
+
+\item{h}{Figure output height (inches)}
 }
 \value{
 None

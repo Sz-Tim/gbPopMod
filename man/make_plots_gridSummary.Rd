@@ -4,7 +4,8 @@
 \alias{make_plots_gridSummary}
 \title{Save plots of buckthorn distribution summaries}
 \usage{
-make_plots_gridSummary(p.wd, grid.sum, byLC = FALSE, txt = NULL)
+make_plots_gridSummary(p.wd, grid.sum, byLC = FALSE, txt = NULL, w = 8,
+  h = 6)
 }
 \arguments{
 \item{grid.sum}{Dataframe or tibble with processed output for whole-grid
@@ -14,6 +15,10 @@ summaries}
 created for each LC?}
 
 \item{txt}{Text to append to start of plot title}
+
+\item{w}{Figure output width (inches)}
+
+\item{h}{Figure output height (inches)}
 
 \item{par.wd}{Directory to store file in}
 }

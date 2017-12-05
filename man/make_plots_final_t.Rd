@@ -4,7 +4,7 @@
 \alias{make_plots_final_t}
 \title{Save plots of final buckthorn distribution}
 \usage{
-make_plots_final_t(p.wd, g.p, N.final, txt = NULL)
+make_plots_final_t(p.wd, g.p, N.final, txt = NULL, w = 8, h = 6)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
@@ -13,10 +13,14 @@ make_plots_final_t(p.wd, g.p, N.final, txt = NULL)
 
 \item{N.final}{Dataframe or tibble with processed output from
 \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
-to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}, filtered
+to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.L5}, filtered
 to include only the final time step}
 
 \item{txt}{Text to append to start of plot title}
+
+\item{w}{Figure output width (inches)}
+
+\item{h}{Figure output height (inches)}
 }
 \value{
 None

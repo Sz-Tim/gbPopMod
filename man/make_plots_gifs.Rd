@@ -4,7 +4,7 @@
 \alias{make_plots_gifs}
 \title{Save gifs of buckthorn distribution through time}
 \usage{
-make_plots_gifs(p.wd, g.p, N.out, txt = NULL)
+make_plots_gifs(p.wd, g.p, N.out, txt = NULL, w = 800, h = 600, i = 0.2)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
@@ -13,9 +13,15 @@ make_plots_gifs(p.wd, g.p, N.out, txt = NULL)
 
 \item{N.out}{Dataframe or tibble with processed output from
 \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
-to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}}
+to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.L5}}
 
 \item{txt}{Text to append to start of plot title}
+
+\item{w}{Figure output width (pixels)}
+
+\item{h}{Figure output height (pixels)}
+
+\item{i}{Gif framerate}
 }
 \value{
 None
