@@ -70,78 +70,52 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param N.final Dataframe or tibble with processed output from
 #'   \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
-#'   to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}, filtered
+#'   to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.L5}, filtered
 #'   to include only the final time step
 #' @param txt Text to append to start of plot title
+#' @param w Figure output width (inches)
+#' @param h Figure output height (inches)
 #' @return None
 #' @keywords plots, store, save, output
 #' @export
 
-make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
+make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
   require(ggplot2); theme_set(theme_bw())
   
   # filenames
-  f.ls <- list(paste0(p.wd, "Final_ad_Ab.jpg"), 
-               paste0(p.wd, "Final_sb_Ab.jpg"), 
-               paste0(p.wd, "Final_ad_sd.jpg"), 
-               paste0(p.wd, "Final_sb_sd.jpg"),
-               paste0(p.wd, "Final_ad_PA.jpg"),
-               paste0(p.wd, "Final_sb_PA.jpg"))
+  f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP")
+  f.full <- paste0(p.wd, "Final_", f.nm, ".jpg") 
+  
+  p.fin <- ggplot(N.final, aes(x=x, y=-y, colour=inbd)) +
+    scale_fill_gradient(low="white", high="red") +
+    scale_colour_manual(values=c("gray", NA))
   
   # Adult abundance
-  ad.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.adult, colour=inbd)) +
-    geom_tile() + scale_fill_gradient(low="white", high="red") +
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Adult abundance. Year", g.p$tmax+1))
-  ggsave(f.ls[[1]], ad.ab.fin, width=8, height=6, units="in")
-  rm(ad.ab.fin)
-  
-  # Seed bank log abundance
-  sb.ab.fin <- ggplot(N.final, aes(x=x, y=-y, fill=N.sb, colour=inbd)) +
-    geom_tile() + scale_fill_gradient(low="white", high="red") +
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "log seed abundance. Year", g.p$tmax+1))
-  ggsave(f.ls[[2]], sb.ab.fin, width=8, height=6, units="in")
-  rm(sb.ab.fin)
-  
-  # Adult variability
-  ad.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.ad, colour=inbd)) +
-    geom_tile() + scale_fill_gradient(low="white", high="red") +
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Adult abundance sd. Year", g.p$tmax+1))
-  ggsave(f.ls[[3]], ad.sd.fin, width=8, height=6, units="in")
-  rm(ad.sd.fin)
-  
-  # Seed bank variability
-  sb.sd.fin <- ggplot(N.final, aes(x=x, y=-y, fill=sd.sb, colour=inbd)) +
-    geom_tile() + scale_fill_gradient(low="white", high="red") +
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Seed bank abundance sd. Year", g.p$tmax+1))
-  ggsave(f.ls[[4]], sb.sd.fin, width=8, height=6, units="in")
-  rm(sb.sd.fin)
-  
-  # Adult presence/absence
-  adult.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=pP.ad, colour=inbd)) +
-    geom_tile() + scale_fill_gradient(low="white", high="red") +
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Adult presence. Year", g.p$tmax+1))
-  ggsave(f.ls[[5]], adult.pa.fin, width=8, height=6, units="in")
-  rm(adult.pa.fin)
-  
-  # Seed bank presence/absence
-  sb.pa.fin <- ggplot(N.final, aes(x=x, y=-y, fill=pP.sb, colour=inbd)) +
-    geom_tile() + scale_fill_gradient(low="white", high="red") +
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Seed presence. Year", g.p$tmax+1))
-  ggsave(f.ls[[6]], sb.pa.fin, width=8, height=6, units="in")
-  rm(sb.pa.fin)
+  ggsave(f.full[1], width=w, height=h, 
+         plot=p.fin + geom_tile(aes_string(fill=f.nm[1])) +
+           ggtitle(paste(txt, "Adult mean(abundance). Year", g.p$tmax+1)))
+  ggsave(f.full[2], width=w, height=h, 
+         plot=p.fin + geom_tile(aes_string(fill=f.nm[2])) +
+           ggtitle(paste(txt, "Seed mean(log abundance). Year", g.p$tmax+1)))
+  ggsave(f.full[3], width=w, height=h, 
+         plot=p.fin + geom_tile(aes_string(fill=f.nm[3])) +
+           ggtitle(paste(txt, "Adult sd(abundance). Year", g.p$tmax+1)))
+  ggsave(f.full[4], width=w, height=h, 
+         plot=p.fin + geom_tile(aes_string(fill=f.nm[4])) +
+           ggtitle(paste(txt, "Seed sd(log abundance). Year", g.p$tmax+1)))
+  ggsave(f.full[5], width=w, height=h, 
+         plot=p.fin + geom_tile(aes_string(fill=f.nm[5])) +
+           ggtitle(paste(txt, "Adult mean(presence). Year", g.p$tmax+1)))
+  ggsave(f.full[6], width=w, height=h, 
+         plot=p.fin + geom_tile(aes_string(fill=f.nm[6])) +
+           ggtitle(paste(txt, "Seed mean(presence). Year", g.p$tmax+1)))
   
   # Check for success
-  for(f in 1:length(f.ls)) {
-    if(file.exists(f.ls[[f]])) { 
-      cat(f.ls[[f]], "saved\n")
+  for(f in 1:length(f.full)) {
+    if(file.exists(f.full[f])) { 
+      cat(f.full[f], "saved\n")
     } else { 
-      cat("--- Error:", f.ls[[f]], "not saved! \n") }
+      cat("--- Error:", f.full[f], "not found! \n") }
   }
 }
 
@@ -158,85 +132,57 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL) {
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param N.out Dataframe or tibble with processed output from
 #'   \code{\link{run_sim}}, including all columns from \code{lc.df} in addition
-#'   to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.less5}
+#'   to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.L5}
 #' @param txt Text to append to start of plot title
+#' @param w Figure output width (pixels)
+#' @param h Figure output height (pixels)
+#' @param i Gif framerate
 #' @return None
 #' @keywords plots, gif, store, save, output
 #' @export
 
-make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
+make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
   require(gganimate); theme_set(theme_bw())
   
   # filenames
-  f.ls <- list(paste0(p.wd, "ad_Ab.gif"),
-               paste0(p.wd, "sb_Ab.gif"),
-               paste0(p.wd, "ad_sd.gif"),
-               paste0(p.wd, "sb_sd.gif"),
-               paste0(p.wd, "ad_PA.gif"),
-               paste0(p.wd, "sb_PA.gif"),
-               paste0(p.wd, "ad_LoDens.gif"))
+  f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP", "ad_L5")
+  f.full <- paste0(p.wd, f.nm, ".gif")
+  
+  p.gif <- ggplot(N.out, aes(x=x, y=-y, frame=year, colour=inbd)) + 
+    scale_fill_gradient(low="white", high="red") + 
+    scale_colour_manual(values=c("gray", NA))
   
   # Adult abundance
-  ad.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.adult, frame=year, colour=inbd)) + 
-    geom_tile() + scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Adult abundance. Year"))
-  gganimate(ad.ab, f.ls[[1]], interval=0.2, ani.width=800, ani.height=600)
-  rm(ad.ab)
-  
-  # Seed bank log abundance
-  sb.ab <- ggplot(N.out, aes(x=x, y=-y, fill=N.sb, frame=year, colour=inbd)) + 
-    geom_tile() + scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "log seed abundance. Year"))
-  gganimate(sb.ab, f.ls[[2]], interval=0.2, ani.width=800, ani.height=600)
-  rm(sb.ab)
-  
-  # Adult variability
-  ad.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.ad, frame=year, colour=inbd)) + 
-    geom_tile() + scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Adult sd. Year"))
-  gganimate(ad.sd, f.ls[[3]], interval=0.2, ani.width=800, ani.height=600)
-  rm(ad.sd)
-  
-  # Seed bank variability
-  sb.sd <- ggplot(N.out, aes(x=x, y=-y, fill=sd.sb, frame=year, colour=inbd)) + 
-    geom_tile() + scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Seed bank sd. Year"))
-  gganimate(sb.sd, f.ls[[4]], interval=0.2, ani.width=800, ani.height=600)
-  rm(sb.sd)
-  
-  # Adult presence/absence
-  adult.pa <- ggplot(N.out, aes(x=x, y=-y, fill=pP.ad, frame=year, colour=inbd)) + 
-    geom_tile() + scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Adult presence. Year"))
-  gganimate(adult.pa, f.ls[[5]], interval=0.2, ani.width=800, ani.height=600)
-  rm(adult.pa)
-  
-  # Seed bank presence/absence
-  sb.pa <- ggplot(N.out, aes(x=x, y=-y, fill=pP.sb, frame=year, colour=inbd)) + 
-    geom_tile() + scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) + 
-    ggtitle(paste(txt, "Seed presence. Year"))
-  gganimate(sb.pa, f.ls[[6]], interval=0.2, ani.width=800, ani.height=600)
-  rm(sb.pa)
-  
-  # Low adult density
-  adult.lo <- ggplot(N.out, aes(x=x, y=-y, fill=N.less5, frame=year)) +
-    geom_tile() + ggtitle(paste(txt, "Blue: Adult density ≤ 5. Year")) + 
-    scale_fill_gradient2(low="white", mid="blue", high="pink", midpoint=1)
-  gganimate(adult.lo, f.ls[[7]], interval=0.2, ani.width=800, ani.height=600)
-  rm(adult.lo)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[1])) + 
+              ggtitle(paste(txt, "Adult mean(abundance). Year")), 
+            filename=f.full[1], interval=i, ani.width=w, ani.height=h)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[2])) + 
+              ggtitle(paste(txt, "Seed mean(log abundance). Year")), 
+            filename=f.full[2], interval=i, ani.width=w, ani.height=h)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[3])) + 
+              ggtitle(paste(txt, "Adult sd(abundance). Year")), 
+            filename=f.full[3], interval=i, ani.width=w, ani.height=h)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[4])) + 
+              ggtitle(paste(txt, "Seed sd(log abundance). Year")), 
+            filename=f.full[4], interval=i, ani.width=w, ani.height=h)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[5])) + 
+              ggtitle(paste(txt, "Adult mean(presence). Year")), 
+            filename=f.full[5], interval=i, ani.width=w, ani.height=h)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[6])) + 
+              ggtitle(paste(txt, "Seed mean(presence). Year")), 
+            filename=f.full[6], interval=i, ani.width=w, ani.height=h)
+  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[7])) %+% 
+              scale_fill_gradient2(low="white", mid="blue", 
+                                   high="pink", midpoint=1) +
+              ggtitle(paste(txt, "Adult mean(0 < abundance ≤ 5). Year")), 
+            filename=f.full[7], interval=i, ani.width=w, ani.height=h)
   
   # Check for success
-  for(f in 1:length(f.ls)) {
-    if(file.exists(f.ls[[f]])) { 
-      cat(f.ls[[f]], "saved\n")
+  for(f in 1:length(f.full)) {
+    if(file.exists(f.full[f])) { 
+      cat(f.full[f], "saved\n")
     } else { 
-      cat("--- Error:", f.ls[[f]], "not saved! \n") }
+      cat("--- Error:", f.full[f], "not found! \n") }
   }
 }
 
@@ -249,63 +195,47 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL) {
 #' @param p.wd Directory to store file in
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
+#' @param w Figure output width (inches)
+#' @param h Figure output height (inches)
 #' @return None
 #' @keywords plots, land cover, store, save, output
 #' @export
 
-make_plots_lc <- function(p.wd, lc.df) {
+make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
   require(ggplot2); theme_set(theme_bw())
   
   # filenames
-  f.ls <- list(paste0(p.wd, "LC_OpI.jpg"),
-               paste0(p.wd, "LC_Oth.jpg"),
-               paste0(p.wd, "LC_Dec.jpg"),
-               paste0(p.wd, "LC_WP.jpg"),
-               paste0(p.wd, "LC_Evg.jpg"),
-               paste0(p.wd, "LC_Mxd.jpg"))
+  f.full <- paste0(p.wd, c("LC_OpI.jpg", "LC_Oth.jpg", "LC_Dec.jpg", 
+                           "LC_WP.jpg", "LC_Evg.jpg", "LC_Mxd.jpg"))
   
-  p.opi <- ggplot(lc.df, aes(x=x, y=-y, fill=OpI, colour=inbd)) + geom_tile() +
-    scale_colour_manual(values=c("gray", NA)) + 
-    scale_fill_gradient(low="white", high="red", limits=c(0,1))
-  ggsave(f.ls[[1]], p.opi, width=10, height=7)
-  rm(p.opi)
+  p.lc <- ggplot(lc.df, aes(x=x, y=-y, colour=inbd)) + 
+    scale_colour_manual(values=c("gray", NA))
   
-  p.oth <- ggplot(lc.df, aes(x=x, y=-y, fill=Oth, colour=inbd)) + geom_tile() +
-    scale_colour_manual(values=c("gray", NA)) + 
-    scale_fill_gradient(low="white", high="gray30", limits=c(0,1))
-  ggsave(f.ls[[2]], p.oth, width=10, height=7)
-  rm(p.oth)
-  
-  p.dec <- ggplot(lc.df, aes(x=x, y=-y, fill=Dec, colour=inbd)) + geom_tile() +
-    scale_colour_manual(values=c("gray", NA)) + 
-    scale_fill_gradient(low="white", high="green3", limits=c(0,1))
-  ggsave(f.ls[[3]], p.dec, width=10, height=7)
-  rm(p.dec)
-  
-  p.wp <- ggplot(lc.df, aes(x=x, y=-y, fill=WP, colour=inbd)) + geom_tile() +
-    scale_colour_manual(values=c("gray", NA)) + 
-    scale_fill_gradient(low="white", high="orchid", limits=c(0,1))
-  ggsave(f.ls[[4]], p.wp, width=10, height=7)
-  rm(p.wp)
-  
-  p.evg <- ggplot(lc.df, aes(x=x, y=-y, fill=Evg, colour=inbd)) + geom_tile() +
-    scale_colour_manual(values=c("gray", NA)) + 
-    scale_fill_gradient(low="white", high="darkgreen", limits=c(0,1))
-  ggsave(f.ls[[5]], p.evg, width=10, height=7)
-  rm(p.evg)
-  
-  p.mxd <- ggplot(lc.df, aes(x=x, y=-y, fill=Mxd, colour=inbd)) + geom_tile() +
-    scale_colour_manual(values=c("gray", NA)) + 
-    scale_fill_gradient(low="white", high="yellowgreen", limits=c(0,1))
-  ggsave(f.ls[[6]], p.mxd, width=10, height=7)
-  rm(p.mxd)
+  ggsave(f.full[1], width=w, height=h,
+         plot=p.lc + geom_tile(aes(fill=OpI)) + ggtitle("Open Invasible") +
+           scale_fill_gradient(low="white", high="red", limits=c(0,1)))
+  ggsave(f.full[2], width=w, height=h,
+         plot=p.lc + geom_tile(aes(fill=Oth)) + ggtitle("Open Invasible")+
+           scale_fill_gradient(low="white", high="gray30", limits=c(0,1)))
+  ggsave(f.full[3], width=w, height=h,
+         plot=p.lc + geom_tile(aes(fill=Dec)) + ggtitle("Open Invasible")+
+           scale_fill_gradient(low="white", high="green3", limits=c(0,1)))
+  ggsave(f.full[4], width=w, height=h,
+         plot=p.lc + geom_tile(aes(fill=WP)) + ggtitle("Open Invasible")+
+           scale_fill_gradient(low="white", high="orchid", limits=c(0,1)))
+  ggsave(f.full[5], width=w, height=h,
+         plot=p.lc + geom_tile(aes(fill=Evg)) + ggtitle("Open Invasible")+
+           scale_fill_gradient(low="white", high="darkgreen", limits=c(0,1)))
+  ggsave(f.full[6], width=w, height=h,
+         plot=p.lc + geom_tile(aes(fill=Mxd)) + ggtitle("Open Invasible")+
+           scale_fill_gradient(low="white", high="yellowgreen", limits=c(0,1)))
   
   # Check for success
-  for(f in 1:length(f.ls)) {
-    if(file.exists(f.ls[[f]])) { 
-      cat(f.ls[[f]], "saved\n")
+  for(f in 1:length(f.full)) {
+    if(file.exists(f.full[f])) { 
+      cat(f.full[f], "saved\n")
     } else { 
-      cat("--- Error:", f.ls[[f]], "not saved! \n") }
+      cat("--- Error:", f.full[f], "not found! \n") }
   }
 }
 
@@ -324,11 +254,14 @@ make_plots_lc <- function(p.wd, lc.df) {
 #' @param byLC \code{FALSE} For LC-specific parameters, should separate plots be
 #'   created for each LC?
 #' @param txt Text to append to start of plot title
+#' @param w Figure output width (inches)
+#' @param h Figure output height (inches)
 #' @return None
 #' @keywords plots, store, save, output
 #' @export
 
-make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL) {
+make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
+                                   w=8, h=6) {
   require(scales); require(ggplot2); theme_set(theme_bw())
   n.set <- length(unique(grid.sum$p.j))
   p.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.set)/n.set)
@@ -342,165 +275,97 @@ make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL) {
       LC.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.LC)/n.LC)
       LC <- c("OpI", "Oth", "Dec", "WP", "Evg", "Mxd")
     } else {
-      cat("DEAL WITH THIS LATER")
+      cat("DEAL WITH THIS LATER -- need a list for LC.col")
     }
   }
   
   # filenames
-  f.ls <- list(paste0(p.wd, "pOcc_ad_mn.jpg"),
-               paste0(p.wd, "pOcc_ad_sd.jpg"),
-               paste0(p.wd, "pOcc_sb_mn.jpg"),
-               paste0(p.wd, "pOcc_sb_sd.jpg"),
-               paste0(p.wd, "pLess5_mn.jpg"),
-               paste0(p.wd, "pLess5_sd.jpg"),
-               paste0(p.wd, "pK_Occ_mn.jpg"),
-               paste0(p.wd, "pK_Occ_sd.jpg"))
+  f.nm <- c("pOcc_ad_mn", "pOcc_ad_sd", "pOcc_sb_mn", "pOcc_sb_sd", 
+              "pL5_mn", "pL5_sd", "pK_Occ_mn", "pK_Occ_sd")
+  f.full <- paste0(p.wd, f.nm)
+  
   if(byLC) {
+    p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+      scale_colour_manual(p, values=LC.col) + ylim(0,100) + 
+      labs(x="Year", y="Mean across simulations")
+    p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+      scale_colour_manual(p, values=LC.col) + 
+      labs(x="Year", y="Standard deviation across simulations")
+    
     for(l in 1:6) {
       # Adult occupancy
-      ad.o.mn <- ggplot(grid.sum, aes(x=year, y=prOcc.ad.mn, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + ylim(0,1) + 
-        labs(x="Year", y="Mean proportion of occupied cells (adults)") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pOcc_ad_mn_", LC[l], ".jpg"), ad.o.mn, 
-             width=8, height=6)
-      rm(ad.o.mn)
-      
-      # Adult occupancy
-      ad.o.sd <- ggplot(grid.sum, aes(x=year, y=prOcc.ad.sd, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + 
-        labs(x="Year", y="Std dev of proportion of occupied cells (adults)") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pOcc_ad_sd_", LC[l], ".jpg"), ad.o.sd, 
-             width=8, height=6)
-      rm(ad.o.sd)
-      
+      ggsave(paste0(f.full[1], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.mn + ggtitle(paste0(LC[l], ": % occupied cells (adults)")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[1])))
+      ggsave(paste0(f.full[2], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.sd + ggtitle(paste0(LC[l], ": % occupied cells (adults)")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[2])))
       # Seed occupancy
-      sb.o.mn <- ggplot(grid.sum, aes(x=year, y=prOcc.sb.mn, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + ylim(0,1) + 
-        labs(x="Year", y="Mean proportion of occupied cells (seeds)") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pOcc_sb_mn_", LC[l], ".jpg"), sb.o.mn, 
-             width=8, height=6)
-      rm(sb.o.mn)
-      
-      # Seed occupancy
-      sb.o.sd <- ggplot(grid.sum, aes(x=year, y=prOcc.sb.sd, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + 
-        labs(x="Year", y="Std dev of proportion of occupied cells (seeds)") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pOcc_sb_sd_", LC[l], ".jpg"), sb.o.sd, 
-             width=8, height=6)
-      rm(sb.o.sd)
-      
+      ggsave(paste0(f.full[3], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.mn + ggtitle(paste0(LC[l], ": % occupied cells (seeds)")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[3])))
+      ggsave(paste0(f.full[4], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.sd + ggtitle(paste0(LC[l], ": % occupied cells (seeds)")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[4])))      
       # Low density cells
-      LD.mn <- ggplot(grid.sum, aes(x=year, y=prLess5.mn, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + ylim(0,1) + 
-        labs(x="Year", y="Mean proportion of low density cells (≤5 adults)") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pLss5_mn_", LC[l], ".jpg"), LD.mn, 
-             width=8, height=6)
-      rm(LD.mn)
-      
-      # Low density cells
-      LD.sd <- ggplot(grid.sum, aes(x=year, y=prLess5.mn, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + 
-        labs(x="Year", 
-             y="Std dev of proportion of low density cells (≤5 adults)") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pLess5_sd_", LC[l], ".jpg"), LD.sd, 
-             width=8, height=6)
-      rm(LD.sd)
-      
+      ggsave(paste0(f.full[5], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.mn + ggtitle(paste0(LC[l], ": % cells with ≤ 5 adults")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[5])))
+      ggsave(paste0(f.full[6], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.sd + ggtitle(paste0(LC[l], ": % cells with ≤ 5 adults")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[6])))   
       # Occupied cells at K
-      K.mn <- ggplot(grid.sum, aes(x=year, y=K.Occ.mn, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + ylim(0,1) + 
-        labs(x="Year", y="Mean proportion of occupied cells at K") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pLss5_mn_", LC[l], ".jpg"), K.mn, 
-             width=8, height=6)
-      rm(K.mn)
-      
-      # Occupied cells at K
-      K.sd <- ggplot(grid.sum, aes(x=year, y=K.Occ.mn, group=p.j)) + 
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])), size=1) + 
-        scale_colour_manual(p, values=LC.col) + 
-        labs(x="Year", y="Std dev of proportion of occupied cells at K") + 
-        ggtitle(LC[l])
-      ggsave(paste0(p.wd, "pLess5_sd_", LC[l], ".jpg"), K.sd, 
-             width=8, height=6)
-      rm(K.sd)
+      ggsave(paste0(f.full[7], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.mn + ggtitle(paste0(LC[l], ": % occupied cells at K")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[7])))
+      ggsave(paste0(f.full[8], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.sd + ggtitle(paste0(LC[l], ": % occupied cells at K")) +
+               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[8])))
     }
   } else {
-    # Adult occupancy
-    ad.o.mn <- ggplot(grid.sum, aes(x=year, y=prOcc.ad.mn, colour=p.j)) + 
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) + 
-      labs(x="Year", y="Mean proportion of occupied cells (adults)")
-    ggsave(f.ls[[1]], ad.o.mn, width=8, height=6)
-    rm(ad.o.mn)
+    p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+      scale_colour_manual(p, values=p.col) + ylim(0,100) + 
+      labs(x="Year", y="Mean across simulations")
+    p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+      scale_colour_manual(p, values=p.col) + 
+      labs(x="Year", y="Standard deviation across simulations")
     
     # Adult occupancy
-    ad.o.sd <- ggplot(grid.sum, aes(x=year, y=prOcc.ad.sd, colour=p.j)) + 
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
-      labs(x="Year", y="Std dev of proportion of occupied cells (adults)")
-    ggsave(f.ls[[2]], ad.o.sd, width=8, height=6)
-    rm(ad.o.sd)
-    
+    ggsave(paste0(f.full[1], ".jpg"),  width=w, height=h,
+           plot=p.mn + ggtitle("% occupied cells (adults)") +
+             geom_line(aes_string(colour="p.j", y=f.nm[1])))
+    ggsave(paste0(f.full[2], ".jpg"),  width=w, height=h,
+           plot=p.sd + ggtitle("% occupied cells (adults)") +
+             geom_line(aes_string(colour="p.j", y=f.nm[2])))
     # Seed occupancy
-    sb.o.mn <- ggplot(grid.sum, aes(x=year, y=prOcc.sb.mn, colour=p.j)) +
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) +  
-      labs(x="Year", y="Mean proportion of occupied cells (seeds)")
-    ggsave(f.ls[[3]], sb.o.mn, width=8, height=6)
-    rm(sb.o.mn)
-    
-    # Seed occupancy
-    sb.o.sd <- ggplot(grid.sum, aes(x=year, y=prOcc.sb.sd, colour=p.j)) + 
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
-      labs(x="Year", y="Std dev of proportion of occupied cells (seeds)")
-    ggsave(f.ls[[4]], sb.o.sd, width=8, height=6)
-    rm(sb.o.sd)
-    
+    ggsave(paste0(f.full[3], ".jpg"),  width=w, height=h,
+           plot=p.mn + ggtitle("% occupied cells (seeds)") +
+             geom_line(aes_string(colour="p.j", y=f.nm[3])))
+    ggsave(paste0(f.full[4], ".jpg"),  width=w, height=h,
+           plot=p.sd + ggtitle("% occupied cells (seeds)") +
+             geom_line(aes_string(colour="p.j", y=f.nm[4])))
     # Low density cells
-    LD.mn <- ggplot(grid.sum, aes(x=year, y=prLess5.mn, colour=p.j)) + 
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) + 
-      labs(x="Year", y="Mean proportion of low density cells (≤5 adults)")
-    ggsave(f.ls[[5]], LD.mn, width=8, height=6)
-    rm(LD.mn)
-    
-    # Low density cells
-    LD.sd <- ggplot(grid.sum, aes(x=year, y=prLess5.sd, colour=p.j)) + 
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
-      labs(x="Year", y="Std dev of proportion of low density cells (≤5 adults)")
-    ggsave(f.ls[[6]], LD.sd, width=8, height=6)
-    rm(LD.sd)
-    
+    ggsave(paste0(f.full[5], ".jpg"),  width=w, height=h,
+           plot=p.mn + ggtitle("% cells with ≤ 5 adults") +
+             geom_line(aes_string(colour="p.j", y=f.nm[5])))
+    ggsave(paste0(f.full[6], ".jpg"),  width=w, height=h,
+           plot=p.sd + ggtitle("% cells with ≤ 5 adults") +
+             geom_line(aes_string(colour="p.j", y=f.nm[6])))
     # Occupied cells at K
-    K.mn <- ggplot(grid.sum, aes(x=year, y=K.Occ.mn, colour=p.j)) +
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + ylim(0,1) + 
-      labs(x="Year", y="Mean proportion of occupied cells at K")
-    ggsave(f.ls[[7]], K.mn, width=8, height=6)
-    rm(K.mn)
-    
-    # Occupied cells at K
-    K.sd <- ggplot(grid.sum, aes(x=year, y=K.Occ.sd, colour=p.j)) + 
-      geom_line(size=1) + scale_colour_manual(p, values=p.col) + 
-      labs(x="Year", y="Std dev of proportion of occupied cells at K")
-    ggsave(f.ls[[8]], K.sd, width=8, height=6)
-    rm(K.sd)
-    # Check for success
-    for(f in 1:length(f.ls)) {
-      if(file.exists(f.ls[[f]])) { 
-        cat(f.ls[[f]], "saved\n")
-      } else { 
-        cat("--- Error:", f.ls[[f]], "not saved! \n") }
-    }
+    ggsave(paste0(f.full[7], ".jpg"),  width=w, height=h,
+           plot=p.mn + ggtitle("% occupied cells at K") +
+             geom_line(aes_string(colour="p.j", y=f.nm[7])))
+    ggsave(paste0(f.full[8], ".jpg"),  width=w, height=h,
+           plot=p.sd + ggtitle("% occupied cells at K") +
+             geom_line(aes_string(colour="p.j", y=f.nm[8])))
+  }
+  
+  # Check for success
+  for(f in 1:length(f.nm)) {
+    if(sum(grepl(f.nm[f], list.files(p.wd))) > 0) { 
+      cat(f.nm[f], "saved\n")
+    } else { 
+      cat("--- Error:", f.nm[f], "not found! \n") }
   }
 }
 
