@@ -126,13 +126,14 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   ad.mn <- apply(ad.j, 1:2, mean)
   cell.j <- cbind(lc.df, ad.mn) %>% as.tibble %>%
     gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
-    mutate(sd.ad=c(apply(ad.j, 1:2, sd)),
-           pP.ad=c(apply(ad.j > 0, 1:2, mean)),
-           N.sb=c(apply(log(sb.j+1), 1:2, mean)),
-           sd.sb=c(apply(log(sb.j+1), 1:2, sd)),
-           pP.sb=c(apply(sb.j > 0, 1:2, mean)),
-           N.less5=c(ad.mn > 0))
-  cell.j$N.less5 <- cell.j$N.less5 + c(ad.mn > 5)
+    rename(ad_Ab=N.adult) %>%
+    mutate(ad_sd=c(apply(ad.j, 1:2, sd)),
+           ad_pP=c(apply(ad.j > 0, 1:2, mean)),
+           sb_Ab=c(apply(log(sb.j+1), 1:2, mean)),
+           sb_sd=c(apply(log(sb.j+1), 1:2, sd)),
+           sb_pP=c(apply(sb.j > 0, 1:2, mean)),
+           ad_L5=c(ad.mn > 0))
+  cell.j$ad_L5 <- cell.j$ad_L5 + c(ad.mn > 5)
   cell.j$year <- str_pad(cell.j$year, 3, "left", "0")
   cell.j$p <- p
   if(length(p.seq[[j]])==1) {
@@ -147,20 +148,20 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
     cell.j$p.j.Mxd <- p.seq[[j]][6]
   }
   ## landscape summaries
-  occ.s.ad <- apply(ad.j[lc.df$inbd,,]>0, 2:3, mean)
-  occ.s.sb <- apply(sb.j[lc.df$inbd,,]>0, 2:3, mean)
-  less5.s <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5, 2:3, mean)
+  occ.s.ad <- apply(ad.j[lc.df$inbd,,]>0, 2:3, mean)*100
+  occ.s.sb <- apply(sb.j[lc.df$inbd,,]>0, 2:3, mean)*100
+  less5.s <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5, 2:3, mean)*100
   K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
-  K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 2:3, mean)/occ.s.ad
+  K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 2:3, mean)/occ.s.ad*10000
   grid.j <- tibble(year=unique(cell.j$year),
-                   prOcc.ad.mn=apply(occ.s.ad, 1, mean),
-                   prOcc.ad.sd=apply(occ.s.ad, 1, sd),
-                   prOcc.sb.mn=apply(occ.s.sb, 1, mean),
-                   prOcc.sb.sd=apply(occ.s.sb, 1, sd),
-                   prLess5.mn=apply(less5.s, 1, mean),
-                   prLess5.sd=apply(less5.s, 1, sd),
-                   K.Occ.mn=apply(K.s, 1, mean),
-                   K.Occ.sd=apply(K.s, 1, sd),
+                   pOcc_ad_mn=apply(occ.s.ad, 1, mean),
+                   pOcc_ad_sd=apply(occ.s.ad, 1, sd),
+                   pOcc_sb_mn=apply(occ.s.sb, 1, mean),
+                   pOcc_sb_sd=apply(occ.s.sb, 1, sd),
+                   pL5_mn=apply(less5.s, 1, mean),
+                   pL5_sd=apply(less5.s, 1, sd),
+                   pK_Occ_mn=apply(K.s, 1, mean),
+                   pK_Occ_sd=apply(K.s, 1, sd),
                    p=p)
   if(length(p.seq[[j]])==1) {
     grid.j$p.j <- p.seq[j]
@@ -181,8 +182,8 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   rm(ad.j); rm(sb.j)
   
   # save plots
-  make_plots_final_t(parSet.wd[j], g.p,  
-                     filter(cell.j, year==max(cell.j$year)), p.j)
+  make_plots_final_t(parSet.wd[j], g.p, filter(cell.j, year==max(cell.j$year)), 
+                     p.j, 8, 6)
   make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
   if(j==1) make_plots_lc(sim.wd, lc.df)
   paste("Finished parameter set", j, "of", length(p.seq))
