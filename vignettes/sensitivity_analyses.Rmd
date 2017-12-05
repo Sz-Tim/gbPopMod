@@ -183,7 +183,7 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   # save plots
   make_plots_final_t(parSet.wd[j], g.p,  
                      filter(cell.j, year==max(cell.j$year)), p.j)
-  # make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
+  make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
   if(j==1) make_plots_lc(sim.wd, lc.df)
   paste("Finished parameter set", j, "of", length(p.seq))
 }
