@@ -19,7 +19,7 @@
 
 sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   
-  require(purrr); require(tidyverse); require(pbapply); require(fastmatch)
+  require(purrr); require(tidyverse); require(fastmatch)
   
   # unpack parameters
   edges <- g.p$edges
@@ -77,11 +77,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   
   # match xy combinations with cell IDs
   if(is.null(lc.new)) cat("determining neighborhood cell IDs...\n")
-  pboptions(type="none")
-  p.c <- makeCluster(g.p$n.cores)
-  c.i <- pblapply(n.i, function(x) fastmatch::fmatch(x, lc.df$x_y), cl=p.c)
-  stopCluster(p.c)
-  
+  c.i <- map(n.i, ~fmatch(., lc.df$x_y))
+
   if(is.null(lc.new)) cat("calculating probabilities...\n")
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
