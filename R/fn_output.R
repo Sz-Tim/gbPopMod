@@ -285,79 +285,83 @@ make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
   f.full <- paste0(p.wd, f.nm)
   
   if(byLC) {
-    p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
-      scale_colour_manual(p, values=LC.col) + ylim(0,100) + 
-      labs(x="Year", y="Mean across simulations")
-    p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
-      scale_colour_manual(p, values=LC.col) + 
-      labs(x="Year", y="Standard deviation across simulations")
     
     for(l in 1:6) {
+      p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + ylim(0,100) + 
+        labs(x="Year", y="Mean across simulations") +
+        scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) +
+        geom_line(aes_string(colour=paste0("p.j.", LC[l])))
+      p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+        labs(x="Year", y="Standard deviation across simulations") +
+        scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) +
+        geom_line(aes_string(colour=paste0("p.j.", LC[l])))
       # Adult occupancy
       ggsave(paste0(f.full[1], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + ggtitle(paste0(LC[l], ": % occupied cells (adults)")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[1])))
+             plot=p.mn + aes_string(y=f.nm[1]) + 
+               ggtitle("% occupied cells (adults)"))
       ggsave(paste0(f.full[2], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + ggtitle(paste0(LC[l], ": % occupied cells (adults)")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[2])))
+             plot=p.sd + aes_string(y=f.nm[2]) + 
+               ggtitle("% occupied cells (adults)"))
       # Seed occupancy
       ggsave(paste0(f.full[3], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + ggtitle(paste0(LC[l], ": % occupied cells (seeds)")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[3])))
+             plot=p.mn + aes_string(y=f.nm[3]) + 
+               ggtitle("% occupied cells (seeds)"))
       ggsave(paste0(f.full[4], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + ggtitle(paste0(LC[l], ": % occupied cells (seeds)")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[4])))      
+             plot=p.sd + aes_string(y=f.nm[4]) + 
+               ggtitle("% occupied cells (seeds)"))
       # Low density cells
       ggsave(paste0(f.full[5], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + ggtitle(paste0(LC[l], ": % cells with ≤ 5 adults")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[5])))
+             plot=p.mn + aes_string(y=f.nm[5]) + 
+               ggtitle("% cells with ≤ 5 adults"))
       ggsave(paste0(f.full[6], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + ggtitle(paste0(LC[l], ": % cells with ≤ 5 adults")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[6])))   
+             plot=p.sd + aes_string(y=f.nm[6]) + 
+               ggtitle("% cells with ≤ 5 adults"))
       # Occupied cells at K
       ggsave(paste0(f.full[7], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + ggtitle(paste0(LC[l], ": % occupied cells at K")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[7])))
+             plot=p.mn + aes_string(y=f.nm[7]) + 
+               ggtitle("% occupied cells at K"))
       ggsave(paste0(f.full[8], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + ggtitle(paste0(LC[l], ": % occupied cells at K")) +
-               geom_line(aes_string(colour=paste0("p.j.", LC[l]), y=f.nm[8])))
+             plot=p.sd + aes_string(y=f.nm[8]) + 
+               ggtitle("% occupied cells at K"))
     }
   } else {
-    p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
-      scale_colour_manual(p, values=p.col) + ylim(0,100) + 
-      labs(x="Year", y="Mean across simulations")
-    p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+    p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + ylim(0,100) + 
+      labs(x="Year", y="Mean across simulations") +
       scale_colour_manual(p, values=p.col) + 
-      labs(x="Year", y="Standard deviation across simulations")
+      geom_line(aes(colour=p.j))
+    p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
+      labs(x="Year", y="Standard deviation across simulations") +
+      scale_colour_manual(p, values=p.col) + 
+      geom_line(aes(colour=p.j))
     
     # Adult occupancy
-    ggsave(paste0(f.full[1], ".jpg"),  width=w, height=h,
-           plot=p.mn + ggtitle("% occupied cells (adults)") +
-             geom_line(aes_string(colour="p.j", y=f.nm[1])))
-    ggsave(paste0(f.full[2], ".jpg"),  width=w, height=h,
-           plot=p.sd + ggtitle("% occupied cells (adults)") +
-             geom_line(aes_string(colour="p.j", y=f.nm[2])))
+    ggsave(paste0(f.full[1], ".jpg"), width=w, height=h,
+           plot=p.mn + aes_string(y=f.nm[1]) + 
+             ggtitle("% occupied cells (adults)"))
+    ggsave(paste0(f.full[2], ".jpg"), width=w, height=h,
+           plot=p.sd + aes_string(y=f.nm[2]) +
+             ggtitle("% occupied cells (adults)"))
     # Seed occupancy
-    ggsave(paste0(f.full[3], ".jpg"),  width=w, height=h,
-           plot=p.mn + ggtitle("% occupied cells (seeds)") +
-             geom_line(aes_string(colour="p.j", y=f.nm[3])))
-    ggsave(paste0(f.full[4], ".jpg"),  width=w, height=h,
-           plot=p.sd + ggtitle("% occupied cells (seeds)") +
-             geom_line(aes_string(colour="p.j", y=f.nm[4])))
+    ggsave(paste0(f.full[3], ".jpg"), width=w, height=h,
+           plot=p.mn + aes_string(y=f.nm[3]) +
+             ggtitle("% occupied cells (seeds)"))
+    ggsave(paste0(f.full[4], ".jpg"), width=w, height=h,
+           plot=p.sd + aes_string(y=f.nm[4]) +
+             ggtitle("% occupied cells (seeds)"))
     # Low density cells
-    ggsave(paste0(f.full[5], ".jpg"),  width=w, height=h,
-           plot=p.mn + ggtitle("% cells with ≤ 5 adults") +
-             geom_line(aes_string(colour="p.j", y=f.nm[5])))
-    ggsave(paste0(f.full[6], ".jpg"),  width=w, height=h,
-           plot=p.sd + ggtitle("% cells with ≤ 5 adults") +
-             geom_line(aes_string(colour="p.j", y=f.nm[6])))
+    ggsave(paste0(f.full[5], ".jpg"), width=w, height=h,
+           plot=p.mn + aes_string(y=f.nm[5]) +
+             ggtitle("% cells with ≤ 5 adults"))
+    ggsave(paste0(f.full[6], ".jpg"), width=w, height=h,
+           plot=p.sd + aes_string(y=f.nm[6]) +
+             ggtitle("% cells with ≤ 5 adults"))
     # Occupied cells at K
-    ggsave(paste0(f.full[7], ".jpg"),  width=w, height=h,
-           plot=p.mn + ggtitle("% occupied cells at K") +
-             geom_line(aes_string(colour="p.j", y=f.nm[7])))
-    ggsave(paste0(f.full[8], ".jpg"),  width=w, height=h,
-           plot=p.sd + ggtitle("% occupied cells at K") +
-             geom_line(aes_string(colour="p.j", y=f.nm[8])))
+    ggsave(paste0(f.full[7], ".jpg"), width=w, height=h,
+           plot=p.mn + aes_string(y=f.nm[7]) +
+             ggtitle("% occupied cells at K"))
+    ggsave(paste0(f.full[8], ".jpg"), width=w, height=h,
+           plot=p.sd + aes_string(y=f.nm[8]) +
+             ggtitle("% occupied cells at K"))
   }
   
   # Check for success
