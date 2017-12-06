@@ -184,7 +184,7 @@ foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
   rm(ad.j); rm(sb.j)
   
   # save plots
-  make_plots_final_t(parSet.wd[j], g.p, filter(cell.j, year==max(cell.j$year)), 
+  make_plots_final_t(parSet.wd[j], g.p, filter(cell.j, year==max(cell.j$year)),
                      p.j, 8, 6)
   make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
   if(j==1) make_plots_lc(sim.wd, lc.df)
@@ -194,8 +194,12 @@ stopCluster(p.c)
 
 # grid summary plots
 grid.sum <- map_df(parSet.wd, ~(read_csv(paste0(., "grid_j.csv")))) %>%
-  mutate(year=as.numeric(year)) %>%
-  mutate_at(vars(p.j:p.j.Mxd), as.factor)
+  mutate(year=as.numeric(year)) 
+if(length(p.seq[[1]])==1) {
+  grid.sum %<>% mutate(p.j=as.factor(p.j)) 
+} else {
+  grid.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
+}
 make_plots_gridSummary(par.wd, grid.sum, byLC=(length(p.seq[[1]])>1))
 ```
 
