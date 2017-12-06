@@ -58,27 +58,29 @@ data(lc.rct)
   # populations
   # indexed 1:ngrid including rows for out-of-bounds cells
   N.init <- pop_init(ngrid, g.p, lc.df)
+
   
+  # set directories
+  sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
+  par.wd <- paste0(sim.wd, p, "/")
+  parSet.wd <- paste0(par.wd, p.seq, "/")
+  if(!dir.exists(here("out"))) dir.create(here("out"))
+  if(!dir.exists(here(sim.wd))) dir.create(here(sim.wd))
+  if(!dir.exists(here(par.wd))) dir.create(here(par.wd))
+
+
   # dispersal probabilities
   # indexed 1:ncell with only inbound cells: sdd.pr[,,,i] = ith inbound cell
   # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.inbd==i,]
   # cell indexes in sdd.pr[,,2,] correspond with lc.df$id
   # this extra complication avoids calculating many, many unnecessary cells
   sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
-```
-
-```{r setDirs}
-sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
-par.wd <- paste0(sim.wd, p, "/")
-parSet.wd <- paste0(par.wd, p.seq, "/")
-if(!dir.exists(here("out"))) dir.create(here("out"))
-if(!dir.exists(here(sim.wd))) dir.create(here(sim.wd))
-if(!dir.exists(here(par.wd))) dir.create(here(par.wd))
+  saveRDS(sdd.pr, paste0(par.wd, "sdd_pr.rds"))
 ```
 
 
 ```{r runSim}
-require(doSNOW)
+sdd.pr <- readRDS(paste0(par.wd, "sdd_pr.rds"))
 for(j in 1:length(p.seq)) {
   # setup for particular parameter value
   set.seed(225)
