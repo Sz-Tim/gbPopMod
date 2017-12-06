@@ -33,10 +33,14 @@ data(lc.rct)
 ## set parameters
 ##---
 
-  p <- "pr.eat"
-  p.seq <- expand_cnpy(Op=c(0.1, 0.99), Cl=c(0.1, 0.99), length_out=5)
-  n.sim <- 20
-  g.p <- set_g_p(tmax=100, lc.r=200, lc.c=200, n.ldd=1, n.cores=8)
+  p <- "pr.s"
+  # p.seq <- seq(0.01, 0.8, length.out=5)
+  p.seq <- expand_cnpy(Op=c(0.1, 0.99), Cl=c(0.1, 0.99), length_out=2)
+  # p.seq <- expand_LCs(OpI=c(0.3, 0.6), Oth=c(0.01, 0.2), Dec=c(0.2, 0.4),
+                      # WP=c(0.2, 0.6), Evg=c(0.2, 0.4), Mxd=c(0.2, 0.4),
+                      # length_out=3)
+  n.sim <- 3
+  g.p <- set_g_p(tmax=100, lc.r=30, lc.c=30, n.ldd=1, n.cores=3)
   control.p <- set_control_p()
   set.seed(225)
   
