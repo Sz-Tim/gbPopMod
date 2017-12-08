@@ -16,7 +16,7 @@ data(lc.rct)
 
 # set parameters
 n.sim <- 6
-g.p <- set_g_p(tmax=20, lc.r=30, lc.c=30, n.ldd=1, n.cores=3)
+g.p <- set_g_p(tmax=5, lc.r=20, lc.c=20, n.cores=3)
 control.p <- set_control_p()
 p <- readRDS("hpc/p.rds")
 p.seq <- readRDS("hpc/p_seq.rds")
