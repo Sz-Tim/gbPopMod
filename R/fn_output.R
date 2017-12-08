@@ -215,19 +215,19 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
          plot=p.lc + geom_tile(aes(fill=OpI)) + ggtitle("Open Invasible") +
            scale_fill_gradient(low="white", high="red", limits=c(0,1)))
   ggsave(f.full[2], width=w, height=h,
-         plot=p.lc + geom_tile(aes(fill=Oth)) + ggtitle("Open Invasible")+
+         plot=p.lc + geom_tile(aes(fill=Oth)) + ggtitle("Other")+
            scale_fill_gradient(low="white", high="gray30", limits=c(0,1)))
   ggsave(f.full[3], width=w, height=h,
-         plot=p.lc + geom_tile(aes(fill=Dec)) + ggtitle("Open Invasible")+
+         plot=p.lc + geom_tile(aes(fill=Dec)) + ggtitle("Deciduous Forest")+
            scale_fill_gradient(low="white", high="green3", limits=c(0,1)))
   ggsave(f.full[4], width=w, height=h,
-         plot=p.lc + geom_tile(aes(fill=WP)) + ggtitle("Open Invasible")+
+         plot=p.lc + geom_tile(aes(fill=WP)) + ggtitle("White Pine Forest")+
            scale_fill_gradient(low="white", high="orchid", limits=c(0,1)))
   ggsave(f.full[5], width=w, height=h,
-         plot=p.lc + geom_tile(aes(fill=Evg)) + ggtitle("Open Invasible")+
+         plot=p.lc + geom_tile(aes(fill=Evg)) + ggtitle("Evergreen Forest")+
            scale_fill_gradient(low="white", high="darkgreen", limits=c(0,1)))
   ggsave(f.full[6], width=w, height=h,
-         plot=p.lc + geom_tile(aes(fill=Mxd)) + ggtitle("Open Invasible")+
+         plot=p.lc + geom_tile(aes(fill=Mxd)) + ggtitle("Mixed Forest")+
            scale_fill_gradient(low="white", high="yellowgreen", limits=c(0,1)))
   
   # Check for success
