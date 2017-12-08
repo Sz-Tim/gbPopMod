@@ -4,7 +4,7 @@
 \alias{run_sensitivity}
 \title{Run sensitivity analysis}
 \usage{
-run_sensitivity(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, lc.df, N.init,
+run_sensitivity(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, lc.df,
   verbose = FALSE, makeGIFs = FALSE)
 }
 \arguments{
@@ -27,9 +27,6 @@ set with \code{\link{set_control_p}}}
 
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
-
-\item{N.init}{Matrix or array with initial population sizes created by 
-\code{\link{pop_init}}}
 
 \item{verbose}{\code{FALSE} Give updates for each year & process?}
 

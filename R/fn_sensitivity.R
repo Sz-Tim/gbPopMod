@@ -14,8 +14,6 @@
 #'   set with \code{\link{set_control_p}}
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param N.init Matrix or array with initial population sizes created by 
-#'   \code{\link{pop_init}}
 #' @param verbose \code{FALSE} Give updates for each year & process? 
 #' @param makeGIFs \code{FALSE} Make a gif for each parameter set?
 #' @return None
@@ -23,7 +21,7 @@
 #' @export
 
 run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, 
-                            lc.df, N.init, verbose=FALSE, makeGIFs=FALSE) {
+                            lc.df, verbose=FALSE, makeGIFs=FALSE) {
   library(tidyverse); library(doSNOW); library(foreach)
   
   cat("|------------------------------------\n")
@@ -38,17 +36,22 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   if(!dir.exists(here(sim.wd))) dir.create(here(sim.wd))
   if(!dir.exists(here(par.wd))) dir.create(here(par.wd))
   
-  # dispersal
   cat("\nCalculating dispersal neighborhoods\n")
   sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
-  saveRDS(sdd.pr, paste0(par.wd, "sdd_pr.rds"))
   
   cat("\nRunning simulations\n")
-  sdd.pr <- readRDS(paste0(par.wd, "sdd_pr.rds"))
   for(j in 1:length(p.seq)) {
     # setup for particular parameter value
     set.seed(225)
     g.p[[p]] <- p.seq[[j]]
+    
+    # population initialization
+    N.init <- pop_init(ngrid, g.p, lc.df)
+    
+    # dispersal
+    if(p %in% c("sdd.max", "sdd.rate", "bird.hab")) {
+      sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
+    }
     
     # run n.sim simulations
     p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
