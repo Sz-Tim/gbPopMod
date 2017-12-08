@@ -27,5 +27,3 @@ vignettes/*.pdf
 .Rproj.user
 inst/doc
 
-# Files for running on the cluster
-/hpc/
