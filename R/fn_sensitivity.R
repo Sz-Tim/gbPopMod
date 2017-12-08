@@ -23,7 +23,7 @@
 
 run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, 
                             lc.df, N.init, verbose=FALSE) {
-  require(tidyverse); require(doSNOW); require(foreach)
+  library(tidyverse); library(doSNOW); library(foreach)
   
   cat("|------------------------------------\n")
   cat("|------ Starting sensitivity analysis for", p, "\n")
@@ -76,7 +76,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   cat("Processing output\n")
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
   foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
-    require(tidyverse); require(stringr); require(gbPopMod)
+    library(tidyverse); library(stringr); library(gbPopMod)
     options(bitmapType='cairo')
     # setup
     p.j <- paste0(p, ": ", p.seq[j])

@@ -19,7 +19,7 @@
 
 make_fruits <- function(N.t, lc.mx, fec.ag, pr.f.ag, y.ad, age.f.d, dem.st=F) {
   
-  require(tidyverse)
+  library(tidyverse)
   
   # calculate N.mature in each LC in each cell
   if(age.f.d) {
@@ -66,7 +66,7 @@ make_fruits <- function(N.t, lc.mx, fec.ag, pr.f.ag, y.ad, age.f.d, dem.st=F) {
 new_seedlings <- function(ngrid, N.seed, N.sb, pr.est.ag, pr.sb, 
                           dem.st=F, bank=F) {
   
-  require(tidyverse)
+  library(tidyverse)
   
   N.rcrt <- rep(0, ngrid)
   if(dem.st) {

@@ -24,7 +24,7 @@
 trt_assign <- function(id.i, ncell, nTrt, trt.eff, 
                        addOwners=FALSE, trt.m1=NULL) {
   
-  require(tidyverse)
+  library(tidyverse)
   
   trt.t <- tibble(id=id.i$id[which(id.i$id.inbd %in% sample(1:ncell, nTrt))],
                   Trt=sample(names(trt.eff), nTrt, replace=TRUE))
@@ -54,7 +54,7 @@ trt_assign <- function(id.i, ncell, nTrt, trt.eff,
 
 trt_ground <- function(est.trt, grd.trt) {
   
-  require(tibble)
+  library(tibble)
   
   pr.est.trt <- tibble(id=est.trt$id,
                        pr.est=grd.trt[match(est.trt$Trt, names(grd.trt))])
@@ -114,7 +114,7 @@ trt_manual <- function(N.t, y.ad, N.trt, man.trt) {
 
 cut_assign <- function(nChg, ncell, lc.df, f.c) {
   
-  require(tidyverse)
+  library(tidyverse)
   
   id.lc <- sample(1:ncell, nChg*ncell)
   n <- length(id.lc)
@@ -156,7 +156,7 @@ cut_assign <- function(nChg, ncell, lc.df, f.c) {
 
 cut_forest <- function(id.chg, f.chg, f.c, lc.df) {
   
-  require(tidyverse)
+  library(tidyverse)
   
   # shift forest to open 
   chg.df <- lc.df[id.chg$id,]

@@ -19,7 +19,7 @@
 
 sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   
-  require(purrr); require(tidyverse); require(fastmatch)
+  library(purrr); library(tidyverse); library(fastmatch)
   
   # unpack parameters
   edges <- g.p$edges
@@ -134,7 +134,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
 sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird, 
                          sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
   
-  require(tidyverse); require(magrittr)
+  library(tidyverse); library(magrittr)
   
   # calculate seeds deposited within source cell vs emigrants
   N.source <- N.f %>%

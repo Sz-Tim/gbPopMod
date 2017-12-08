@@ -23,7 +23,7 @@
 run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, 
                     control.p, verbose=TRUE) {
   
-  require(tidyverse); require(magrittr)
+  library(tidyverse); library(magrittr)
   
   # Unpack parameters
   tmax <- g.p$tmax
