@@ -25,8 +25,11 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                             lc.df, N.init, verbose=FALSE) {
   require(tidyverse); require(doSNOW); require(foreach)
   
+  cat("|------------------------------------\n")
+  cat("|------ Starting sensitivity analysis for", p, "\n")
+  cat("|------\n\n")
+  
   # set directories
-  cat("\n\nSetting directories\n")
   sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
   par.wd <- paste0(sim.wd, p, "/")
   parSet.wd <- paste0(par.wd, p.seq, "/")
@@ -35,11 +38,11 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   if(!dir.exists(here(par.wd))) dir.create(here(par.wd))
   
   # dispersal
-  cat("\n\nCalculating dispersal neighborhoods\n")
+  cat("\nCalculating dispersal neighborhoods\n")
   sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
   saveRDS(sdd.pr, paste0(par.wd, "sdd_pr.rds"))
   
-  cat("\n\nRunning simulations\n")
+  cat("\nRunning simulations\n")
   sdd.pr <- readRDS(paste0(par.wd, "sdd_pr.rds"))
   for(j in 1:length(p.seq)) {
     # setup for particular parameter value
@@ -67,11 +70,10 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     rm(ad.j); rm(sb.j)
     
     # progress
-    cat("Finished parameter set", j, "of", length(p.seq), "\n\n")
+    cat("  Finished parameter set", j, "of", length(p.seq), "\n\n")
   }
   
-  
-  cat("\nProcessing output\n")
+  cat("Processing output\n")
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
   foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
     require(tidyverse); require(stringr); require(gbPopMod)
@@ -138,7 +140,6 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
       grid.j$p.j.Mxd <- p.seq[[j]][6]
     }
     
-    
     # save data summaries
     write_csv(cell.j, paste0(parSet.wd[j], "cell_j.csv"))
     write_csv(grid.j, paste0(parSet.wd[j], "grid_j.csv"))
@@ -149,12 +150,13 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                        p.j, 8, 6)
     make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
     if(j==1) make_plots_lc(sim.wd, lc.df)
-    paste("Finished parameter set", j, "of", length(p.seq))
+    paste("  Finished parameter set", j, "of", length(p.seq))
   }
   stopCluster(p.c)
   
   # grid summary plots
-  grid.sum <- map_df(parSet.wd, ~(read_csv(paste0(., "grid_j.csv")))) %>%
+  grid.sum <- map_df(parSet.wd, 
+                     ~suppressMessages(read_csv(paste0(., "grid_j.csv")))) %>%
     mutate(year=as.numeric(year)) 
   if(length(p.seq[[j]])==1) {
     grid.sum %<>% mutate(p.j=as.factor(p.j)) 
@@ -162,4 +164,10 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     grid.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
   }
   make_plots_gridSummary(par.wd, grid.sum, byLC=(length(p.seq[[1]])>1))
+  
+  # progress
+  cat("\n")
+  cat("|------\n")
+  cat("|------ Finished sensitivity analysis for", p, "\n")
+  cat("|------------------------------------\n\n")
 }

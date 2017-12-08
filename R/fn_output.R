@@ -19,7 +19,7 @@ save_pars <- function(p.wd, g.p, control.p, verbose=TRUE) {
   saveRDS(control.p, file=cp_f)
   if(verbose) {
     if(file.exists(gp_f) & file.exists(cp_f)) { 
-      cat("Parameters stored in", p.wd, "\n") 
+      cat("  Parameters stored in", p.wd, "\n") 
     } else {
       cat("--- Error: Parameters not stored \n")
     }
@@ -51,7 +51,7 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
   saveRDS(sb.N, file=sb_f)
   if(verbose) {
     if(file.exists(ad_f) & file.exists(sb_f)) { 
-      cat("Abundances stored in", p.wd, "\n") 
+      cat("  Abundances stored in", p.wd, "\n") 
     } else {
       cat("--- Error: Abundances not stored \n")
     }
@@ -113,7 +113,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
   # Check for success
   for(f in 1:length(f.full)) {
     if(file.exists(f.full[f])) { 
-      cat(f.full[f], "saved\n")
+      cat(" ", f.full[f], "saved\n")
     } else { 
       cat("--- Error:", f.full[f], "not found! \n") }
   }
@@ -180,7 +180,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
   # Check for success
   for(f in 1:length(f.full)) {
     if(file.exists(f.full[f])) { 
-      cat(f.full[f], "saved\n")
+      cat(" ", f.full[f], "saved\n")
     } else { 
       cat("--- Error:", f.full[f], "not found! \n") }
   }
@@ -233,7 +233,7 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
   # Check for success
   for(f in 1:length(f.full)) {
     if(file.exists(f.full[f])) { 
-      cat(f.full[f], "saved\n")
+      cat(" ", f.full[f], "saved\n")
     } else { 
       cat("--- Error:", f.full[f], "not found! \n") }
   }
@@ -367,7 +367,7 @@ make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
   # Check for success
   for(f in 1:length(f.nm)) {
     if(sum(grepl(f.nm[f], list.files(p.wd))) > 0) { 
-      cat(f.nm[f], "saved\n")
+      cat(" ", f.nm[f], "saved\n")
     } else { 
       cat("--- Error:", f.nm[f], "not found! \n") }
   }

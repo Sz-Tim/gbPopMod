@@ -70,16 +70,16 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   n.iy <- map(yy, ~.[.>=n.y[1] & .<=n.y[2]])
   
   # generate all xy combinations & neighborhood matrix indices
-  if(is.null(lc.new)) cat("generating neighborhoods...\n")
+  if(is.null(lc.new)) cat("  generating neighborhoods...\n")
   n.i <- map2(n.ix, n.iy, expand_v) 
   n.x <- map2(xx, n.ix, `%fin%`) %>% map(which) %>% map(range)
   n.y <- map2(yy, n.iy, `%fin%`) %>% map(which) %>% map(range)
   
   # match xy combinations with cell IDs
-  if(is.null(lc.new)) cat("determining neighborhood cell IDs...\n")
+  if(is.null(lc.new)) cat("  determining neighborhood cell IDs...\n")
   c.i <- map(n.i, ~fmatch(., lc.df$x_y))
 
-  if(is.null(lc.new)) cat("calculating probabilities...\n")
+  if(is.null(lc.new)) cat("  calculating probabilities...\n")
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
     sdd.i[n.y[[n]][1]:n.y[[n]][2],
@@ -93,10 +93,10 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
     
     # progress update
     if(n %% 5000 == 0) {
-      if(is.null(lc.new)) cat("finished cell", n, "\n")
+      if(is.null(lc.new)) cat("  finished cell", n, "\n")
     }
   }
-  if(is.null(lc.new)) cat("finished:", n, "cells\n")
+  if(is.null(lc.new)) cat("  finished:", n, "cells\n")
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
   return(sdd.i)
 }
