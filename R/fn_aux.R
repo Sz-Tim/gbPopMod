@@ -192,6 +192,7 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #' @param tmax \code{100} Number of time steps per simulation
 #' @param dem.st \code{FALSE} Include stochasticity in demography?
 #' @param sdd.st \code{TRUE} Include stochasticity in short distance dispersal?
+#' @param bank \code{TRUE} Include seedbank?
 #' @param n.cores \code{4} Number of cores for parallelizing sdd.pr calculation
 #' @param lc.r \code{100} Maximum number of rows (\code{y}) in landscape
 #' @param lc.c \code{100} Maximum number of columns (\code{x}) in landscape
@@ -207,7 +208,6 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #'   mean fruit per adult
 #' @param age.f \code{4} Vector \code{length=n.lc} or scalar of age at first
 #'   fruiting. Individuals at this age are considered adults
-#' @param bank \code{TRUE} Include seedbank?
 #' @param pr.sb \code{0.3} Probability of annual survival in seed bank
 #' @param pr.est \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 #'   \code{length=n.lc} of seedling establishment probabilities
@@ -226,24 +226,24 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #' @keywords initialize, set up, global, parameter
 #' @export
 
-set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, n.cores=4, 
+set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4, 
                     lc.r=100, lc.c=100, n.lc=6, N.p.t0=10,
                     K=c(750, 10, 100, 100, 300, 100),
                     pr.s=c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6),
                     pr.f=c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
                     fec=c(200, 100, 40, 20, 20, 10),
-                    age.f=4, bank=TRUE, pr.sb=0.3, 
+                    age.f=4, pr.sb=0.3, 
                     pr.est=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
                     sdd.max=15, sdd.rate=0.1, n.ldd=1,
                     pr.eat=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
                     bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), pr.s.bird=0.6,
                     edges="wall") {
   
-  g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, n.cores=n.cores, 
-              lc.r=lc.r, lc.c=lc.c, n.lc=n.lc, N.p.t0=N.p.t0, K=K, pr.s=pr.s,
-              pr.f=pr.f, fec=fec, age.f=age.f, bank=bank, pr.sb=pr.sb,
+  g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, bank=bank,
+              n.cores=n.cores, lc.r=lc.r, lc.c=lc.c, n.lc=n.lc, N.p.t0=N.p.t0, 
+              K=K, pr.s=pr.s, pr.f=pr.f, fec=fec, age.f=age.f, pr.sb=pr.sb,
               pr.est=pr.est, sdd.max=sdd.max, sdd.rate=sdd.rate, n.ldd=n.ldd,
-              pr.eat=pr.eat, bird.hab=bird.hab, pr.s.bird=pr.s.bird,
+              pr.eat=pr.eat, bird.hab=bird.hab, pr.s.bird=pr.s.bird, 
               edges=edges)
   
   return(g.p)
