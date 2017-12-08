@@ -5,7 +5,7 @@
 \title{Run sensitivity analysis}
 \usage{
 run_sensitivity(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, lc.df, N.init,
-  verbose = FALSE)
+  verbose = FALSE, makeGIFs = FALSE)
 }
 \arguments{
 \item{p}{Parameter to perform the sensitivity analysis on}
@@ -32,6 +32,8 @@ cell id info}
 \code{\link{pop_init}}}
 
 \item{verbose}{\code{FALSE} Give updates for each year & process?}
+
+\item{makeGIFS}{\code{FALSE} Make a gif for each parameter set?}
 }
 \value{
 None
