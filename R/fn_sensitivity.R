@@ -27,7 +27,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   
   cat("|------------------------------------\n")
   cat("|------ Starting sensitivity analysis for", p, "\n")
-  cat("|------\n\n")
+  cat("|------\n")
   
   # set directories
   sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
@@ -169,5 +169,5 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   cat("\n")
   cat("|------\n")
   cat("|------ Finished sensitivity analysis for", p, "\n")
-  cat("|------------------------------------\n\n")
+  cat("|------------------------------------\n\n\n")
 }
