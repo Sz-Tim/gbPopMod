@@ -45,4 +45,4 @@ module load linuxbrew/colsa
 ## Instruct your program to make use of the number of desired threads.
 ## As your job will be allocated an entire node, this should normally
 ## be 24.
-srun Rscript hpc/hpc_sens.R
+srun Rscript hpc/hpc_wrap.R
