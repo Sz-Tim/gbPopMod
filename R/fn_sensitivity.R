@@ -16,7 +16,7 @@
 #'   cell id info
 #' @param verbose \code{FALSE} Give updates for each year & process? 
 #' @param makeGIFs \code{FALSE} Make a gif for each parameter set?
-#' @return None
+#' @return Success message
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
@@ -174,4 +174,5 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   cat("|------\n")
   cat("|------ Finished sensitivity analysis for", p, "\n")
   cat("|------------------------------------\n\n\n")
+  return(paste("Completed", p))
 }

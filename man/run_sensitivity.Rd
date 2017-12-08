@@ -33,7 +33,7 @@ cell id info}
 \item{makeGIFs}{\code{FALSE} Make a gif for each parameter set?}
 }
 \value{
-None
+Success message
 }
 \description{
 This is a wrapper for running simulations over a set of varying parameters.
