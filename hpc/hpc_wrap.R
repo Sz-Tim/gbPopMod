@@ -15,15 +15,12 @@ data(lc.rct)
 
 
 # set parameters
-n.sim <- 3
-g.p <- set_g_p(tmax=5, lc.r=30, lc.c=30, n.ldd=1, n.cores=3)
+n.sim <- 6
+g.p <- set_g_p(tmax=20, lc.r=30, lc.c=30, n.ldd=1, n.cores=3)
 control.p <- set_control_p()
-p <- c("pr.sb", "pr.s.bird", "pr.s", "pr.f", "fec")
-p.seq <- list(seq(0.1, 0.8, length.out=3),
-              seq(0.3, 0.8, length.out=3),
-              expand_cnpy(Op=c(0.2, 0.9), Cl=c(0.2, 0.9), length_out=2),
-              expand_cnpy(Op=c(0.2, 0.9), Cl=c(0.2, 0.9), length_out=2),
-              expand_cnpy(Op=c(100, 200), Cl=c(10, 40), length_out=2))
+p <- readRDS("hpc/p.rds")
+p.seq <- readRDS("hpc/p_seq.rds")
+
 
 # land cover
 lc.df <- lc.rct %>% 
@@ -33,18 +30,12 @@ lc.df <- lc.rct %>%
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
+
 # population
 set.seed(225)
 N.init <- pop_init(ngrid, g.p, lc.df)
 
-##---
-## run sensitivity loop
-##---
-
+# sensitivity loop
 map2(p, p.seq, ~run_sensitivity(.x, .y, n.sim, ngrid, ncell, g.p, control.p,
                                 lc.df, N.init))
-
-
-
-
 
