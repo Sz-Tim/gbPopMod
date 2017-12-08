@@ -263,6 +263,7 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
 make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
                                    w=8, h=6) {
   library(scales); library(ggplot2); theme_set(theme_bw())
+  p <- grid.sum$p[1]
   n.set <- length(unique(grid.sum$p.j))
   p.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.set)/n.set)
   if(byLC) {
