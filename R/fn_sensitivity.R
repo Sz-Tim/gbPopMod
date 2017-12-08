@@ -17,7 +17,7 @@
 #' @param N.init Matrix or array with initial population sizes created by 
 #'   \code{\link{pop_init}}
 #' @param verbose \code{FALSE} Give updates for each year & process? 
-#' @param makeGIFS \code{FALSE} Make a gif for each parameter set?
+#' @param makeGIFs \code{FALSE} Make a gif for each parameter set?
 #' @return None
 #' @keywords parameters, sensitivity, save, output
 #' @export
@@ -149,7 +149,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     # save plots
     make_plots_final_t(parSet.wd[j], g.p, 
                        filter(cell.j, year==max(cell.j$year)), p.j, 8, 6)
-    if(makeGIFS) make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
+    if(makeGIFs) make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
     if(j==1) make_plots_lc(sim.wd, lc.df)
     paste("  Finished parameter set", j, "of", length(p.seq))
   }

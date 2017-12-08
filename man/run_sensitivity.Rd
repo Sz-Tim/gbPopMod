@@ -33,7 +33,7 @@ cell id info}
 
 \item{verbose}{\code{FALSE} Give updates for each year & process?}
 
-\item{makeGIFS}{\code{FALSE} Make a gif for each parameter set?}
+\item{makeGIFs}{\code{FALSE} Make a gif for each parameter set?}
 }
 \value{
 None
