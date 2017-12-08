@@ -43,4 +43,4 @@ It runs in parallel using the \code{snow} and \code{foreach} packages.
 \keyword{output}
 \keyword{parameters,}
 \keyword{save,}
-\keyword{store,}
+\keyword{sensitivity,}

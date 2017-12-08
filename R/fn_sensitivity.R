@@ -18,7 +18,7 @@
 #'   \code{\link{pop_init}}
 #' @param verbose \code{FALSE} Give updates for each year & process? 
 #' @return None
-#' @keywords parameters, store, save, output
+#' @keywords parameters, sensitivity, save, output
 #' @export
 
 run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, 
@@ -146,8 +146,8 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     rm(ad.j); rm(sb.j)
     
     # save plots
-    make_plots_final_t(parSet.wd[j], g.p, filter(cell.j, year==max(cell.j$year)),
-                       p.j, 8, 6)
+    make_plots_final_t(parSet.wd[j], g.p, 
+                       filter(cell.j, year==max(cell.j$year)), p.j, 8, 6)
     make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
     if(j==1) make_plots_lc(sim.wd, lc.df)
     paste("  Finished parameter set", j, "of", length(p.seq))
