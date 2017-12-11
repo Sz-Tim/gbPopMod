@@ -29,6 +29,6 @@ ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
 # sensitivity loop
-map2(p, p.seq, 
+walk2(p, p.seq, 
      ~run_sensitivity(.x, .y, n.sim, ngrid, ncell, g.p, control.p, lc.df))
 
