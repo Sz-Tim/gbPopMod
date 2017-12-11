@@ -80,7 +80,7 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
 #' @export
 
 make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
-  library(ggplot2); theme_set(theme_bw())
+  library(ggplot2); theme_set(theme_bw()); options(bitmapType='cairo')
   
   # filenames
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP")
@@ -142,7 +142,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 #' @export
 
 make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
-  library(gganimate); theme_set(theme_bw())
+  library(gganimate); theme_set(theme_bw()); options(bitmapType='cairo')
   
   # filenames
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP", "ad_L5")
@@ -202,7 +202,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
 #' @export
 
 make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
-  library(ggplot2); theme_set(theme_bw())
+  library(ggplot2); theme_set(theme_bw()); options(bitmapType='cairo')
   
   # filenames
   f.full <- paste0(p.wd, c("LC_OpI.jpg", "LC_Oth.jpg", "LC_Dec.jpg", 
@@ -263,6 +263,8 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
 make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
                                    w=8, h=6) {
   library(scales); library(ggplot2); theme_set(theme_bw())
+  options(bitmapType='cairo')
+  
   p <- grid.sum$p[1]
   n.set <- length(unique(grid.sum$p.j))
   p.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.set)/n.set)
