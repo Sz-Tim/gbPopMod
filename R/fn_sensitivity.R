@@ -162,7 +162,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   grid.sum <- map_df(parSet.wd, 
                      ~suppressMessages(read_csv(paste0(., "grid_j.csv")))) %>%
     mutate(year=as.numeric(year)) 
-  if(length(p.seq[[j]])==1) {
+  if(length(p.seq[[1]])==1) {
     grid.sum %<>% mutate(p.j=as.factor(p.j)) 
   } else {
     grid.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
