@@ -121,7 +121,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                      2:3, mean)*100
     K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
     K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 
-                 2:3, mean)/occ.s.ad*10000
+                 2:3, mean)*100
     grid.j <- tibble(year=unique(cell.j$year),
                      pOcc_ad_mn=apply(occ.s.ad, 1, mean),
                      pOcc_ad_sd=apply(occ.s.ad, 1, sd),
@@ -129,8 +129,10 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                      pOcc_sb_sd=apply(occ.s.sb, 1, sd),
                      pL5_mn=apply(less5.s, 1, mean),
                      pL5_sd=apply(less5.s, 1, sd),
-                     pK_Occ_mn=apply(K.s, 1, mean),
-                     pK_Occ_sd=apply(K.s, 1, sd),
+                     pK_mn=apply(K.s, 1, mean),
+                     pK_sd=apply(K.s, 1, sd),
+                     pK_Occ_mn=apply(K.s/occ.s.ad*100, 1, mean),
+                     pK_Occ_sd=apply(K.s/occ.s.ad*100, 1, sd),
                      p=p)
     if(length(p.seq[[j]])==1) {
       grid.j$p.j <- p.seq[j]

@@ -284,7 +284,7 @@ make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
   
   # filenames
   f.nm <- c("pOcc_ad_mn", "pOcc_ad_sd", "pOcc_sb_mn", "pOcc_sb_sd", 
-              "pL5_mn", "pL5_sd", "pK_Occ_mn", "pK_Occ_sd")
+              "pL5_mn", "pL5_sd", "pK_mn", "pK_sd", "pK_Occ_mn", "pK_Occ_sd")
   f.full <- paste0(p.wd, f.nm)
   
   if(byLC) {
@@ -319,12 +319,19 @@ make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
       ggsave(paste0(f.full[6], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=p.sd + aes_string(y=f.nm[6]) + 
                ggtitle("% cells with ≤ 5 adults"))
-      # Occupied cells at K
+      # Cells at K
       ggsave(paste0(f.full[7], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=p.mn + aes_string(y=f.nm[7]) + 
-               ggtitle("% occupied cells at K"))
+               ggtitle("% cells at K"))
       ggsave(paste0(f.full[8], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=p.sd + aes_string(y=f.nm[8]) + 
+               ggtitle("% cells at K"))
+      # Occupied cells at K
+      ggsave(paste0(f.full[9], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.mn + aes_string(y=f.nm[9]) + 
+               ggtitle("% occupied cells at K"))
+      ggsave(paste0(f.full[10], "_", LC[l], ".jpg"),  width=w, height=h,
+             plot=p.sd + aes_string(y=f.nm[10]) + 
                ggtitle("% occupied cells at K"))
     }
   } else {
@@ -358,12 +365,19 @@ make_plots_gridSummary <- function(p.wd, grid.sum, byLC=FALSE, txt=NULL,
     ggsave(paste0(f.full[6], ".jpg"), width=w, height=h,
            plot=p.sd + aes_string(y=f.nm[6]) +
              ggtitle("% cells with ≤ 5 adults"))
-    # Occupied cells at K
+    # Cells at K
     ggsave(paste0(f.full[7], ".jpg"), width=w, height=h,
            plot=p.mn + aes_string(y=f.nm[7]) +
-             ggtitle("% occupied cells at K"))
+             ggtitle("% cells at K"))
     ggsave(paste0(f.full[8], ".jpg"), width=w, height=h,
            plot=p.sd + aes_string(y=f.nm[8]) +
+             ggtitle("% cells at K"))
+    # Occupied cells at K
+    ggsave(paste0(f.full[9], ".jpg"), width=w, height=h,
+           plot=p.mn + aes_string(y=f.nm[9]) +
+             ggtitle("% occupied cells at K"))
+    ggsave(paste0(f.full[10], ".jpg"), width=w, height=h,
+           plot=p.sd + aes_string(y=f.nm[10]) +
              ggtitle("% occupied cells at K"))
   }
   
