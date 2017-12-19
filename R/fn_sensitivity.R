@@ -90,29 +90,29 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     
     # munge data
     ## cell summaries
-    ad.mn <- apply(ad.j, 1:2, mean)
-    cell.j <- cbind(lc.df, ad.mn) %>% as.tibble %>%
+    ad.mn <- apply(ad.j[lc.df$inbd,,], 1:2, mean)
+    cell_yr.j <- cbind(lc.df[lc.df$inbd,,], ad.mn) %>% as.tibble %>%
       gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
       rename(ad_Ab=N.adult) %>%
-      mutate(ad_sd=c(apply(ad.j, 1:2, sd)),
-             ad_pP=c(apply(ad.j > 0, 1:2, mean)),
-             sb_Ab=c(apply(log(sb.j+1), 1:2, mean)),
-             sb_sd=c(apply(log(sb.j+1), 1:2, sd)),
-             sb_pP=c(apply(sb.j > 0, 1:2, mean)),
+      mutate(ad_sd=c(apply(ad.j[lc.df$inbd,,], 1:2, sd)),
+             ad_pP=c(apply(ad.j[lc.df$inbd,,] > 0, 1:2, mean)),
+             sb_Ab=c(apply(log(sb.j[lc.df$inbd,,]+1), 1:2, mean)),
+             sb_sd=c(apply(log(sb.j[lc.df$inbd,,]+1), 1:2, sd)),
+             sb_pP=c(apply(sb.j[lc.df$inbd,,] > 0, 1:2, mean)),
              ad_L5=c(ad.mn > 0))
-    cell.j$ad_L5 <- cell.j$ad_L5 + c(ad.mn > 5)
-    cell.j$year <- str_pad(cell.j$year, 3, "left", "0")
-    cell.j$p <- p
+    cell_yr.j$ad_L5 <- cell_yr.j$ad_L5 + c(ad.mn > 5)
+    cell_yr.j$year <- str_pad(cell_yr.j$year, 3, "left", "0")
+    cell_yr.j$p <- p
     if(length(p.seq[[j]])==1) {
-      cell.j$p.j <- p.seq[j]
+      cell_yr.j$p.j <- p.seq[j]
     } else {
-      cell.j$p.j <- as.character(p.seq[j])
-      cell.j$p.j.OpI <- p.seq[[j]][1]
-      cell.j$p.j.Oth <- p.seq[[j]][2]
-      cell.j$p.j.Dec <- p.seq[[j]][3]
-      cell.j$p.j.WP <- p.seq[[j]][4]
-      cell.j$p.j.Evg <- p.seq[[j]][5]
-      cell.j$p.j.Mxd <- p.seq[[j]][6]
+      cell_yr.j$p.j <- as.character(p.seq[j])
+      cell_yr.j$p.j.OpI <- p.seq[[j]][1]
+      cell_yr.j$p.j.Oth <- p.seq[[j]][2]
+      cell_yr.j$p.j.Dec <- p.seq[[j]][3]
+      cell_yr.j$p.j.WP <- p.seq[[j]][4]
+      cell_yr.j$p.j.Evg <- p.seq[[j]][5]
+      cell_yr.j$p.j.Mxd <- p.seq[[j]][6]
     }
     ## landscape summaries
     occ.s.ad <- apply(ad.j[lc.df$inbd,,]>0, 2:3, mean)*100
@@ -122,7 +122,11 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
     K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 
                  2:3, mean)*100
-    grid.j <- tibble(year=unique(cell.j$year),
+    t.0K <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<K.ag[lc.df$inbd,],
+                  c(1,3), sum)
+    t.L5 <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5,
+                  c(1,3), sum)
+    grid.j <- tibble(year=unique(cell_yr.j$year),
                      pOcc_ad_mn=apply(occ.s.ad, 1, mean),
                      pOcc_ad_sd=apply(occ.s.ad, 1, sd),
                      pOcc_sb_mn=apply(occ.s.sb, 1, mean),
@@ -134,8 +138,15 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                      pK_Occ_mn=apply(K.s/occ.s.ad*100, 1, mean),
                      pK_Occ_sd=apply(K.s/occ.s.ad*100, 1, sd),
                      p=p)
+    cell.j <- cbind(lc.df[lc.df$inbd,], 
+                    t0K_mn=apply(t.0K, 1, mean),
+                    t0K_sd=apply(t.0K, 1, sd),
+                    tL5_mn=apply(t.L5, 1, mean),
+                    tL5_sd=apply(t.L5, 1, sd)) %>% as.tibble
+    cell.j$p <- p
     if(length(p.seq[[j]])==1) {
       grid.j$p.j <- p.seq[j]
+      cell.j$p.j <- p.seq[j]
     } else {
       grid.j$p.j <- as.character(p.seq[j])
       grid.j$p.j.OpI <- p.seq[[j]][1]
@@ -144,17 +155,25 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
       grid.j$p.j.WP <- p.seq[[j]][4]
       grid.j$p.j.Evg <- p.seq[[j]][5]
       grid.j$p.j.Mxd <- p.seq[[j]][6]
+      cell.j$p.j <- as.character(p.seq[j])
+      cell.j$p.j.OpI <- p.seq[[j]][1]
+      cell.j$p.j.Oth <- p.seq[[j]][2]
+      cell.j$p.j.Dec <- p.seq[[j]][3]
+      cell.j$p.j.WP <- p.seq[[j]][4]
+      cell.j$p.j.Evg <- p.seq[[j]][5]
+      cell.j$p.j.Mxd <- p.seq[[j]][6]
     }
     
     # save data summaries
+    write_csv(cell_yr.j, paste0(parSet.wd[j], "cell_yr_j.csv"))
     write_csv(cell.j, paste0(parSet.wd[j], "cell_j.csv"))
     write_csv(grid.j, paste0(parSet.wd[j], "grid_j.csv"))
     rm(ad.j); rm(sb.j)
     
     # save plots
     make_plots_final_t(parSet.wd[j], g.p, 
-                       filter(cell.j, year==max(cell.j$year)), p.j, 8, 6)
-    if(makeGIFs) make_plots_gifs(parSet.wd[j], g.p, cell.j, p.j)
+                       filter(cell_yr.j, year==max(cell_yr.j$year)), p.j, 8, 6)
+    if(makeGIFs) make_plots_gifs(parSet.wd[j], g.p, cell_yr.j, p.j)
     if(j==1) make_plots_lc(sim.wd, lc.df)
     paste("  Finished parameter set", j, "of", length(p.seq))
   }
@@ -164,12 +183,16 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   grid.sum <- map_df(parSet.wd, 
                      ~suppressMessages(read_csv(paste0(., "grid_j.csv")))) %>%
     mutate(year=as.numeric(year)) 
+  cell.sum <- map_df(parSet.wd, 
+                     ~suppressMessages(read_csv(paste0(., "cell_j.csv"))))
   if(length(p.seq[[1]])==1) {
     grid.sum %<>% mutate(p.j=as.factor(p.j)) 
+    cell.sum %<>% mutate(p.j=as.factor(p.j)) 
   } else {
     grid.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
+    cell.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
   }
-  make_plots_gridSummary(par.wd, grid.sum, byLC=(length(p.seq[[1]])>1))
+  make_plots_gridSummary(par.wd, grid.sum, cell.sum, byLC=(length(p.seq[[1]])>1))
   
   # progress
   cat("\n")

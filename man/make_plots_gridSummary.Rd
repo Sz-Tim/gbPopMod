@@ -4,12 +4,15 @@
 \alias{make_plots_gridSummary}
 \title{Save plots of buckthorn distribution summaries}
 \usage{
-make_plots_gridSummary(p.wd, grid.sum, byLC = FALSE, txt = NULL, w = 8,
-  h = 6)
+make_plots_gridSummary(p.wd, grid.sum, cell.sum, byLC = FALSE, txt = NULL,
+  w = 8, h = 6)
 }
 \arguments{
 \item{grid.sum}{Dataframe or tibble with processed output for whole-grid
 summaries}
+
+\item{cell.sum}{Dataframe or tibble with processed output for summaries of
+time-to-event by cell}
 
 \item{byLC}{\code{FALSE} For LC-specific parameters, should separate plots be
 created for each LC?}
