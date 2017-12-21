@@ -302,11 +302,11 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
         scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) +
         geom_line(aes_string(colour=paste0("p.j.", LC[l])))
       t.mn <- ggplot(cell.sum, aes(group=p.j)) +  
-        labs(y="Mean across simulations") +
+        labs(y="Density") +
         scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) + 
         geom_density(aes_string(colour=paste0("p.j.", LC[l])))
       t.sd <- ggplot(cell.sum, aes(group=p.j)) +  
-        labs(y="Std dev across simulations") +
+        labs(y="Density") +
         scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) + 
         geom_density(aes_string(colour=paste0("p.j.", LC[l])))
       
@@ -358,17 +358,17 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
       # Time from N=1 to N=K
       ggsave(paste0(f.full[11], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=t.mn + aes_string(x=f.nm[11]) + 
-               labs(title="Time from N=1 to N=K", x="Years"))
+               labs(title="Time from N=1 to N=K", x="mean(years)"))
       ggsave(paste0(f.full[12], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=t.sd + aes_string(x=f.nm[12]) + 
-               labs(title="Time from N=1 to N=K", x="Years"))
+               labs(title="Time from N=1 to N=K", x="sd(years)"))
       # Time from N=1 to N>5
       ggsave(paste0(f.full[13], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=t.mn + aes_string(x=f.nm[13]) + 
-               labs(title="Time from N=1 to N>5", x="Years"))
+               labs(title="Time from N=1 to N>5", x="mean(years)"))
       ggsave(paste0(f.full[14], "_", LC[l], ".jpg"),  width=w, height=h,
              plot=t.sd + aes_string(x=f.nm[14]) + 
-               labs(title="Time from N=1 to N>5", x="Years"))
+               labs(title="Time from N=1 to N>5", x="sd(years)"))
       
     }
   } else {
@@ -379,10 +379,10 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
       labs(x="Year") +
       scale_colour_manual(p, values=p.col) + geom_line()
     t.mn <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
-      labs(y="Mean across simulations") +
+      labs(y="Density") +
       scale_colour_manual(p, values=p.col) + geom_density()
     t.sd <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
-      labs(y="Std dev across simulations") +
+      labs(y="Density") +
       scale_colour_manual(p, values=p.col) + geom_density()
     
     # Adult occupancy
@@ -433,17 +433,17 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
     # Time from N=1 to N=K
     ggsave(paste0(f.full[11], ".jpg"), width=w, height=h,
            plot=t.mn + aes_string(x=f.nm[11]) + 
-             labs(title="Time from N=1 to N=K", x="Years"))
+             labs(title="Time from N=1 to N=K", x="mean(years)"))
     ggsave(paste0(f.full[12], ".jpg"), width=w, height=h,
            plot=t.sd + aes_string(x=f.nm[12]) + 
-             labs(title="Time from N=1 to N=K", x="Years"))
+             labs(title="Time from N=1 to N=K", x="sd(years)"))
     # Time from N=1 to N>5
     ggsave(paste0(f.full[13], ".jpg"), width=w, height=h,
            plot=t.mn + aes_string(x=f.nm[13]) + 
-             labs(title="Time from N=1 to N>5", x="Years"))
+             labs(title="Time from N=1 to N>5", x="mean(years)"))
     ggsave(paste0(f.full[14], ".jpg"), width=w, height=h,
            plot=t.sd + aes_string(x=f.nm[14]) + 
-             labs(title="Time from N=1 to N>5", x="Years"))    
+             labs(title="Time from N=1 to N>5", x="sd(years)"))    
   }
   
   # Check for success
