@@ -29,6 +29,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   cat("|------\n")
   
   # set directories
+  byLC <- length(p.seq[[1]])>1
   sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
   par.wd <- paste0(sim.wd, p, "/")
   parSet.wd <- paste0(par.wd, p.seq, "/")
@@ -82,11 +83,13 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
     library(tidyverse); library(stringr); library(gbPopMod)
     options(bitmapType='cairo')
+    
     # setup
     p.j <- paste0(p, ": ", p.seq[j])
     ad.j <- readRDS(paste0(parSet.wd[j], "abund_ad.rds"))
     sb.j <- readRDS(paste0(parSet.wd[j], "abund_sb.rds"))
     g.p <- readRDS(paste0(parSet.wd[j], "pars_glbl.rds"))
+    byLC <- length(p.seq[[j]])>1
     
     # munge data
     ## cell summaries
@@ -114,9 +117,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     cell_yr.j$ad_L5 <- cell_yr.j$ad_L5 + c(ad.mn > 5)
     cell_yr.j$year <- str_pad(cell_yr.j$year, 3, "left", "0")
     cell_yr.j$p <- p
-    if(length(p.seq[[j]])==1) {
-      cell_yr.j$p.j <- p.seq[j]
-    } else {
+    if(byLC) {
       cell_yr.j$p.j <- as.character(p.seq[j])
       cell_yr.j$p.j.OpI <- p.seq[[j]][1]
       cell_yr.j$p.j.Oth <- p.seq[[j]][2]
@@ -124,6 +125,8 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
       cell_yr.j$p.j.WP <- p.seq[[j]][4]
       cell_yr.j$p.j.Evg <- p.seq[[j]][5]
       cell_yr.j$p.j.Mxd <- p.seq[[j]][6]
+    } else {
+      cell_yr.j$p.j <- p.seq[j]
     }
     ## landscape summaries
     occ.s.ad <- apply(ad.j[lc.df$inbd,,]>0, 2:3, mean)*100
@@ -155,10 +158,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                     tL5_mn=apply(t.L5, 1, mean),
                     tL5_sd=apply(t.L5, 1, sd)) %>% as.tibble
     cell.j$p <- p
-    if(length(p.seq[[j]])==1) {
-      grid.j$p.j <- p.seq[j]
-      cell.j$p.j <- p.seq[j]
-    } else {
+    if(byLC) {
       grid.j$p.j <- as.character(p.seq[j])
       grid.j$p.j.OpI <- p.seq[[j]][1]
       grid.j$p.j.Oth <- p.seq[[j]][2]
@@ -173,6 +173,9 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
       cell.j$p.j.WP <- p.seq[[j]][4]
       cell.j$p.j.Evg <- p.seq[[j]][5]
       cell.j$p.j.Mxd <- p.seq[[j]][6]
+    } else {
+      grid.j$p.j <- p.seq[j]
+      cell.j$p.j <- p.seq[j]
     }
     
     # save data summaries
@@ -196,14 +199,14 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     mutate(year=as.numeric(year)) 
   cell.sum <- map_df(parSet.wd, 
                      ~suppressMessages(read_csv(paste0(., "cell_j.csv"))))
-  if(length(p.seq[[1]])==1) {
-    grid.sum %<>% mutate(p.j=as.factor(p.j)) 
-    cell.sum %<>% mutate(p.j=as.factor(p.j)) 
-  } else {
+  if(byLC) {
     grid.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
     cell.sum %<>% mutate_at(vars(p.j:p.j.Mxd), as.factor)
+  } else {
+    grid.sum %<>% mutate(p.j=as.factor(p.j)) 
+    cell.sum %<>% mutate(p.j=as.factor(p.j)) 
   }
-  make_plots_gridSummary(par.wd, grid.sum, cell.sum, byLC=(length(p.seq[[1]])>1))
+  make_plots_gridSummary(par.wd, grid.sum, cell.sum, byLC)
   
   # progress
   cat("\n")
