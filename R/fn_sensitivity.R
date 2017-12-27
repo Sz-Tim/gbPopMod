@@ -91,6 +91,17 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     # munge data
     ## cell summaries
     ad.mn <- apply(ad.j[lc.df$inbd,,], 1:2, mean)
+    K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
+    ### logical: is cell-iter-t at K?
+    at.K <- apply(ad.j, c(2,3), function(x) x == K.ag & x > 0)
+    ### logical: did cell-iter ever reach K?
+    reach.K <- at.K
+    for(i in 1:dim(at.K)[1]) {
+      for(s in 1:dim(at.K)[3]) {
+        reach.K[i,,s] <- sum(reach.K[i,,s]) > 0
+      }
+    }
+    ### summarize
     cell_yr.j <- cbind(lc.df[lc.df$inbd,,], ad.mn) %>% as.tibble %>%
       gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
       rename(ad_Ab=N.adult) %>%
@@ -119,10 +130,10 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     occ.s.sb <- apply(sb.j[lc.df$inbd,,]>0, 2:3, mean)*100
     less5.s <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5, 
                      2:3, mean)*100
-    K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
-    K.s <- apply(ad.j[lc.df$inbd,,]==K.ag[lc.df$inbd,], 
-                 2:3, mean)*100
-    t.0K <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<K.ag[lc.df$inbd,],
+    K.s <- apply(at.K[lc.df$inbd,,], 2:3, mean)*100
+    t.0K <- apply(ad.j[lc.df$inbd,,]>0 & 
+                    !at.K[lc.df$inbd,,] & 
+                    reach.K[lc.df$inbd,,],
                   c(1,3), sum)
     t.L5 <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5,
                   c(1,3), sum)
