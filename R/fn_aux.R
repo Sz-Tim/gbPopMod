@@ -36,19 +36,19 @@ expand_v <- function(x, y, sep="_") {
 #'   being varied.
 #' @param p \code{NULL} Character scalar of which parameter to vary. If \code{LC
 #'   != "all"}, then this must be specified.
-#' @param lc.min Vector \code{length=n.lc} of minimum parameter values.
-#' @param lc.max Vector \code{length=n.lc} of maximum parameter values
 #' @param LC Character scalar of which land cover categories to increment; must
 #'   take one of \code{c("all", "Opn", "Oth", "Dec", "WP", "Evg", "Mxd")}
 #' @param all.combo \code{FALSE} Should all combinations of all land cover
 #'   values be generated?
 #' @param len.out Number of parameter values per land cover category
+#' @param lc.min Vector \code{length=n.lc} of minimum parameter values.
+#' @param lc.max Vector \code{length=n.lc} of maximum parameter values
 #' @return List of vectors, each length 6
 #' @keywords expand.grid, sensitivity
 #' @export
 
-expand_LCs <- function(g.p=g.p, p=NULL, lc.min=rep(0.1, 6), lc.max=rep(0.9, 6), 
-                       LC="all", all.combo=FALSE, len_out=6) {
+expand_LCs <- function(g.p=g.p, p=NULL, LC="all", all.combo=FALSE, len_out=6,
+                       lc.min=rep(0.1, 6), lc.max=rep(0.9, 6)) {
   library(tidyverse); library(purrr)
   names(lc.min) <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
   names(lc.max) <- names(lc.min)
