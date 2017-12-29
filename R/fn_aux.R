@@ -25,26 +25,19 @@ expand_v <- function(x, y, sep="_") {
 #' vectors with min and max parameter values (one set for each land cover
 #' category) in addition to a length.out parameter, and returns a list of
 #' vectors, with an element for each combination of land cover parameters.
-#' @param OpI Vector of min & max for Open Invasible
-#' @param Oth Vector of min & max for Other
-#' @param Dec Vector of min & max for Deciduous Forest
-#' @param WP Vector of min & max for White Pine Forest
-#' @param Evg Vector of min & max for Evergreen Forest
-#' @param Mxd Vector of min & max for Mixed Forest
-#' @param length.out Number of parameter values per land cover category
+#' @param lc.min Vector \code{length=n.lc} of minimum parameter values
+#' @param lc.max Vector \code{length=n.lc} of maximum parameter values
+#' @param len.out Number of parameter values per land cover category
 #' @return List of vectors, each length 6
 #' @keywords expand.grid, sensitivity
 #' @export
 
-expand_LCs <- function(OpI=c(0.01, 0.99), Oth=c(0.01, 0.99), Dec=c(0.01, 0.99),
-                       WP=c(0.01, 0.99), Evg=c(0.01, 0.99), Mxd=c(0.01, 0.99),
-                       length_out=2) {
-  g <- as.matrix(expand.grid(OpI=seq(OpI[1], OpI[2], length.out=length_out),
-                             Oth=seq(Oth[1], Oth[2], length.out=length_out),
-                             Dec=seq(Dec[1], Dec[2], length.out=length_out),
-                             WP=seq(WP[1], WP[2], length.out=length_out),
-                             Evg=seq(Evg[1], Evg[2], length.out=length_out),
-                             Mxd=seq(Mxd[1], Mxd[2], length.out=length_out)))
+expand_all_LCs <- function(lc.min=rep(0.1, 6), lc.max=rep(0.9, 6), len_out=2) {
+  library(tidyverse); library(purrr)
+  names(lc.min) <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
+  names(lc.max) <- names(lc.min)
+  g <- map2(lc.min, lc.max, ~seq(.x, .y, length.out=len_out)) %>% 
+    expand.grid %>% as.matrix
   return(l=lapply(seq_len(nrow(g)), function(i) g[i,]))
 }
 
