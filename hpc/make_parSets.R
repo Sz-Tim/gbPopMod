@@ -2,9 +2,9 @@
 library(gbPopMod)
 
 p <- names(set_g_p())[10:22]
-p.seq <- list(K=expand_LCs(OpI=c(500,800), Oth=c(10,20), Dec=c(80,120),
-                           WP=c(200,300), Evg=c(80,120), Mxd=c(80,120), 
-                           length_out=2),
+p.seq <- list(K=expand_LCs(g.p=g.p, p="K", LC="all", len_out=6,
+                           lc.min=c(500, 10, 80, 200, 80, 80),
+                           lc.max=c(800, 20, 120, 300, 120, 120)),
               pr.s=expand_cnpy(Op=c(0.2, 0.9), Cl=c(0.2, 0.9), length_out=3),
               pr.f=expand_cnpy(Op=c(0.2, 0.9), Cl=c(0.2, 0.9), length_out=3),
               fec=expand_cnpy(Op=c(100, 200), Cl=c(10, 40), length_out=3),
