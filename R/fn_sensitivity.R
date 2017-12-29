@@ -119,7 +119,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     cell_yr.j$p <- p
     if(byLC) {
       cell_yr.j$p.j <- as.character(p.seq[j])
-      cell_yr.j$p.j.OpI <- p.seq[[j]][1]
+      cell_yr.j$p.j.Opn <- p.seq[[j]][1]
       cell_yr.j$p.j.Oth <- p.seq[[j]][2]
       cell_yr.j$p.j.Dec <- p.seq[[j]][3]
       cell_yr.j$p.j.WP <- p.seq[[j]][4]
@@ -160,14 +160,14 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     cell.j$p <- p
     if(byLC) {
       grid.j$p.j <- as.character(p.seq[j])
-      grid.j$p.j.OpI <- p.seq[[j]][1]
+      grid.j$p.j.Opn <- p.seq[[j]][1]
       grid.j$p.j.Oth <- p.seq[[j]][2]
       grid.j$p.j.Dec <- p.seq[[j]][3]
       grid.j$p.j.WP <- p.seq[[j]][4]
       grid.j$p.j.Evg <- p.seq[[j]][5]
       grid.j$p.j.Mxd <- p.seq[[j]][6]
       cell.j$p.j <- as.character(p.seq[j])
-      cell.j$p.j.OpI <- p.seq[[j]][1]
+      cell.j$p.j.Opn <- p.seq[[j]][1]
       cell.j$p.j.Oth <- p.seq[[j]][2]
       cell.j$p.j.Dec <- p.seq[[j]][3]
       cell.j$p.j.WP <- p.seq[[j]][4]

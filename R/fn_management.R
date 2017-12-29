@@ -161,7 +161,7 @@ cut_forest <- function(id.chg, f.chg, f.c, lc.df) {
   # shift forest to open 
   chg.df <- lc.df[id.chg$id,]
   chg.df[,f.c] <- chg.df[,f.c] - f.chg[,1:length(f.c)]
-  chg.df[,"OpI"] <- chg.df[,"OpI"] + f.chg[,length(f.c)+1]
+  chg.df[,"Opn"] <- chg.df[,"Opn"] + f.chg[,length(f.c)+1]
 
   return(chg.df)
 }

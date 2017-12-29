@@ -205,14 +205,14 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
   library(ggplot2); theme_set(theme_bw()); options(bitmapType='cairo')
   
   # filenames
-  f.full <- paste0(p.wd, c("LC_OpI.jpg", "LC_Oth.jpg", "LC_Dec.jpg", 
+  f.full <- paste0(p.wd, c("LC_Opn.jpg", "LC_Oth.jpg", "LC_Dec.jpg", 
                            "LC_WP.jpg", "LC_Evg.jpg", "LC_Mxd.jpg"))
   
   p.lc <- ggplot(lc.df, aes(x=x, y=-y, colour=inbd)) + 
     scale_colour_manual(values=c("gray", NA))
   
   ggsave(f.full[1], width=w, height=h,
-         plot=p.lc + geom_tile(aes(fill=OpI)) + ggtitle("Open Invasible") +
+         plot=p.lc + geom_tile(aes(fill=Opn)) + ggtitle("Open Invasible") +
            scale_fill_gradient(low="white", high="red", limits=c(0,1)))
   ggsave(f.full[2], width=w, height=h,
          plot=p.lc + geom_tile(aes(fill=Oth)) + ggtitle("Other")+
@@ -271,14 +271,14 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
   n.set <- length(unique(grid.sum$p.j))
   p.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.set)/n.set)
   if(byLC) {
-    if(with(grid.sum, n_distinct(p.j.OpI) == n_distinct(p.j.Oth) &
+    if(with(grid.sum, n_distinct(p.j.Opn) == n_distinct(p.j.Oth) &
             n_distinct(p.j.Oth) == n_distinct(p.j.Dec) &
             n_distinct(p.j.Dec) == n_distinct(p.j.WP) &
             n_distinct(p.j.WP) == n_distinct(p.j.Evg) &
             n_distinct(p.j.Evg) == n_distinct(p.j.Mxd))) {
-      n.LC <- n_distinct(grid.sum$p.j.OpI)
+      n.LC <- n_distinct(grid.sum$p.j.Opn)
       LC.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.LC)/n.LC)
-      LC <- c("OpI", "Oth", "Dec", "WP", "Evg", "Mxd")
+      LC <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
     } else {
       cat("DEAL WITH THIS LATER -- need a list for LC.col")
     }
