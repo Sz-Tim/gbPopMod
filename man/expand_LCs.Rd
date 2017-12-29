@@ -4,8 +4,8 @@
 \alias{expand_LCs}
 \title{Expand land cover-based parameter ranges}
 \usage{
-expand_LCs(g.p = g.p, p = NULL, lc.min = rep(0.1, 6), lc.max = rep(0.9,
-  6), LC = "all", all.combo = FALSE, len_out = 6)
+expand_LCs(g.p = g.p, p = NULL, LC = "all", all.combo = FALSE,
+  len_out = 6, lc.min = rep(0.1, 6), lc.max = rep(0.9, 6))
 }
 \arguments{
 \item{g.p}{Named list of global parameters. If \code{LC != "all"}, then
@@ -15,15 +15,15 @@ being varied.}
 \item{p}{\code{NULL} Character scalar of which parameter to vary. If \code{LC
 != "all"}, then this must be specified.}
 
-\item{lc.min}{Vector \code{length=n.lc} of minimum parameter values.}
-
-\item{lc.max}{Vector \code{length=n.lc} of maximum parameter values}
-
 \item{LC}{Character scalar of which land cover categories to increment; must
 take one of \code{c("all", "Opn", "Oth", "Dec", "WP", "Evg", "Mxd")}}
 
 \item{all.combo}{\code{FALSE} Should all combinations of all land cover
 values be generated?}
+
+\item{lc.min}{Vector \code{length=n.lc} of minimum parameter values.}
+
+\item{lc.max}{Vector \code{length=n.lc} of maximum parameter values}
 
 \item{len.out}{Number of parameter values per land cover category}
 }
