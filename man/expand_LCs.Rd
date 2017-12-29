@@ -2,35 +2,45 @@
 % Please edit documentation in R/fn_aux.R
 \name{expand_LCs}
 \alias{expand_LCs}
-\title{Expand to all combinations of land cover parameter ranges}
+\title{Expand land cover-based parameter ranges}
 \usage{
-expand_LCs(OpI = c(0.01, 0.99), Oth = c(0.01, 0.99), Dec = c(0.01, 0.99),
-  WP = c(0.01, 0.99), Evg = c(0.01, 0.99), Mxd = c(0.01, 0.99),
-  length_out = 2)
+expand_LCs(g.p = g.p, p = NULL, lc.min = rep(0.1, 6), lc.max = rep(0.9,
+  6), LC = "all", all.combo = FALSE, len_out = 6)
 }
 \arguments{
-\item{OpI}{Vector of min & max for Open Invasible}
+\item{g.p}{Named list of global parameters. If \code{LC != "all"}, then
+default values from g.p are used for the land cover categories that are not
+being varied.}
 
-\item{Oth}{Vector of min & max for Other}
+\item{p}{\code{NULL} Character scalar of which parameter to vary. If \code{LC
+!= "all"}, then this must be specified.}
 
-\item{Dec}{Vector of min & max for Deciduous Forest}
+\item{lc.min}{Vector \code{length=n.lc} of minimum parameter values.}
 
-\item{WP}{Vector of min & max for White Pine Forest}
+\item{lc.max}{Vector \code{length=n.lc} of maximum parameter values}
 
-\item{Evg}{Vector of min & max for Evergreen Forest}
+\item{LC}{Character scalar of which land cover categories to increment; must
+take one of \code{c("all", "Opn", "Oth", "Dec", "WP", "Evg", "Mxd")}}
 
-\item{Mxd}{Vector of min & max for Mixed Forest}
+\item{all.combo}{\code{FALSE} Should all combinations of all land cover
+values be generated?}
 
-\item{length.out}{Number of parameter values per land cover category}
+\item{len.out}{Number of parameter values per land cover category}
 }
 \value{
 List of vectors, each length 6
 }
 \description{
-This function is similar to \code{\link[base]{expand.grid}} but inputs six
-vectors with min and max parameter values (one set for each land cover
-category) in addition to a length.out parameter, and returns a list of
-vectors, with an element for each combination of land cover parameters.
+This function is similar to \code{\link[base]{expand.grid}} but inputs a
+vector of minimum values and a vector of maximum values in addition to a
+length.out parameter. It returns a list of vectors, with an element for each
+combination of land cover parameters. By default, \code{all.combo=FALSE} and
+all land covers are incremented jointly. If \code{all.combo=TRUE}, then all
+combinations of land cover parameter values will be output. If
+\code{LC="all"}, then all land cover types will be incremented across the
+specifie range. If \code{LC} is set to a specific land cover category, then
+only that category will be incremented while the other categories are held
+constant.
 }
 \keyword{expand.grid,}
 \keyword{sensitivity}

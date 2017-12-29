@@ -19,25 +19,51 @@ expand_v <- function(x, y, sep="_") {
 
 
 
-#' Expand to all combinations of land cover parameter ranges
+#' Expand land cover-based parameter ranges
 #'
-#' This function is similar to \code{\link[base]{expand.grid}} but inputs six
-#' vectors with min and max parameter values (one set for each land cover
-#' category) in addition to a length.out parameter, and returns a list of
-#' vectors, with an element for each combination of land cover parameters.
-#' @param lc.min Vector \code{length=n.lc} of minimum parameter values
+#' This function is similar to \code{\link[base]{expand.grid}} but inputs a
+#' vector of minimum values and a vector of maximum values in addition to a
+#' length.out parameter. It returns a list of vectors, with an element for each
+#' combination of land cover parameters. By default, \code{all.combo=FALSE} and
+#' all land covers are incremented jointly. If \code{all.combo=TRUE}, then all
+#' combinations of land cover parameter values will be output. If
+#' \code{LC="all"}, then all land cover types will be incremented across the
+#' specifie range. If \code{LC} is set to a specific land cover category, then
+#' only that category will be incremented while the other categories are held
+#' constant.
+#' @param g.p Named list of global parameters. If \code{LC != "all"}, then
+#'   default values from g.p are used for the land cover categories that are not
+#'   being varied.
+#' @param p \code{NULL} Character scalar of which parameter to vary. If \code{LC
+#'   != "all"}, then this must be specified.
+#' @param lc.min Vector \code{length=n.lc} of minimum parameter values.
 #' @param lc.max Vector \code{length=n.lc} of maximum parameter values
+#' @param LC Character scalar of which land cover categories to increment; must
+#'   take one of \code{c("all", "Opn", "Oth", "Dec", "WP", "Evg", "Mxd")}
+#' @param all.combo \code{FALSE} Should all combinations of all land cover
+#'   values be generated?
 #' @param len.out Number of parameter values per land cover category
 #' @return List of vectors, each length 6
 #' @keywords expand.grid, sensitivity
 #' @export
 
-expand_all_LCs <- function(lc.min=rep(0.1, 6), lc.max=rep(0.9, 6), len_out=2) {
+expand_LCs <- function(g.p=g.p, p=NULL, lc.min=rep(0.1, 6), lc.max=rep(0.9, 6), 
+                       LC="all", all.combo=FALSE, len_out=6) {
   library(tidyverse); library(purrr)
   names(lc.min) <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
   names(lc.max) <- names(lc.min)
-  g <- map2(lc.min, lc.max, ~seq(.x, .y, length.out=len_out)) %>% 
-    expand.grid %>% as.matrix
+  if(LC=="all") {
+    g <- map2_df(lc.min, lc.max, ~seq(.x, .y, length.out=len_out))
+    if(all.combo) {
+      g <- g %>% expand.grid %>% as.matrix
+    } else {
+      g <- as.matrix(g)
+    }
+  } else {
+    g <- t(replicate(len_out, g.p[[p]]))
+    colnames(g) <- names(lc.min)
+    g[,LC] <- seq(lc.min[LC], lc.max[LC], length.out=len_out)
+  } 
   return(l=lapply(seq_len(nrow(g)), function(i) g[i,]))
 }
 
