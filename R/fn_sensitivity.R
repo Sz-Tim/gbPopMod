@@ -79,7 +79,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   }
   
   cat("Processing output\n")
-  p.c <- makeCluster(g.p$n.cores/2); registerDoSNOW(p.c)
+  p.c <- makeCluster(g.p$n.cores/3); registerDoSNOW(p.c)
   foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
     library(tidyverse); library(stringr); library(gbPopMod)
     options(bitmapType='cairo')
