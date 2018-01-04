@@ -262,26 +262,17 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
 #' @keywords plots, store, save, output
 #' @export
 
-make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE, 
+make_plots_gridSummary <- function(p, p.wd, grid.sum, cell.sum, byLC=FALSE, 
                                    txt=NULL, w=8, h=6) {
   library(scales); library(ggplot2); theme_set(theme_bw())
   options(bitmapType='cairo')
   
-  p <- grid.sum$p[1]
   n.set <- length(unique(grid.sum$p.j))
   p.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.set)/n.set)
   if(byLC) {
-    if(with(grid.sum, n_distinct(p.j.Opn) == n_distinct(p.j.Oth) &
-            n_distinct(p.j.Oth) == n_distinct(p.j.Dec) &
-            n_distinct(p.j.Dec) == n_distinct(p.j.WP) &
-            n_distinct(p.j.WP) == n_distinct(p.j.Evg) &
-            n_distinct(p.j.Evg) == n_distinct(p.j.Mxd))) {
-      n.LC <- n_distinct(grid.sum$p.j.Opn)
-      LC.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.LC)/n.LC)
-      LC <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
-    } else {
-      cat("DEAL WITH THIS LATER -- need a list for LC.col")
-    }
+    n.LC <- n_distinct(grid.sum$p.j.Opn)
+    LC.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.LC)/n.LC)
+    LC <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
   }
   
   # filenames
@@ -290,24 +281,23 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
             "t0K_mn", "t0K_sd", "tL5_mn", "tL5_sd")
   f.full <- paste0(p.wd, f.nm)
   
-  if(byLC) {
-    
+  if(byLC & p[2]=="all") {
     for(l in 1:6) {
       p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + ylim(0,100) + 
         labs(x="Year") +
-        scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) +
+        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) +
         geom_line(aes_string(colour=paste0("p.j.", LC[l])))
       p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
         labs(x="Year") +
-        scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) +
+        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) +
         geom_line(aes_string(colour=paste0("p.j.", LC[l])))
       t.mn <- ggplot(cell.sum, aes(group=p.j)) +  
         labs(y="Density") +
-        scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) + 
+        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) + 
         geom_density(aes_string(colour=paste0("p.j.", LC[l])))
       t.sd <- ggplot(cell.sum, aes(group=p.j)) +  
         labs(y="Density") +
-        scale_colour_manual(paste0(LC[l], ": ", p), values=LC.col) + 
+        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) + 
         geom_density(aes_string(colour=paste0("p.j.", LC[l])))
       
       # Adult occupancy
@@ -374,16 +364,16 @@ make_plots_gridSummary <- function(p.wd, grid.sum, cell.sum, byLC=FALSE,
   } else {
     p.mn <- ggplot(grid.sum, aes(x=year, group=p.j, colour=p.j)) + 
       labs(x="Year") + ylim(0,100) + 
-      scale_colour_manual(p, values=p.col) + geom_line()
+      scale_colour_manual(p[1], values=p.col) + geom_line()
     p.sd <- ggplot(grid.sum, aes(x=year, group=p.j, colour=p.j)) + 
       labs(x="Year") +
-      scale_colour_manual(p, values=p.col) + geom_line()
+      scale_colour_manual(p[1], values=p.col) + geom_line()
     t.mn <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
       labs(y="Density") +
-      scale_colour_manual(p, values=p.col) + geom_density()
+      scale_colour_manual(p[1], values=p.col) + geom_density()
     t.sd <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
       labs(y="Density") +
-      scale_colour_manual(p, values=p.col) + geom_density()
+      scale_colour_manual(p[1], values=p.col) + geom_density()
     
     # Adult occupancy
     ggsave(paste0(f.full[1], ".jpg"), width=w, height=h,

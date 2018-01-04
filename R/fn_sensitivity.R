@@ -24,14 +24,16 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                             lc.df, verbose=FALSE, makeGIFs=FALSE) {
   library(tidyverse); library(doSNOW); library(foreach)
   
+  p.id <- paste(p, collapse="-")
+  
   cat("|------------------------------------\n")
-  cat("|------ Starting sensitivity analysis for", p, "\n")
+  cat("|------ Starting sensitivity analysis for", p.id, "\n")
   cat("|------\n")
   
   # set directories
   byLC <- length(p.seq[[1]])>1
   sim.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
-  par.wd <- paste0(sim.wd, p, "/")
+  par.wd <- paste0(sim.wd, p.id, "/")
   parSet.wd <- paste0(par.wd, p.seq, "/")
   if(!dir.exists(here("out"))) dir.create(here("out"))
   if(!dir.exists(here(sim.wd))) dir.create(here(sim.wd))
@@ -44,13 +46,13 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   for(j in 1:length(p.seq)) {
     # setup for particular parameter value
     set.seed(225)
-    g.p[[p]] <- p.seq[[j]]
+    g.p[[p[1]]] <- p.seq[[j]]
     
     # population initialization
     N.init <- pop_init(ngrid, g.p, lc.df)
     
     # dispersal
-    if(p %in% c("sdd.max", "sdd.rate", "bird.hab")) {
+    if(p[1] %in% c("sdd.max", "sdd.rate", "bird.hab")) {
       sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
     }
     
@@ -85,7 +87,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     options(bitmapType='cairo')
     
     # setup
-    p.j <- paste0(p, ": ", p.seq[j])
+    p.j <- paste0(p[1], ": ", p.seq[j])
     ad.j <- readRDS(paste0(parSet.wd[j], "abund_ad.rds"))
     sb.j <- readRDS(paste0(parSet.wd[j], "abund_sb.rds"))
     g.p <- readRDS(paste0(parSet.wd[j], "pars_glbl.rds"))
@@ -116,7 +118,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
              ad_L5=c(ad.mn > 0))
     cell_yr.j$ad_L5 <- cell_yr.j$ad_L5 + c(ad.mn > 5)
     cell_yr.j$year <- str_pad(cell_yr.j$year, 3, "left", "0")
-    cell_yr.j$p <- p
+    cell_yr.j$p <- p[1]
     if(byLC) {
       cell_yr.j$p.j <- as.character(p.seq[j])
       cell_yr.j$p.j.Opn <- p.seq[[j]][1]
@@ -151,13 +153,13 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                      pK_sd=apply(K.s, 1, sd),
                      pK_Occ_mn=apply(K.s/occ.s.ad*100, 1, mean),
                      pK_Occ_sd=apply(K.s/occ.s.ad*100, 1, sd),
-                     p=p)
+                     p=p[1])
     cell.j <- cbind(lc.df[lc.df$inbd,], 
                     t0K_mn=apply(t.0K, 1, mean),
                     t0K_sd=apply(t.0K, 1, sd),
                     tL5_mn=apply(t.L5, 1, mean),
                     tL5_sd=apply(t.L5, 1, sd)) %>% as.tibble
-    cell.j$p <- p
+    cell.j$p <- p[1]
     if(byLC) {
       grid.j$p.j <- as.character(p.seq[j])
       grid.j$p.j.Opn <- p.seq[[j]][1]
@@ -206,12 +208,12 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     grid.sum %<>% mutate(p.j=as.factor(p.j)) 
     cell.sum %<>% mutate(p.j=as.factor(p.j)) 
   }
-  make_plots_gridSummary(par.wd, grid.sum, cell.sum, byLC)
+  make_plots_gridSummary(p, par.wd, grid.sum, cell.sum, byLC)
   
   # progress
   cat("\n")
   cat("|------\n")
-  cat("|------ Finished sensitivity analysis for", p, "\n")
+  cat("|------ Finished sensitivity analysis for", p.id, "\n")
   cat("|------------------------------------\n\n\n")
-  return(paste("Completed", p))
+  return(paste("Completed", p.id))
 }
