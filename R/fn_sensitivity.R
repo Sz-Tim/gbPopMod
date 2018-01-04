@@ -101,10 +101,12 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     at.K <- apply(ad.j, c(2,3), function(x) x == K.ag & x > 0)
     ### logical: did cell-iter ever reach K?
     reach.K <- at.K
+    N.init <- at.K
     for(i in 1:dim(at.K)[1]) {
       for(s in 1:dim(at.K)[3]) {
         reach.K[i,,s] <- sum(reach.K[i,,s]) > 0
       }
+      N.init[i,,] <- ad.j[i,1,1] > 0
     }
     ### summarize
     cell_yr.j <- cbind(lc.df[lc.df$inbd,,], ad.mn) %>% as.tibble %>%
@@ -138,7 +140,8 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     K.s <- apply(at.K[lc.df$inbd,,], 2:3, mean)*100
     t.0K <- apply(ad.j[lc.df$inbd,,]>0 & 
                     !at.K[lc.df$inbd,,] & 
-                    reach.K[lc.df$inbd,,],
+                    reach.K[lc.df$inbd,,] &
+                    !N.init[lc.df$inbd,,],
                   c(1,3), sum)
     t.L5 <- apply(ad.j[lc.df$inbd,,]>0 & ad.j[lc.df$inbd,,]<=5,
                   c(1,3), sum)
