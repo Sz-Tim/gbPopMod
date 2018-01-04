@@ -158,10 +158,10 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
                      pK_Occ_sd=apply(K.s/occ.s.ad*100, 1, sd),
                      p=p[1])
     cell.j <- cbind(lc.df[lc.df$inbd,], 
-                    t0K_mn=apply(t.0K, 1, mean),
-                    t0K_sd=apply(t.0K, 1, sd),
-                    tL5_mn=apply(t.L5, 1, mean),
-                    tL5_sd=apply(t.L5, 1, sd)) %>% as.tibble
+                    t0K_mn=apply(t.0K, 1, mean) %>% na_if(0),
+                    t0K_sd=apply(t.0K, 1, sd) %>% na_if(0),
+                    tL5_mn=apply(t.L5, 1, mean) %>% na_if(0),
+                    tL5_sd=apply(t.L5, 1, sd) %>% na_if(0)) %>% as.tibble
     cell.j$p <- p[1]
     if(byLC) {
       grid.j$p.j <- as.character(p.seq[j])
