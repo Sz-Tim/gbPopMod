@@ -4,16 +4,16 @@
 \alias{expand_LCs}
 \title{Expand land cover-based parameter ranges}
 \usage{
-expand_LCs(g.p = g.p, p = NULL, LC = "all", all.combo = FALSE,
+expand_LCs(gp = g.p, param = NULL, LC = "all", all.combo = FALSE,
   len_out = 6, lc.min = rep(0.1, 6), lc.max = rep(0.9, 6))
 }
 \arguments{
-\item{g.p}{Named list of global parameters. If \code{LC != "all"}, then
+\item{gp}{Named list of global parameters. If \code{LC != "all"}, then
 default values from g.p are used for the land cover categories that are not
 being varied.}
 
-\item{p}{\code{NULL} Character scalar of which parameter to vary. If \code{LC
-!= "all"}, then this must be specified.}
+\item{param}{\code{NULL} Character scalar of which parameter to vary. If
+\code{LC != "all"}, then this must be specified.}
 
 \item{LC}{Character scalar of which land cover categories to increment; must
 take one of \code{c("all", "Opn", "Oth", "Dec", "WP", "Evg", "Mxd")}}
