@@ -52,7 +52,7 @@ data(lc.rct)
 ##---
 
   set.seed(225)
-  n.sim <- 4; par.sim <- FALSE
+  n.sim <- 4; prl.sim <- FALSE
   g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.ldd=1, n.cores=4)
   control.p <- set_control_p()
   
@@ -82,7 +82,7 @@ data(lc.rct)
 ```
 
 ```{r runSim}
-if(par.sim) {
+if(prl.sim) {
   require(doParallel)
   p.c <- makeCluster(g.p$n.cores)
   registerDoParallel(p.c)
@@ -113,28 +113,25 @@ if(par.sim) {
 ```{r plots, fig.height=8, fig.width=10}
 ad.mn <- apply(out.ad, 1:2, mean)
 N.out <- cbind(lc.df, ad.mn) %>% as.tibble %>%
-  gather(year, N.adult, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
-  mutate(sd.ad=c(apply(out.ad, 1:2, sd)),
-         pP.ad=c(apply(out.ad > 0, 1:2, mean)),
-         N.sb=c(apply(log(out.sb+1), 1:2, mean)),
-         sd.sb=c(apply(log(out.sb+1), 1:2, sd)),
-         pP.sb=c(apply(out.sb > 0, 1:2, mean)),
-         N.less5=c(ad.mn > 0))
-N.out$N.less5 <- N.out$N.less5 + c(ad.mn > 5)
+  gather(year, ad_Ab, (1:ncol(ad.mn)) + ncol(lc.df)) %>%
+  mutate(ad_sd=c(apply(out.ad, 1:2, sd)),
+         ad_pP=c(apply(out.ad > 0, 1:2, mean)),
+         sb_Ab=c(apply(log(out.sb+1), 1:2, mean)),
+         sb_sd=c(apply(log(out.sb+1), 1:2, sd)),
+         sb_pP=c(apply(out.sb > 0, 1:2, mean)),
+         ad_L5=c(ad.mn > 0))
+N.out$ad_L5 <- N.out$ad_L5 + c(ad.mn > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
 # prepare plot paths & filenames
 p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "_", g.p$edges, "/")
 if(!dir.exists(here::here("out"))) dir.create(here::here("out"))
 if(!dir.exists(here::here(p.wd))) dir.create(here::here(p.wd))
-age.i <- ifelse(length(g.p$age.f)==1, 
-                paste0("age", g.p$age.f, ""),
-                paste0("ages", min(g.p$age.f), "-", max(g.p$age.f), ""))
 
 # save plots
-save_pars(p.wd, age.i, g.p, control.p)
-make_plots_final_t(p.wd, age.i, g.p, filter(N.out, year==max(N.out$year)))
-make_plots_gifs(p.wd, age.i, g.p, N.out)
+save_pars(p.wd, g.p, control.p)
+make_plots_final_t(p.wd, g.p, filter(N.out, year==max(N.out$year)))
+make_plots_gifs(p.wd, g.p, N.out)
 make_plots_lc(p.wd, lc.df)
 ```
 
