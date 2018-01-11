@@ -269,172 +269,84 @@ make_plots_gridSummary <- function(p, p.wd, grid.sum, cell.sum, byLC=FALSE,
   
   n.set <- length(unique(grid.sum$p.j))
   p.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.set)/n.set)
-  if(byLC) {
-    n.LC <- n_distinct(grid.sum$p.j.Opn)
-    LC.col <- seq_gradient_pal(low="#e5f5e0", high="#00441b")((1:n.LC)/n.LC)
-    LC <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
-  }
   
   # filenames
   f.nm <- c("pOcc_ad_mn", "pOcc_ad_sd", "pOcc_sb_mn", "pOcc_sb_sd", 
             "pL5_mn", "pL5_sd", "pK_mn", "pK_sd", "pK_Occ_mn", "pK_Occ_sd",
             "t0K_mn", "t0K_sd", "tL5_mn", "tL5_sd")
   f.full <- paste0(p.wd, f.nm)
+  p.mn <- ggplot(grid.sum, aes(x=year, group=p.j, colour=p.j)) + 
+    labs(x="Year") + ylim(0,100) + 
+    scale_colour_manual(p[1], values=p.col) + geom_line()
+  p.sd <- ggplot(grid.sum, aes(x=year, group=p.j, colour=p.j)) + 
+    labs(x="Year") +
+    scale_colour_manual(p[1], values=p.col) + geom_line()
+  t.mn <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
+    labs(y="Density") +
+    scale_colour_manual(p[1], values=p.col) + geom_density()
+  t.sd <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
+    labs(y="Density") +
+    scale_colour_manual(p[1], values=p.col) + geom_density()
   
-  if(byLC && p[2]=="all") {
-    for(l in 1:6) {
-      p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + ylim(0,100) + 
-        labs(x="Year") +
-        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) +
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])))
-      p.sd <- ggplot(grid.sum, aes(x=year, group=p.j)) + 
-        labs(x="Year") +
-        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) +
-        geom_line(aes_string(colour=paste0("p.j.", LC[l])))
-      t.mn <- ggplot(cell.sum, aes(group=p.j)) +  
-        labs(y="Density") +
-        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) + 
-        geom_density(aes_string(colour=paste0("p.j.", LC[l])))
-      t.sd <- ggplot(cell.sum, aes(group=p.j)) +  
-        labs(y="Density") +
-        scale_colour_manual(paste0(LC[l], ": ", p[1]), values=LC.col) + 
-        geom_density(aes_string(colour=paste0("p.j.", LC[l])))
-      
-      # Adult occupancy
-      ggsave(paste0(f.full[1], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + aes_string(y=f.nm[1]) + 
-               labs(title="% occupied cells (adults)",
-                    y="Mean across simulations"))
-      ggsave(paste0(f.full[2], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + aes_string(y=f.nm[2]) + 
-               labs(title="% occupied cells (adults)",
-                    y="Std dev across simulations"))
-      # Seed occupancy
-      ggsave(paste0(f.full[3], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + aes_string(y=f.nm[3]) + 
-               labs(title="% occupied cells (seeds)",
-                    y="Mean across simulations"))
-      ggsave(paste0(f.full[4], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + aes_string(y=f.nm[4]) + 
-               labs(title="% occupied cells (seeds)",
-                    y="Std dev across simulations"))
-      # Low density cells
-      ggsave(paste0(f.full[5], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + aes_string(y=f.nm[5]) + 
-               labs(title="% cells with ≤ 5 adults",
-                    y="Mean across simulations"))
-      ggsave(paste0(f.full[6], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + aes_string(y=f.nm[6]) + 
-               labs(title="% cells with ≤ 5 adults",
-                    y="Std dev across simulations"))
-      # Cells at K
-      ggsave(paste0(f.full[7], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + aes_string(y=f.nm[7]) + 
-               labs(title="% cells at K",
-                    y="Mean across simulations"))
-      ggsave(paste0(f.full[8], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + aes_string(y=f.nm[8]) + 
-               labs(title="% cells at K",
-                    y="Std dev across simulations"))
-      # Occupied cells at K
-      ggsave(paste0(f.full[9], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.mn + aes_string(y=f.nm[9]) + 
-               labs(title="% occupied cells at K",
-                    y="Mean across simulations"))
-      ggsave(paste0(f.full[10], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=p.sd + aes_string(y=f.nm[10]) + 
-               labs(title="% occupied cells at K",
-                    y="Std dev across simulations"))
-      # Time from N=1 to N=K
-      ggsave(paste0(f.full[11], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=t.mn + aes_string(x=f.nm[11]) + 
-               labs(title="Time from N=1 to N=K", x="mean(years)"))
-      ggsave(paste0(f.full[12], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=t.sd + aes_string(x=f.nm[12]) + 
-               labs(title="Time from N=1 to N=K", x="sd(years)"))
-      # Time from N=1 to N>5
-      ggsave(paste0(f.full[13], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=t.mn + aes_string(x=f.nm[13]) + 
-               labs(title="Time from N=1 to N>5", x="mean(years)"))
-      ggsave(paste0(f.full[14], "_", LC[l], ".jpg"),  width=w, height=h,
-             plot=t.sd + aes_string(x=f.nm[14]) + 
-               labs(title="Time from N=1 to N>5", x="sd(years)"))
-      
-    }
-  } else {
-    p.mn <- ggplot(grid.sum, aes(x=year, group=p.j, colour=p.j)) + 
-      labs(x="Year") + ylim(0,100) + 
-      scale_colour_manual(p[1], values=p.col) + geom_line()
-    p.sd <- ggplot(grid.sum, aes(x=year, group=p.j, colour=p.j)) + 
-      labs(x="Year") +
-      scale_colour_manual(p[1], values=p.col) + geom_line()
-    t.mn <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
-      labs(y="Density") +
-      scale_colour_manual(p[1], values=p.col) + geom_density()
-    t.sd <- ggplot(cell.sum, aes(group=p.j, colour=p.j)) +  
-      labs(y="Density") +
-      scale_colour_manual(p[1], values=p.col) + geom_density()
-    
-    # Adult occupancy
-    ggsave(paste0(f.full[1], ".jpg"), width=w, height=h,
-           plot=p.mn + aes_string(y=f.nm[1]) + 
-             labs(title="% occupied cells (adults)", 
-                  y="Mean across simulations"))
-    ggsave(paste0(f.full[2], ".jpg"), width=w, height=h,
-           plot=p.sd + aes_string(y=f.nm[2]) +
-             labs(title="% occupied cells (adults)", 
-                  y="Std dev across simulations"))
-    # Seed occupancy
-    ggsave(paste0(f.full[3], ".jpg"), width=w, height=h,
-           plot=p.mn + aes_string(y=f.nm[3]) +
-             labs(title="% occupied cells (seeds)",
-                  y="Mean across simulations"))
-    ggsave(paste0(f.full[4], ".jpg"), width=w, height=h,
-           plot=p.sd + aes_string(y=f.nm[4]) +
-             labs(title="% occupied cells (seeds)", 
-                  y="Std dev across simulations"))
-    # Low density cells
-    ggsave(paste0(f.full[5], ".jpg"), width=w, height=h,
-           plot=p.mn + aes_string(y=f.nm[5]) +
-             labs(title="% cells with ≤ 5 adults",
-                  y="Mean across simulations"))
-    ggsave(paste0(f.full[6], ".jpg"), width=w, height=h,
-           plot=p.sd + aes_string(y=f.nm[6]) +
-             labs(title="% cells with ≤ 5 adults", 
-                  y="Std dev across simulations"))
-    # Cells at K
-    ggsave(paste0(f.full[7], ".jpg"), width=w, height=h,
-           plot=p.mn + aes_string(y=f.nm[7]) +
-             labs(title="% cells at K", 
-                  y="Mean across simulations"))
-    ggsave(paste0(f.full[8], ".jpg"), width=w, height=h,
-           plot=p.sd + aes_string(y=f.nm[8]) +
-             labs(title="% cells at K", 
-                  y="Std dev across simulations"))
-    # Occupied cells at K
-    ggsave(paste0(f.full[9], ".jpg"), width=w, height=h,
-           plot=p.mn + aes_string(y=f.nm[9]) +
-             labs(title="% occupied cells at K", 
-                  y="Mean across simulations"))
-    ggsave(paste0(f.full[10], ".jpg"), width=w, height=h,
-           plot=p.sd + aes_string(y=f.nm[10]) +
-             labs(title="% occupied cells at K", 
-                  y="Std dev across simulations"))
-    # Time from N=1 to N=K
-    ggsave(paste0(f.full[11], ".jpg"), width=w, height=h,
-           plot=t.mn + aes_string(x=f.nm[11]) + 
-             labs(title="Time from N=1 to N=K", x="mean(years)"))
-    ggsave(paste0(f.full[12], ".jpg"), width=w, height=h,
-           plot=t.sd + aes_string(x=f.nm[12]) + 
-             labs(title="Time from N=1 to N=K", x="sd(years)"))
-    # Time from N=1 to N>5
-    ggsave(paste0(f.full[13], ".jpg"), width=w, height=h,
-           plot=t.mn + aes_string(x=f.nm[13]) + 
-             labs(title="Time from N=1 to N>5", x="mean(years)"))
-    ggsave(paste0(f.full[14], ".jpg"), width=w, height=h,
-           plot=t.sd + aes_string(x=f.nm[14]) + 
-             labs(title="Time from N=1 to N>5", x="sd(years)"))    
-  }
+  # Adult occupancy
+  ggsave(paste0(f.full[1], ".jpg"), width=w, height=h,
+         plot=p.mn + aes_string(y=f.nm[1]) + 
+           labs(title="% occupied cells (adults)", 
+                y="Mean across simulations"))
+  ggsave(paste0(f.full[2], ".jpg"), width=w, height=h,
+         plot=p.sd + aes_string(y=f.nm[2]) +
+           labs(title="% occupied cells (adults)", 
+                y="Std dev across simulations"))
+  # Seed occupancy
+  ggsave(paste0(f.full[3], ".jpg"), width=w, height=h,
+         plot=p.mn + aes_string(y=f.nm[3]) +
+           labs(title="% occupied cells (seeds)",
+                y="Mean across simulations"))
+  ggsave(paste0(f.full[4], ".jpg"), width=w, height=h,
+         plot=p.sd + aes_string(y=f.nm[4]) +
+           labs(title="% occupied cells (seeds)", 
+                y="Std dev across simulations"))
+  # Low density cells
+  ggsave(paste0(f.full[5], ".jpg"), width=w, height=h,
+         plot=p.mn + aes_string(y=f.nm[5]) +
+           labs(title="% cells with ≤ 5 adults",
+                y="Mean across simulations"))
+  ggsave(paste0(f.full[6], ".jpg"), width=w, height=h,
+         plot=p.sd + aes_string(y=f.nm[6]) +
+           labs(title="% cells with ≤ 5 adults", 
+                y="Std dev across simulations"))
+  # Cells at K
+  ggsave(paste0(f.full[7], ".jpg"), width=w, height=h,
+         plot=p.mn + aes_string(y=f.nm[7]) +
+           labs(title="% cells at K", 
+                y="Mean across simulations"))
+  ggsave(paste0(f.full[8], ".jpg"), width=w, height=h,
+         plot=p.sd + aes_string(y=f.nm[8]) +
+           labs(title="% cells at K", 
+                y="Std dev across simulations"))
+  # Occupied cells at K
+  ggsave(paste0(f.full[9], ".jpg"), width=w, height=h,
+         plot=p.mn + aes_string(y=f.nm[9]) +
+           labs(title="% occupied cells at K", 
+                y="Mean across simulations"))
+  ggsave(paste0(f.full[10], ".jpg"), width=w, height=h,
+         plot=p.sd + aes_string(y=f.nm[10]) +
+           labs(title="% occupied cells at K", 
+                y="Std dev across simulations"))
+  # Time from N=1 to N=K
+  ggsave(paste0(f.full[11], ".jpg"), width=w, height=h,
+         plot=t.mn + aes_string(x=f.nm[11]) + 
+           labs(title="Time from N=1 to N=K", x="mean(years)"))
+  ggsave(paste0(f.full[12], ".jpg"), width=w, height=h,
+         plot=t.sd + aes_string(x=f.nm[12]) + 
+           labs(title="Time from N=1 to N=K", x="sd(years)"))
+  # Time from N=1 to N>5
+  ggsave(paste0(f.full[13], ".jpg"), width=w, height=h,
+         plot=t.mn + aes_string(x=f.nm[13]) + 
+           labs(title="Time from N=1 to N>5", x="mean(years)"))
+  ggsave(paste0(f.full[14], ".jpg"), width=w, height=h,
+         plot=t.sd + aes_string(x=f.nm[14]) + 
+           labs(title="Time from N=1 to N>5", x="sd(years)"))    
   
   # Check for success
   for(f in 1:length(f.nm)) {
