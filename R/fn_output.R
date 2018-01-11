@@ -80,7 +80,8 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
 #' @export
 
 make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
-  library(ggplot2); theme_set(theme_bw()); options(bitmapType='cairo')
+  library(ggplot2); options(bitmapType='cairo')
+  theme_set(theme_bw() + theme(panel.grid=element_blank()))
   
   # filenames
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP")
@@ -142,7 +143,8 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 #' @export
 
 make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
-  library(gganimate); theme_set(theme_bw()); options(bitmapType='cairo')
+  library(gganimate); options(bitmapType='cairo')
+  theme_set(theme_bw() + theme(panel.grid=element_blank()))
   
   # filenames
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP", "ad_L5")
@@ -202,7 +204,8 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
 #' @export
 
 make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
-  library(ggplot2); theme_set(theme_bw()); options(bitmapType='cairo')
+  library(ggplot2); options(bitmapType='cairo')
+  theme_set(theme_bw() + theme(panel.grid=element_blank()))
   
   # filenames
   f.full <- paste0(p.wd, c("LC_Opn.jpg", "LC_Oth.jpg", "LC_Dec.jpg", 
@@ -264,7 +267,8 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
 
 make_plots_gridSummary <- function(p, p.wd, grid.sum, cell.sum, byLC=FALSE, 
                                    txt=NULL, w=8, h=6) {
-  library(scales); library(ggplot2); theme_set(theme_bw())
+  library(scales); library(ggplot2)
+  theme_set(theme_bw() + theme(panel.grid=element_blank()))
   options(bitmapType='cairo')
   
   n.set <- length(unique(grid.sum$p.j))
