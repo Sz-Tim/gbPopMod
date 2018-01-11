@@ -281,7 +281,7 @@ make_plots_gridSummary <- function(p, p.wd, grid.sum, cell.sum, byLC=FALSE,
             "t0K_mn", "t0K_sd", "tL5_mn", "tL5_sd")
   f.full <- paste0(p.wd, f.nm)
   
-  if(byLC & p[2]=="all") {
+  if(byLC && p[2]=="all") {
     for(l in 1:6) {
       p.mn <- ggplot(grid.sum, aes(x=year, group=p.j)) + ylim(0,100) + 
         labs(x="Year") +
