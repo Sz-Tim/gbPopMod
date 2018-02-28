@@ -29,7 +29,12 @@ trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, nTrt, trt.eff,
   
   library(tidyverse)
   
-  if(is.null(assign_i)) assign_i <- sample(1:ncell, nTrt)
+  if(is.null(assign_i)) {
+    assign_i <- sample(1:ncell, nTrt)
+  } else {
+    nTrt <- length(assign_i)
+  }
+  
   
   trt.t <- tibble(id=id.i$id[which(id.i$id.inbd %in% assign_i)],
                   Trt=sample(names(trt.eff), nTrt, replace=TRUE))
