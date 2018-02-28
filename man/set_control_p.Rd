@@ -5,9 +5,9 @@
 \title{Set buckthorn control treatment parameters}
 \usage{
 set_control_p(null_ctrl = TRUE, t.trt = 30, add.owners = FALSE,
-  nTrt.grd = 0.05, nTrt.man = 0.05, grd.trt = c(Lit = 0.005, Cov = 0.01,
-  Com = 1e-05), man.trt = c(M = 0.1, C = 0.3, MC = 0.8), lc.chg = TRUE,
-  n.chg = 1e-04)
+  grd.i = NULL, man.i = NULL, chg.i = NULL, nTrt.grd = 0.05,
+  nTrt.man = 0.05, grd.trt = c(Lit = 0.005, Cov = 0.01, Com = 1e-05),
+  man.trt = c(M = 0.1, C = 0.3, MC = 0.8), lc.chg = TRUE, n.chg = 1e-04)
 }
 \arguments{
 \item{null_ctrl}{\code{TRUE} Set control parameters to \code{NULL}?}
@@ -16,6 +16,18 @@ set_control_p(null_ctrl = TRUE, t.trt = 30, add.owners = FALSE,
 
 \item{add.owners}{\code{FALSE} Do owners treat every year once starting a
 particular treatment?}
+
+\item{grd.i}{\code{NULL} Vector of cell IDs to receive ground treatments. If
+\code{NULL}, then \code{nTrt.grd * ncell} cells are assigned randomly with
+the \link{trt_assign} function}
+
+\item{man.i}{\code{NULL} Vector of cell IDs to receive manual treatments. If
+\code{NULL}, then \code{nTrt.man * ncell} cells are assigned randomly with
+the \link{trt_assign} function}
+
+\item{chg.i}{\code{NULL} Vector of cell IDs to receive land cover changes. If
+\code{NULL}, then \code{n.chg * ncell} cells are assigned randomly with
+the \link{trt_assign} function}
 
 \item{nTrt.grd}{\code{0.05} Proportion of cells with ground treatments in
 each time step}

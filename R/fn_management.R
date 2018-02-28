@@ -5,7 +5,10 @@
 #' time step or are appended.
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
 #'   while \code{id.inbd} indexes only inbound cells
-#' @param ncell Number of inbound grid cells
+#' @param ncell \code{NULL} Number of inbound grid cells. Required if cell IDs
+#'   are not supplied via \code{assign_i}
+#' @param assign_i \code{NULL} Vector of inbound cell IDs to treat. If
+#'   \code{NULL}, then \code{ncell} IDs are sampled randomly for treatments
 #' @param nTrt Proportion of inbound grid cells to be treated. If add != NULL,
 #'   then this is appended to the cells treated in the previous time step.
 #' @param trt.eff Named vector with effects of each treatment. These names are
@@ -21,12 +24,14 @@
 #' @export
 
 
-trt_assign <- function(id.i, ncell, nTrt, trt.eff, 
+trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, nTrt, trt.eff, 
                        addOwners=FALSE, trt.m1=NULL) {
   
   library(tidyverse)
   
-  trt.t <- tibble(id=id.i$id[which(id.i$id.inbd %in% sample(1:ncell, nTrt))],
+  if(is.null(assign_i)) assign_i <- sample(1:ncell, nTrt)
+  
+  trt.t <- tibble(id=id.i$id[which(id.i$id.inbd %in% assign_i)],
                   Trt=sample(names(trt.eff), nTrt, replace=TRUE))
   
   if(addOwners) {
@@ -102,7 +107,10 @@ trt_manual <- function(N.t, y.ad, N.trt, man.trt) {
 #' Randomly assigns a specified number of cells to have their forest habitat
 #' cleared by a random proportion.
 #' @param nChg Proportion of inbound cells to cut
-#' @param ncell Number of inbound grid cells
+#' @param ncell \code{NULL} Number of inbound grid cells. Required if cell IDs
+#'   are not supplied via \code{assign_i}
+#' @param assign_i \code{NULL} Vector of inbound cell IDs to treat. If
+#'   \code{NULL}, then \code{ncell} IDs are sampled randomly for treatments
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
 #' @param f.c Vector of forest column indexes within \code{lc.df}
@@ -112,13 +120,13 @@ trt_manual <- function(N.t, y.ad, N.trt, man.trt) {
 #' @keywords control, cut, forest, land cover change, owners
 #' @export
 
-cut_assign <- function(nChg, ncell, lc.df, f.c) {
+cut_assign <- function(nChg, ncell=NULL, assign_i=NULL, lc.df, f.c) {
   
   library(tidyverse)
   
-  id.lc <- sample(1:ncell, nChg*ncell)
-  n <- length(id.lc)
-  id.chg <- dplyr::filter(lc.df, id.inbd %in% id.lc) %>% 
+  if(is.null(assign_i)) assign_i <- sample(1:ncell, nChg*ncell)
+  n <- length(assign_i)
+  id.chg <- dplyr::filter(lc.df, id.inbd %in% assign_i) %>% 
     select(id, id.inbd)
   mx <- (runif(n*length(f.c)) * lc.df[id.chg$id, f.c]) %>%
     cbind(., TotChg=rowSums(.))

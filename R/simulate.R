@@ -44,13 +44,16 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   pr.s.bird <- g.p$pr.s.bird  # pr(viable | digestion)
   n.ldd <- g.p$n.ldd   # num long distance dispersal events per year
   y.ad <- max(g.p$age.f)
-  age.f.d <- length(age.f) > 1
+  age.f.d <- length(g.p$age.f) > 1
   id.i <- lc.df %>% select(id, id.inbd)
   edges <- g.p$edges
   
   # If buckthorn is being actively managed...
   pr.est.trt <- NULL
   if(!is.null(control.p)) {
+    grd.i <- control.p$grd.i
+    man.i <- control.p$man.i
+    chg.i <- control.p$chg.i
     nTrt.grd <- control.p$nTrt.grd * ncell
     nTrt.man <- control.p$nTrt.man * ncell
     grd.trt <- control.p$grd.trt
@@ -94,10 +97,10 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
       # of years after the treatment rather than being killed explicitly
       
       # 2A. Adjust LC %
-      if(lc.chg) {
+      if(lc.chg && n.chg >= 1) {
         if(verbose) cat("Changing LC...")
         # i. decide which cells change and how much of each kind of forest
-        chg.asn <- cut_assign(n.chg, ncell, lc.df, f.c=6:9)
+        chg.asn <- cut_assign(n.chg, ncell, chg.i, lc.df, f.c=6:9)
         
         # ii. cut forest & update SDD neighborhoods
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
@@ -113,7 +116,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
       # 2B. Adjust p.est
       if(nTrt.grd > 0) {
         if(verbose) cat("Covering...")
-        est.trt <- trt_assign(id.i, ncell, nTrt.grd, grd.trt, 
+        est.trt <- trt_assign(id.i, ncell, grd.i, nTrt.grd, grd.trt, 
                                         addOwners=add.owners, trt.m1=est.trt)
         pr.est.trt <- trt_ground(est.trt, grd.trt)
       }
@@ -121,7 +124,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
       # 2C. Adjust N
       if(nTrt.man > 0) {
         if(verbose) cat("Cutting & spraying...")
-        N.trt <- trt_assign(id.i, ncell, nTrt.man, man.trt, 
+        N.trt <- trt_assign(id.i, ncell, man.i, nTrt.man, man.trt, 
                                       addOwners=add.owners, trt.m1=N.trt)
         if(age.f.d) {
           N[,t,,] <- trt_manual(N.t, y.ad, N.trt, man.trt)

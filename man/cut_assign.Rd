@@ -4,12 +4,16 @@
 \alias{cut_assign}
 \title{Assign cells to convert a proportion of forest to open invasible}
 \usage{
-cut_assign(nChg, ncell, lc.df, f.c)
+cut_assign(nChg, ncell = NULL, assign_i = NULL, lc.df, f.c)
 }
 \arguments{
 \item{nChg}{Proportion of inbound cells to cut}
 
-\item{ncell}{Number of inbound grid cells}
+\item{ncell}{\code{NULL} Number of inbound grid cells. Required if cell IDs
+are not supplied via \code{assign_i}}
+
+\item{assign_i}{\code{NULL} Vector of inbound cell IDs to treat. If
+\code{NULL}, then \code{ncell} IDs are sampled randomly for treatments}
 
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
