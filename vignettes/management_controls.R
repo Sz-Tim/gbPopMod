@@ -10,10 +10,10 @@ data(lc.rct)
 n.sim <- 3
 g.p <- set_g_p(tmax=150, lc.r=50, lc.c=50, n.cores=1)
 control.p <- set_control_p(null_ctrl=FALSE, 
-                           man.i=1:100,  # cells with manual controls
+                           man.i=1300:1800,  # cells with manual controls
                            nTrt.man=NA,  # for random cell assignment
                            man.trt=c(M=0.05, C=0.3, MC=0.95),
-                           grd.i=200:300, # cells with ground cover controls
+                           grd.i=1300:1500, # cells with ground cover controls
                            nTrt.grd=NA,  # for random cell assignment
                            grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
                            chg.i=NULL  # cells with timber harvest
