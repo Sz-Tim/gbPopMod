@@ -7,11 +7,15 @@ theme_set(theme_bw())
 data(lc.rct)
 
 # set parameters
-n.sim <- 3; prl.sim <- FALSE
-g.p <- set_g_p(tmax=100, lc.r=50, lc.c=50, n.cores=3)
+n.sim <- 3
+g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.cores=1)
 control.p <- set_control_p(null_ctrl=FALSE, 
-                           man.i=1:20,  # cells with manual controls
-                           grd.i=30:40, # cells with ground cover controls
+                           man.i=c(25, 30),  # cells with manual controls
+                           nTrt.man=NA,  # for random cell assignment
+                           man.trt=c(M=0.05, C=0.3, MC=0.95),
+                           grd.i=c(45, 50), # cells with ground cover controls
+                           nTrt.grd=NA,  # for random cell assignment
+                           grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
                            chg.i=NULL  # cells with timber harvest
                            )
 
@@ -30,7 +34,7 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 N.init <- pop_init(ngrid, g.p, lc.df)
 
 # run simulation
-if(prl.sim) {
+if(g.p$n.cores > 1) {
   require(doParallel)
   p.c <- makeCluster(g.p$n.cores)
   registerDoParallel(p.c)
