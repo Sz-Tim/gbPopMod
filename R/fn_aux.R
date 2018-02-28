@@ -316,6 +316,7 @@ set_control_p <- function(null_ctrl=TRUE, t.trt=30, add.owners=FALSE,
     control.p <- NULL
   } else {
     control.p <- list(t.trt=t.trt, add.owners=add.owners,
+                      grd.i=grd.i, man.i=man.i, chg.i=chg.i,
                       nTrt.grd=nTrt.grd, nTrt.man=nTrt.man,
                       grd.trt=grd.trt, man.trt=man.trt,
                       lc.chg=lc.chg, n.chg=n.chg)
