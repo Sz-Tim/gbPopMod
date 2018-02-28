@@ -114,18 +114,20 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
       }
       
       # 2B. Adjust p.est
-      if(nTrt.grd > 0) {
+      if(nTrt.grd > 0 || !is.null(grd.i)) {
         if(verbose) cat("Covering...")
-        est.trt <- trt_assign(id.i, ncell, grd.i, nTrt.grd, grd.trt, 
-                                        addOwners=add.owners, trt.m1=est.trt)
+        est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
+                              nTrt=nTrt.grd, trt.eff=grd.trt, 
+                              addOwners=add.owners, trt.m1=est.trt)
         pr.est.trt <- trt_ground(est.trt, grd.trt)
       }
       
       # 2C. Adjust N
-      if(nTrt.man > 0) {
+      if(nTrt.man > 0 || !is.null(man.i)) {
         if(verbose) cat("Cutting & spraying...")
-        N.trt <- trt_assign(id.i, ncell, man.i, nTrt.man, man.trt, 
-                                      addOwners=add.owners, trt.m1=N.trt)
+        N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
+                            nTrt=nTrt.man, trt.eff=man.trt, 
+                            addOwners=add.owners, trt.m1=N.trt)
         if(age.f.d) {
           N[,t,,] <- trt_manual(N.t, y.ad, N.trt, man.trt)
         } else {
