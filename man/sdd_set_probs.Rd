@@ -4,7 +4,8 @@
 \alias{sdd_set_probs}
 \title{Set short distance dispersal probabilities}
 \usage{
-sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL, edges = "wall")
+sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL, edges = "wall",
+  lc.col = 4:9)
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
@@ -17,6 +18,10 @@ cell id info}
 \item{lc.new}{Vector of indexes of cells that need to have their SDD
 neighborhood recalculated; defaults to \code{NULL} and calculates SDD
 neighborhoods for all cells}
+
+\item{edges}{\code{"wall"} Boundary behavior}
+
+\item{lc.col}{\code{4:9} Column indexes for land cover proportions}
 }
 \value{
 Array with dim(disp.rows, disp.cols, 2, ncell) where the third

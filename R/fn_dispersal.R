@@ -11,18 +11,20 @@
 #' @param lc.new Vector of indexes of cells that need to have their SDD
 #'   neighborhood recalculated; defaults to \code{NULL} and calculates SDD
 #'   neighborhoods for all cells
+#' @param edges \code{"wall"} Boundary behavior
+#' @param lc.col \code{4:9} Column indexes for land cover proportions
 #' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
 #'   dimension contains grid id's for the neighborhood or probabilities to each
 #'   target cell
 #' @keywords sdd, dispersal, probability, probabilities
 #' @export
 
-sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
+sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, 
+                          edges="wall", lc.col=4:9) {
   
   library(purrr); library(tidyverse); library(fastmatch)
   
   # unpack parameters
-  edges <- g.p$edges
   sdd.max <- g.p$sdd.max
   sdd.rate <- g.p$sdd.rate
   bird.hab <- g.p$bird.hab
@@ -32,9 +34,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, edges="wall") {
   n.y <- range(lc.df[,2])
   nbr <- 2 * sdd.max + 1
   sdd.i <- array(0, dim=c(nbr, nbr, 2, ncell))
-  bird.hab.ag <- as.matrix(lc.df[,4:9]) %*% (bird.hab %>% divide_by(sum(.)))
+  bird.hab.ag <- as.matrix(lc.df[,lc.col]) %*% (bird.hab %>% divide_by(sum(.)))
   if(edges=="wall") bird.hab.ag[!lc.df$inbd] <- 0
-  
   
   # generate default dispersal probability matrix
   d.pr <- matrix(0, nbr, nbr)
