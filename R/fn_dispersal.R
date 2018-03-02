@@ -60,7 +60,6 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
       xx <- map(lc.df$x[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
       yy <- map(lc.df$y[lc.df$inbd], ~seq(.-sdd.max, .+sdd.max))
     }
-    
   } else {
     xx <- map(lc.df$x[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
     yy <- map(lc.df$y[lc.df$id %in% lc.new$id], ~seq(.-sdd.max, .+sdd.max))
