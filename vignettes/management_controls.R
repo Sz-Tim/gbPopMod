@@ -8,14 +8,17 @@ data(lc.rct)
 
 # set parameters
 n.sim <- 3
-g.p <- set_g_p(tmax=150, lc.r=50, lc.c=50, n.cores=1)
+g.p <- set_g_p(tmax=10, lc.r=50, lc.c=50, n.cores=1)
 control.p <- set_control_p(null_ctrl=FALSE, 
+                           t.trt=1,
                            man.i=1300:1800,  # cells with manual controls
-                           nTrt.man=NA,  # for random cell assignment
+                           pTrt.man=NA,  # for random cell assignment
                            man.trt=c(M=0.05, C=0.3, MC=0.95),
                            grd.i=1300:1500, # cells with ground cover controls
-                           nTrt.grd=NA,  # for random cell assignment
+                           pTrt.grd=NA,  # for random cell assignment
                            grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
+                           lc.chg=TRUE,
+                           pChg=.1,
                            chg.i=NULL  # cells with timber harvest
                            )
 
@@ -23,7 +26,7 @@ control.p <- set_control_p(null_ctrl=FALSE,
 lc.df <- lc.rct %>% 
   filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
   mutate(id=row_number(), 
-         id.inbd=min_rank(na_if(inbd*id, 0)))
+         id.in=min_rank(na_if(inbd*id, 0)))
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
@@ -48,11 +51,9 @@ if(g.p$n.cores > 1) {
   out.sb <- map(out.p, ~.$N.sb) %>% unlist %>% 
     array(., dim=c(ngrid, g.p$tmax+1, n.sim))
 } else {
-  out.ad <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
-  out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
+  out.ad <- out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
   for(s in 1:n.sim) {
-    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, 
-                   control.p, verbose=T)
+    out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
     out.ad[,,s] <- out$N[,,max(g.p$age.f)]
     out.sb[,,s] <- out$N.sb
     rm(out)

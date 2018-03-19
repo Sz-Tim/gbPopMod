@@ -111,7 +111,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #' distance from the source cell, bird habitat preference, the proportion of
 #' fruits eaten by birds, and seed viability post-digestion.
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id.inbd} indexes only inbound cells
+#'   while \code{id.in} indexes only inbound cells
 #' @param N.f Tibble of fruits produced in each cell output from
 #'   \code{\link{make_fruits}}
 #' @param pr.eat.ag Vector of proportion of fruits eaten by birds from
@@ -142,7 +142,7 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
            N.emig=N.produced*(1-pexp(.5,sdd.rate))*pr.eat.ag[id,],
            N.drop=N.produced-N.emig) %>%
     mutate(N.emig=N.emig*pr.s.bird,
-           id.inbd=id.i$id.inbd[id])
+           id.in=id.i$id.in[id])
   N.seed <- N.source %>% select(id, N.drop) %>% rename(N.dep=N.drop)
   
   if(sdd.st) {
@@ -186,7 +186,7 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
     group_by(id) %>% 
     summarise(N=sum(N.dep) %>% round) %>%
     filter(N > 0)
-  if(edges=="wall") N.seed %<>% filter(!is.na(id.i$id.inbd[id]))
+  if(edges=="wall") N.seed %<>% filter(!is.na(id.i$id.in[id]))
   
   return(N.seed)
 }
@@ -200,7 +200,7 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
 #' landcape. A single established seed is added to each target cell
 #' @param ncell Number of inbound grid cells
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id.inbd} indexes only inbound cells
+#'   while \code{id.in} indexes only inbound cells
 #' @param N.rcrt \code{N.rcrt} output from \code{\link{new_seedlings}} with grid
 #'   id and number of new recruits in each cell
 #' @param n.ldd Number of long distance dispersal events per time step
@@ -211,7 +211,7 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
 
 ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
   
-  ldd.id <- id.i$id[which(id.i$id.inbd %in% sample(1:ncell, n.ldd, replace=T))]
+  ldd.id <- id.i$id[which(id.i$id.in %in% sample(1:ncell, n.ldd, replace=T))]
   N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
 
   return(N.rcrt)

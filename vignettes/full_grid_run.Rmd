@@ -65,7 +65,7 @@ data(lc.rct)
   lc.df <- lc.rct %>% 
     filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
     mutate(id=row_number(), 
-           id.inbd=min_rank(na_if(inbd*id, 0)))
+           id.in=min_rank(na_if(inbd*id, 0)))
   ngrid <- nrow(lc.df)
   ncell <- sum(lc.df$inbd)
   
@@ -75,7 +75,7 @@ data(lc.rct)
   
   # dispersal probabilities
   # indexed 1:ncell with only inbound cells: sdd.pr[,,,i] = ith inbound cell
-  # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.inbd==i,]
+  # row i = dplyr::filter(lc.df, inbds)[i,] = lc.df[id.in==i,]
   # cell indexes in sdd.pr[,,2,] correspond with lc.df$id
   # this extra complication avoids calculating many, many unnecessary cells
   sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)

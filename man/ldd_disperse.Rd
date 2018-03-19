@@ -10,7 +10,7 @@ ldd_disperse(ncell, id.i, N.rcrt, n.ldd)
 \item{ncell}{Number of inbound grid cells}
 
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id.inbd} indexes only inbound cells}
+while \code{id.in} indexes only inbound cells}
 
 \item{N.rcrt}{\code{N.rcrt} output from \code{\link{new_seedlings}} with grid
 id and number of new recruits in each cell}

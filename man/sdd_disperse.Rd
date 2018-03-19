@@ -9,7 +9,7 @@ sdd_disperse(id.i, N.f, pr.eat.ag, pr.s.bird, sdd.pr, sdd.rate, sdd.st = F,
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id.inbd} indexes only inbound cells}
+while \code{id.in} indexes only inbound cells}
 
 \item{N.f}{Tibble of fruits produced in each cell output from
 \code{\link{make_fruits}}}

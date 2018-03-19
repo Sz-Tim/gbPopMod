@@ -4,13 +4,14 @@
 #' treatment. Assigned cells either overwrite the cells treated in the previous
 #' time step or are appended.
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id.inbd} indexes only inbound cells
+#'   while \code{id.in} indexes only inbound cells
 #' @param ncell \code{NULL} Number of inbound grid cells. Required if cell IDs
 #'   are not supplied via \code{assign_i}
 #' @param assign_i \code{NULL} Vector of inbound cell IDs to treat. If
 #'   \code{NULL}, then \code{ncell} IDs are sampled randomly for treatments
-#' @param nTrt Proportion of inbound grid cells to be treated. If add != NULL,
-#'   then this is appended to the cells treated in the previous time step.
+#' @param nTrt Number of inbound grid cells to be treated. If \code{add !=
+#'   NULL}, then this is appended to the cells treated in the previous time
+#'   step.
 #' @param trt.eff Named vector with effects of each treatment. These names are
 #'   sampled and assigned to cells
 #' @param addOwners \code{Logical} denoting whether to append new treated cells
@@ -36,7 +37,7 @@ trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, nTrt, trt.eff,
   }
   
   
-  trt.t <- tibble(id=id.i$id[which(id.i$id.inbd %in% assign_i)],
+  trt.t <- tibble(id=id.i$id[which(id.i$id.in %in% assign_i)],
                   Trt=sample(names(trt.eff), nTrt, replace=TRUE))
   
   if(addOwners) {

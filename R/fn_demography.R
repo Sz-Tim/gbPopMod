@@ -29,10 +29,8 @@ make_fruits <- function(N.t, lc.mx, fec.ag, pr.f.ag, y.ad, age.f.d, dem.st=F) {
   }
   if(dem.st) {
     N.f <- tibble(id = which(N.mature>0)) %>%
-      mutate(N.rpr = rbinom(n(), N.mature[id],
-                            prob=pr.f.ag[id]),
-             N.fruit = rpois(n(), 
-                             lambda=N.rpr*fec.ag[id])) %>% 
+      mutate(N.rpr = rbinom(n(), N.mature[id], prob=pr.f.ag[id]),
+             N.fruit = rpois(n(), lambda=N.rpr*fec.ag[id])) %>% 
       filter(N.fruit > 0)
   } else {
     N.f <- tibble(id = which(N.mature>0)) %>%
@@ -79,10 +77,8 @@ new_seedlings <- function(ngrid, N.seed, N.sb, pr.est.ag, pr.sb,
       # N_est_sb
       N.sbEst[N.seed$id] <- rbinom(nrow(N.seed), N.sb[N.seed$id], 
                                    pr.est.ag[N.seed$id])
-      
       # N_est_tot = N_est + N_est_sb
       N.rcrt[N.seed$id] <- N.rcrt[N.seed$id] + N.sbEst[N.seed$id]
-      
       # N_to_sb = (N_sb_notEst + N_addedToSB) * p(SB)
       N.sb[N.seed$id] <- rbinom(nrow(N.seed),
                                 N.sb[N.seed$id] + N.seed$N - N.rcrt[N.seed$id],
@@ -101,11 +97,9 @@ new_seedlings <- function(ngrid, N.seed, N.sb, pr.est.ag, pr.sb,
       # N_est_tot = N_est + N_est_sb
       N.rcrt[N.seed$id] <- (N.rcrt[N.seed$id] + 
                               N.sb[N.seed$id] * pr.est.ag[N.seed$id,]) %>% round
-      
       # N_to_sb = (N_sb_notEst + N_addedToSB) * p(SB)
       N.sb[N.seed$id] <- ((N.sb[N.seed$id]*(1-pr.est.ag[N.seed$id,]) + 
                              N.seed$N - N.rcrt[N.seed$id]) * pr.sb) %>% round
-      
     } else {
       N.sb <- rep(0, ngrid)
     }

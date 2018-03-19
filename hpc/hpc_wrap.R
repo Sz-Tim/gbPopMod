@@ -14,17 +14,17 @@ theme_set(theme_bw())
 data(lc.rct)
 
 # set parameters
-n.sim <- 6
-g.p <- set_g_p(tmax=10, lc.r=30, lc.c=30, n.cores=3)
+n.sim <- 3
+g.p <- set_g_p(tmax=100, lc.r=30, lc.c=30, n.cores=3)
 control.p <- set_control_p()
-p <- readRDS("hpc/p.rds")
-p.seq <- readRDS("hpc/p_seq.rds")
+p <- readRDS("hpc/p.rds")[4]
+p.seq <- readRDS("hpc/p_seq.rds")[4]
 
 # land cover
 lc.df <- lc.rct %>% 
   filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
   mutate(id=row_number(), 
-         id.inbd=min_rank(na_if(inbd*id, 0)))
+         id.in=min_rank(na_if(inbd*id, 0)))
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
