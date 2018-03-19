@@ -98,7 +98,7 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 
 #' Aggregate compositional data within each cell
 #'
-#' This function reformats and calculates cell-means based on land cover
+#' This function reformats and calculates expected cell-means based on land cover
 #' composition for relevant parameters.
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
@@ -140,7 +140,7 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #' @keywords premultiply, aggregate, set up, initialize
 #' @export
 
-cell_agg <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, 
+cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, 
                      pr.est, pr.est.trt=NULL, edges="wall") {
   
   lc.mx <- as.matrix(lc.df[,4:9])
