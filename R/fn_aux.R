@@ -280,24 +280,24 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #' @param add.owners \code{FALSE} Do owners treat every year once starting a
 #'   particular treatment?
 #' @param grd.i \code{NULL} Vector of cell IDs to receive ground treatments. If
-#'   \code{NULL}, then \code{nTrt.grd * ncell} cells are assigned randomly with
+#'   \code{NULL}, then \code{pTrt.grd * ncell} cells are assigned randomly with
 #'   the \link{trt_assign} function
 #' @param man.i \code{NULL} Vector of cell IDs to receive manual treatments. If
-#'   \code{NULL}, then \code{nTrt.man * ncell} cells are assigned randomly with
+#'   \code{NULL}, then \code{pTrt.man * ncell} cells are assigned randomly with
 #'   the \link{trt_assign} function
 #' @param chg.i \code{NULL} Vector of cell IDs to receive land cover changes. If
-#'   \code{NULL}, then \code{n.chg * ncell} cells are assigned randomly with
+#'   \code{NULL}, then \code{pChg * ncell} cells are assigned randomly with
 #'   the \link{trt_assign} function
-#' @param nTrt.grd \code{0.05} Proportion of cells with ground treatments in
+#' @param pTrt.grd \code{0.05} Proportion of cells with ground treatments in
 #'   each time step
-#' @param nTrt.man \code{0.05} Proportion of cells with manual treatments in
+#' @param pTrt.man \code{0.05} Proportion of cells with manual treatments in
 #'   each time step
 #' @param grd.trt \code{Lit=0.005, Cov=0.01, Com=0.00001} Named vector with
 #'   ground treatments and associated seedling establishment probabilities
 #' @param man.trt \code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
 #'   treatments and associated mortality (=success) rates
 #' @param lc.chg \code{TRUE} Does land cover change across years?
-#' @param n.chg \code{0.0001} Proportion of cells with land cover change each
+#' @param pChg \code{0.0001} Proportion of cells with land cover change each
 #'   year
 #' @return Named list of control parameters including all arguments as elements
 #'   unless \code{null_ctrl==TRUE}, in which case the function returns
@@ -307,19 +307,19 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 
 set_control_p <- function(null_ctrl=TRUE, t.trt=30, add.owners=FALSE,
                           grd.i=NULL, man.i=NULL, chg.i=NULL,
-                          nTrt.grd=0.05, nTrt.man=0.05,
+                          pTrt.grd=0.05, pTrt.man=0.05,
                           grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
                           man.trt=c(M=0.1, C=0.3, MC=0.8),
-                          lc.chg=TRUE, n.chg=0.0001) {
+                          lc.chg=TRUE, pChg=0.0001) {
   
   if(null_ctrl) {
     control.p <- NULL
   } else {
     control.p <- list(t.trt=t.trt, add.owners=add.owners,
                       grd.i=grd.i, man.i=man.i, chg.i=chg.i,
-                      nTrt.grd=nTrt.grd, nTrt.man=nTrt.man,
+                      pTrt.grd=pTrt.grd, pTrt.man=pTrt.man,
                       grd.trt=grd.trt, man.trt=man.trt,
-                      lc.chg=lc.chg, n.chg=n.chg)
+                      lc.chg=lc.chg, pChg=pChg)
   }
   
   return(control.p)

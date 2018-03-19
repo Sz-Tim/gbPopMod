@@ -111,7 +111,7 @@ trt_manual <- function(N.t, y.ad, N.trt, man.trt) {
 #'
 #' Randomly assigns a specified number of cells to have their forest habitat
 #' cleared by a random proportion.
-#' @param nChg Proportion of inbound cells to cut
+#' @param nChg Number of inbound cells to cut
 #' @param ncell \code{NULL} Number of inbound grid cells. Required if cell IDs
 #'   are not supplied via \code{assign_i}
 #' @param assign_i \code{NULL} Vector of inbound cell IDs to treat. If
@@ -129,10 +129,10 @@ cut_assign <- function(nChg, ncell=NULL, assign_i=NULL, lc.df, f.c) {
   
   library(tidyverse)
   
-  if(is.null(assign_i)) assign_i <- sample(1:ncell, nChg*ncell)
+  if(is.null(assign_i)) assign_i <- sample(1:ncell, nChg)
   n <- length(assign_i)
-  id.chg <- dplyr::filter(lc.df, id.inbd %in% assign_i) %>% 
-    select(id, id.inbd)
+  id.chg <- dplyr::filter(lc.df, id.in %in% assign_i) %>% 
+    select(id, id.in)
   mx <- (runif(n*length(f.c)) * lc.df[id.chg$id, f.c]) %>%
     cbind(., TotChg=rowSums(.))
   

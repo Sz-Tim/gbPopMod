@@ -7,7 +7,7 @@
 cut_assign(nChg, ncell = NULL, assign_i = NULL, lc.df, f.c)
 }
 \arguments{
-\item{nChg}{Proportion of inbound cells to cut}
+\item{nChg}{Number of inbound cells to cut}
 
 \item{ncell}{\code{NULL} Number of inbound grid cells. Required if cell IDs
 are not supplied via \code{assign_i}}

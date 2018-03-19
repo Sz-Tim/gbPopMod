@@ -9,7 +9,7 @@ trt_assign(id.i, ncell = NULL, assign_i = NULL, nTrt, trt.eff,
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id.inbd} indexes only inbound cells}
+while \code{id.in} indexes only inbound cells}
 
 \item{ncell}{\code{NULL} Number of inbound grid cells. Required if cell IDs
 are not supplied via \code{assign_i}}
@@ -17,8 +17,9 @@ are not supplied via \code{assign_i}}
 \item{assign_i}{\code{NULL} Vector of inbound cell IDs to treat. If
 \code{NULL}, then \code{ncell} IDs are sampled randomly for treatments}
 
-\item{nTrt}{Proportion of inbound grid cells to be treated. If add != NULL,
-then this is appended to the cells treated in the previous time step.}
+\item{nTrt}{Number of inbound grid cells to be treated. If \code{add !=
+NULL}, then this is appended to the cells treated in the previous time
+step.}
 
 \item{trt.eff}{Named vector with effects of each treatment. These names are
 sampled and assigned to cells}
