@@ -8,10 +8,10 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
   K = c(750, 10, 100, 100, 300, 100), pr.s = c(0.9, 0.1, 0.6, 0.6, 0.6,
   0.6), pr.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3), fec = c(200, 100, 40, 20,
-  20, 10), age.f = 4, pr.sb = 0.3, pr.est = c(0.07, 0.01, 0.08, 0.02,
-  0.02, 0.03), sdd.max = 15, sdd.rate = 0.1, n.ldd = 1, pr.eat = c(0.3,
-  0.1, 0.2, 0.2, 0.2, 0.1), bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05),
-  pr.s.bird = 0.6, edges = "wall")
+  20, 10), age.f = rep(4, 6), pr.sb = 0.3, pr.est = c(0.07, 0.01, 0.08,
+  0.02, 0.02, 0.03), sdd.max = 15, sdd.rate = 0.1, n.ldd = 1,
+  pr.eat = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1), bird.hab = c(0.35, 0.35, 0.05,
+  0.1, 0.1, 0.05), pr.s.bird = 0.6, edges = "wall")
 }
 \arguments{
 \item{tmax}{\code{100} Number of time steps per simulation}
@@ -44,8 +44,8 @@ of annual juvenile survival rates}
 \item{fec}{\code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
 mean fruit per adult}
 
-\item{age.f}{\code{4} Vector \code{length=n.lc} or scalar of age at first
-fruiting. Individuals at this age are considered adults}
+\item{age.f}{\code{rep(4, 6)} Vector \code{length=n.lc} or scalar of age at
+first fruiting. Individuals at this age are considered adults}
 
 \item{pr.sb}{\code{0.3} Probability of annual survival in seed bank}
 
