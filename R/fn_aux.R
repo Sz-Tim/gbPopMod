@@ -225,8 +225,8 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #'   \code{length=n.lc} of fruiting probabilities
 #' @param fec \code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
 #'   mean fruit per adult
-#' @param age.f \code{4} Vector \code{length=n.lc} or scalar of age at first
-#'   fruiting. Individuals at this age are considered adults
+#' @param age.f \code{rep(4, 6)} Vector \code{length=n.lc} or scalar of age at
+#'   first fruiting. Individuals at this age are considered adults
 #' @param pr.sb \code{0.3} Probability of annual survival in seed bank
 #' @param pr.est \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 #'   \code{length=n.lc} of seedling establishment probabilities
