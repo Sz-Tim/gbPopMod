@@ -26,44 +26,19 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   library(tidyverse); library(magrittr)
   
   # Unpack parameters
-  tmax <- g.p$tmax
-  n.lc <- g.p$n.lc
-  dem.st <- g.p$dem.st
-  sdd.st <- g.p$sdd.st
-  bank <- g.p$bank
-  K <- g.p$K  # carrying capacity
-  pr.s <- g.p$pr.s  # pre-adult survival
-  pr.f <- g.p$pr.f  # pr(fruit)
-  fec <- g.p$fec  # mean(fruit per adult)
-  age.f <- g.p$age.f  # mean age at first fruiting
-  pr.est <- g.p$pr.est  # pr(seedling est)
-  pr.sb <- g.p$pr.sb  # pr(ann.surv seed bank)
-  lambda <- g.p$lambda  # pop growth rate
-  sdd.rate <- g.p$sdd.rate  # 1/mn for dispersal kernel
-  pr.eat <- g.p$pr.eat  # pr(birds eat frt)
-  pr.s.bird <- g.p$pr.s.bird  # pr(viable | digestion)
-  n.ldd <- g.p$n.ldd   # num long distance dispersal events per year
+  list2env(g.p, environment())
   y.ad <- max(g.p$age.f)
+  id.i <- lc.df %>% select(id, id.in)
   age.f.d <- length(g.p$age.f) > 1
-  id.i <- lc.df %>% select(id, id.inbd)
-  edges <- g.p$edges
   
   # If buckthorn is being actively managed...
   pr.est.trt <- NULL
   if(!is.null(control.p)) {
-    grd.i <- control.p$grd.i
-    man.i <- control.p$man.i
-    chg.i <- control.p$chg.i
-    nTrt.grd <- control.p$nTrt.grd * ncell
-    nTrt.man <- control.p$nTrt.man * ncell
-    grd.trt <- control.p$grd.trt
-    man.trt <- control.p$man.trt
-    lc.chg <- control.p$lc.chg
-    n.chg <- control.p$n.chg
-    t.trt <- control.p$t.trt
-    add.owners <- control.p$add.owners
-    est.trt <- tibble(id=numeric(), Trt=character())
-    N.trt <- tibble(id=numeric(), Trt=character())
+    list2env(control.p, environment())
+    nTrt.grd <- ceiling(control.p$nTrt.grd * ncell)
+    nTrt.man <- ceiling(control.p$nTrt.man * ncell)
+    nChg <- ceiling(control.p$pChg * ncell)
+    est.trt <- N.trt <- tibble(id=numeric(), Trt=character())
   }
   
   # 1. Initialize populations
@@ -72,45 +47,32 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     N <- array(0, dim=c(ngrid, tmax+1, n.lc, y.ad))  
     N[,1,,] <- N.init
     for(l in 1:n.lc) {
-      if(age.f[l] < y.ad) {
-        N[,,l,age.f[l]:(y.ad-1)] <- NA
-      }
+      if(age.f[l] < y.ad) { N[,,l,age.f[l]:(y.ad-1)] <- NA }
     }
   } else {
-    N <- array(0, dim=c(ngrid, tmax+1, y.ad))  
+    N <- array(0, dim=c(ngrid, tmax+1, y.ad))
     N[,1,] <- N.init
   }
   
+  
   for(t in 1:tmax) {
     if(verbose) cat("Year", t, "")
-    if(age.f.d) {
-      N.t <- N[,t,,]
-    } else {
-      N.t <- N[,t,]
-    }
+    N.t <- ifelse(age.f.d, N[,t,,], N[,t,])
     
     # 2. Implement management
     if(!is.null(control.p) && t >= t.trt) {
-      # run functions to implement management controls
-      # For future complexity, manual.trt could also push a proportion of
-      # the adults back to a previous age so they don't fruit for a number
-      # of years after the treatment rather than being killed explicitly
-      
       # 2A. Adjust LC %
-      if(lc.chg && n.chg >= 1) {
+      if(lc.chg && nChg >= 1) {
         if(verbose) cat("Changing LC...")
         # i. decide which cells change and how much of each kind of forest
-        chg.asn <- cut_assign(n.chg, ncell, chg.i, lc.df, f.c=6:9)
-        
+        chg.asn <- cut_assign(nChg, ncell, chg.i, lc.df, f.c=6:9)
         # ii. cut forest & update SDD neighborhoods
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
                                                 f.c=6:9, lc.df)
-        sdd.i <- tibble(id.inbd=unique(arrayInd(which(sdd.pr %in% 
-                                                        chg.asn$id.chg$id.inbd), 
-                                                dim(sdd.pr))[,4]), 
-                        id=id.i$id[match(id.inbd, id.i$id.inbd)])
-        sdd.pr[,,,sdd.i$id.inbd] <- sdd_set_probs(nrow(sdd.i), lc.df, 
-                                                  g.p, sdd.i)
+        sdd.i <- tibble(id.in=unique(
+          arrayInd(which(sdd.pr %in% chg.asn$id.chg$id.in), dim(sdd.pr))[,4]), 
+          id=id.i$id[match(id.in, id.i$id.in)])
+        sdd.pr[,,,sdd.i$id.in] <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
       }
       
       # 2B. Adjust p.est
