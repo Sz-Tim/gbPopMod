@@ -15,7 +15,7 @@ new_seedlings(ngrid, N.seed, N.sb, pr.est.ag, pr.sb, dem.st = F, bank = F)
 \item{N.sb}{Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)}
 
 \item{pr.est.ag}{Vector of establishment probabilities from
-\code{\link{cell_agg}}}
+\code{\link{cell_E}}}
 
 \item{pr.sb}{Probability of surviving a year in the seed bank}
 
