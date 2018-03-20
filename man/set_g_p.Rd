@@ -6,12 +6,13 @@
 \usage{
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
-  K = c(750, 10, 100, 100, 300, 100), pr.s = c(0.9, 0.1, 0.6, 0.6, 0.6,
-  0.6), pr.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3), fec = c(200, 100, 40, 20,
-  20, 10), age.f = rep(4, 6), pr.sb = 0.3, pr.est = c(0.07, 0.01, 0.08,
-  0.02, 0.02, 0.03), sdd.max = 15, sdd.rate = 0.1, n.ldd = 1,
-  pr.eat = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1), bird.hab = c(0.35, 0.35, 0.05,
-  0.1, 0.1, 0.05), pr.s.bird = 0.6, edges = "wall")
+  K = c(750, 10, 100, 100, 300, 100), s.jv = c(0.9, 0.1, 0.6, 0.6, 0.6,
+  0.6), s.ad = c(1, 1, 1, 1, 1, 1), pr.f = c(0.9, 0.1, 0.29, 0.23, 0.2,
+  0.3), fec = c(200, 100, 40, 20, 20, 10), age.f = rep(4, 6), s.sb = 0.3,
+  pr.est = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03), sdd.max = 15,
+  sdd.rate = 0.1, n.ldd = 1, pr.eat = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
+  bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05), s.bird = 0.6,
+  edges = "wall", method = "wt.mean")
 }
 \arguments{
 \item{tmax}{\code{100} Number of time steps per simulation}
@@ -35,8 +36,11 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
 \item{K}{\code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
 carrying capacities for adults}
 
-\item{pr.s}{\code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
+\item{s.jv}{\code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
 of annual juvenile survival rates}
+
+\item{s.ad}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+adult survival rates}
 
 \item{pr.f}{\code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
 \code{length=n.lc} of fruiting probabilities}
@@ -47,7 +51,7 @@ mean fruit per adult}
 \item{age.f}{\code{rep(4, 6)} Vector \code{length=n.lc} or scalar of age at
 first fruiting. Individuals at this age are considered adults}
 
-\item{pr.sb}{\code{0.3} Probability of annual survival in seed bank}
+\item{s.sb}{\code{0.3} Probability of annual survival in seed bank}
 
 \item{pr.est}{\code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 \code{length=n.lc} of seedling establishment probabilities}
@@ -65,10 +69,15 @@ first fruiting. Individuals at this age are considered adults}
 \item{bird.hab}{\code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
 \code{length=n.lc} of bird habitat preferences}
 
-\item{pr.s.bird}{\code{0.6} Seed viability post-digestion}
+\item{s.bird}{\code{0.6} Seed viability post-digestion}
 
 \item{edges}{\code{wall} Boundary behavior, taking values of \code{wall},
 \code{sink}, or \code{none}. See boundary_behavior.Rmd for descriptions}
+
+\item{method}{\code{"wt.mean"} Method to use for calculating expected
+parameter values for each cell. If \code{"wt.mean"}, a mean is calculated
+weighted by the proportional land cover. If \code{"lm"}, a regression is
+performed treating each parameter vector as an intercept plus slopes}
 }
 \value{
 Named list of global parameters including all arguments as elements

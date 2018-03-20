@@ -4,7 +4,7 @@
 \alias{cell_E}
 \title{Aggregate compositional data within each cell}
 \usage{
-cell_E(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est, pr.est.trt = NULL,
+cell_E(lc.df, K, s.jv, fec, pr.f, pr.eat, pr.est, pr.est.trt = NULL,
   edges = "wall", method = "wt.mean")
 }
 \arguments{
@@ -14,7 +14,7 @@ other covariates, and cell id info}
 \item{K}{Vector \code{length=n.lc} with carrying capacity for each land cover
 type}
 
-\item{pr.s}{Vector \code{length=n.lc} with juvenile survival probability for
+\item{s.jv}{Vector \code{length=n.lc} with juvenile survival probability for
 each land cover type}
 
 \item{fec}{Vector \code{length=n.lc} with mean per-individual fruit
@@ -51,7 +51,7 @@ Named list with values aggregated within cells based on land cover
   nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
   \code{length=ngrid} with total K} \item{\code{K.lc}}{Matrix
   \code{(ncol=n.lc, nrow=ngrid)} with K per land cover category}
-  \item{\code{pr.s.E}}{Vector \code{length=ngrid} with pr(surv)}
+  \item{\code{s.jv.E}}{Vector \code{length=ngrid} with pr(juvenile surv)}
   \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with relative
   density among land cover categories} \item{\code{fec.E}}{Vector
   \code{length=ngrid} with mean fruit produced per adult)}

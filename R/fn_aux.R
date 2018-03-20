@@ -122,7 +122,7 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #'   other covariates, and cell id info
 #' @param K Vector \code{length=n.lc} with carrying capacity for each land cover
 #'   type
-#' @param pr.s Vector \code{length=n.lc} with juvenile survival probability for
+#' @param s.jv Vector \code{length=n.lc} with juvenile survival probability for
 #'   each land cover type
 #' @param fec Vector \code{length=n.lc} with mean per-individual fruit
 #'   production for each land cover type
@@ -150,7 +150,7 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #'   nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
 #'   \code{length=ngrid} with total K} \item{\code{K.lc}}{Matrix
 #'   \code{(ncol=n.lc, nrow=ngrid)} with K per land cover category}
-#'   \item{\code{pr.s.E}}{Vector \code{length=ngrid} with pr(surv)}
+#'   \item{\code{s.jv.E}}{Vector \code{length=ngrid} with pr(juvenile surv)}
 #'   \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with relative
 #'   density among land cover categories} \item{\code{fec.E}}{Vector
 #'   \code{length=ngrid} with mean fruit produced per adult)}
@@ -167,7 +167,7 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #' @keywords premultiply, aggregate, set up, initialize
 #' @export
 
-cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est, 
+cell_E <- function(lc.df, K, s.jv, fec, pr.f, pr.eat, pr.est, 
                    pr.est.trt=NULL, edges="wall", method="wt.mean") {
   
   if(method=="wt.mean") {
@@ -175,7 +175,7 @@ cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est,
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))
     rel.dens <- t(apply(lc.mx, 1, function(x) K*x/c(x%*%K)))
-    pr.s.E <- c(lc.mx %*% pr.s)
+    s.jv.E <- c(lc.mx %*% s.jv)
     fec.E <- lc.mx %*% fec
     pr.f.E <- lc.mx %*% pr.f
     pr.eat.E <- lc.mx %*% pr.eat
@@ -183,16 +183,15 @@ cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est,
   } else if(method=="lm") {
     lc.mx <- cbind(1, as.matrix(select(lc.df, 
                               -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
-    K.E <- round(lc.mx[,length(K)] %*% K)
-    K.lc <- round(t(t(lc.mx[,length(K)]) * K))
-    rel.dens <- t(apply(lc.mx[,length(K)], 1, function(x) K*x/c(x%*%K)))
-    pr.s.E <- c(antilogit(lc.mx[,length(pr.s)] %*% pr.s))
-    fec.E <- exp(lc.mx[,length(fec)] %*% fec)
-    pr.f.E <- antilogit(lc.mx[,length(pr.f)] %*% pr.f)
-    pr.eat.E <- antilogit(lc.mx[,length(pr.eat)] %*% pr.eat)
-    pr.est.E <- antilogit(lc.mx[,length(pr.est)] %*% pr.est)
+    K.E <- round(lc.mx[,1:length(K)] %*% K)
+    K.lc <- round(t(t(lc.mx[,1:length(K)]) * K))
+    rel.dens <- t(apply(lc.mx[,1:length(K)], 1, function(x) K*x/c(x%*%K)))
+    s.jv.E <- c(antilogit(lc.mx[,1:length(s.jv)] %*% s.jv))
+    fec.E <- exp(lc.mx[,1:length(fec)] %*% fec)
+    pr.f.E <- antilogit(lc.mx[,1:length(pr.f)] %*% pr.f)
+    pr.eat.E <- antilogit(lc.mx[,1:length(pr.eat)] %*% pr.eat)
+    pr.est.E <- antilogit(lc.mx[,1:length(pr.est)] %*% pr.est)
   }
-
   
   if(!is.null(pr.est.trt)) {
     pr.est.E[pr.est.trt$id,] <- pr.est.trt$pr.est
@@ -201,7 +200,7 @@ cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est,
   if(edges=="sink") pr.est.E[!lc.df$inbd] <- 0
   
   return(list(lc.mx=lc.mx, K.E=K.E, K.lc=K.lc, rel.dens=rel.dens,
-              pr.s.E=pr.s.E, fec.E=fec.E, pr.f.E=pr.f.E,
+              s.jv.E=s.jv.E, fec.E=fec.E, pr.f.E=pr.f.E,
               pr.eat.E=pr.eat.E, pr.est.E=pr.est.E))
 }
 
@@ -260,15 +259,17 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #' @param N.p.t0 \code{10} Number of cells with buckthorn at t=1
 #' @param K \code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
 #'   carrying capacities for adults
-#' @param pr.s \code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
+#' @param s.jv \code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
 #'   of annual juvenile survival rates
+#' @param s.ad \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+#'   adult survival rates
 #' @param pr.f \code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
 #'   \code{length=n.lc} of fruiting probabilities
 #' @param fec \code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
 #'   mean fruit per adult
 #' @param age.f \code{rep(4, 6)} Vector \code{length=n.lc} or scalar of age at
 #'   first fruiting. Individuals at this age are considered adults
-#' @param pr.sb \code{0.3} Probability of annual survival in seed bank
+#' @param s.sb \code{0.3} Probability of annual survival in seed bank
 #' @param pr.est \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 #'   \code{length=n.lc} of seedling establishment probabilities
 #' @param sdd.max \code{15} Maximum dispersal distance in cells
@@ -279,9 +280,13 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #'   \code{1-pr.eat} assumed to drop directly below buckthorn individuals
 #' @param bird.hab \code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
 #'   \code{length=n.lc} of bird habitat preferences
-#' @param pr.s.bird \code{0.6} Seed viability post-digestion
+#' @param s.bird \code{0.6} Seed viability post-digestion
 #' @param edges \code{wall} Boundary behavior, taking values of \code{wall},
 #'   \code{sink}, or \code{none}. See boundary_behavior.Rmd for descriptions
+#' @param method \code{"wt.mean"} Method to use for calculating expected
+#'   parameter values for each cell. If \code{"wt.mean"}, a mean is calculated
+#'   weighted by the proportional land cover. If \code{"lm"}, a regression is
+#'   performed treating each parameter vector as an intercept plus slopes
 #' @return Named list of global parameters including all arguments as elements
 #' @keywords initialize, set up, global, parameter
 #' @export
@@ -289,22 +294,23 @@ pop_init <- function(ngrid, g.p, lc.df) {
 set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4, 
                     lc.r=100, lc.c=100, n.lc=6, N.p.t0=10,
                     K=c(750, 10, 100, 100, 300, 100),
-                    pr.s=c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6),
+                    s.jv=c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6),
+                    s.ad=c(1, 1, 1, 1, 1, 1),
                     pr.f=c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
                     fec=c(200, 100, 40, 20, 20, 10),
-                    age.f=rep(4,6), pr.sb=0.3, 
+                    age.f=rep(4,6), s.sb=0.3, 
                     pr.est=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
                     sdd.max=15, sdd.rate=0.1, n.ldd=1,
                     pr.eat=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
-                    bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), pr.s.bird=0.6,
-                    edges="wall") {
+                    bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), s.bird=0.6,
+                    edges="wall", method="wt.mean") {
   
   g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, bank=bank,
               n.cores=n.cores, lc.r=lc.r, lc.c=lc.c, n.lc=n.lc, N.p.t0=N.p.t0, 
-              K=K, pr.s=pr.s, pr.f=pr.f, fec=fec, age.f=age.f, pr.sb=pr.sb,
-              pr.est=pr.est, sdd.max=sdd.max, sdd.rate=sdd.rate, n.ldd=n.ldd,
-              pr.eat=pr.eat, bird.hab=bird.hab, pr.s.bird=pr.s.bird, 
-              edges=edges)
+              K=K, s.jv=s.jv, s.ad=s.ad, pr.f=pr.f, fec=fec, age.f=age.f, 
+              s.sb=s.sb, pr.est=pr.est, sdd.max=sdd.max, sdd.rate=sdd.rate, 
+              n.ldd=n.ldd, pr.eat=pr.eat, bird.hab=bird.hab, s.bird=s.bird, 
+              edges=edges, method=method)
   
   return(g.p)
 }
