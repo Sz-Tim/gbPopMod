@@ -1,3 +1,21 @@
+#' Antilogit function
+#'
+#' This function calculates the antilogit for the object \code{x}, returning the corresponding probability (range 0-1)
+#' @param x Vector of unconstrained values
+#' @return Vector of constrained values
+#' @keywords antilogit
+#' @export
+
+antilogit <- function (x) {
+  exp(x)/(1 + exp(x))
+}
+
+
+
+
+
+
+
 #' Expand all pairwise combinations of two vectors into one character vector
 #'
 #' This function is similar to \code{\link[base]{expand.grid}} but inputs two
