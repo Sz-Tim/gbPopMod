@@ -4,9 +4,9 @@
 #' assumes no fruit production before \code{age.f} and that individuals are
 #' distributed among land cover types in densities relative to K.
 #' @param N.t Matrix or array of abundances, with dims=c(ngrid, (lc), y.ad)
-#' @param lc.mx Matrix of land cover proportions from \code{\link{cell_agg}}
-#' @param fec.ag Vector of fruit per individual from \code{\link{cell_agg}}
-#' @param pr.f.ag Vector of fruiting probability from \code{\link{cell_agg}}
+#' @param lc.mx Matrix of land cover proportions from \code{\link{cell_E}}
+#' @param fec.ag Vector of fruit per individual from \code{\link{cell_E}}
+#' @param pr.f.ag Vector of fruiting probability from \code{\link{cell_E}}
 #' @param y.ad Maximum age at maturity (i.e., \code{max(age.f)})
 #' @param age.f.d \code{Logical} denoting whether \code{age.f} differs among
 #'   land cover types
@@ -52,7 +52,7 @@ make_fruits <- function(N.t, lc.mx, fec.ag, pr.f.ag, y.ad, age.f.d, dem.st=F) {
 #'   \code{\link{sdd_disperse}} with grid id and number of seeds in each cell
 #' @param N.sb Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)
 #' @param pr.est.ag Vector of establishment probabilities from
-#'   \code{\link{cell_agg}}
+#'   \code{\link{cell_E}}
 #' @param pr.sb Probability of surviving a year in the seed bank
 #' @param dem.st \code{Logical} denoting whether to include demographic
 #'   stochasticity
@@ -106,4 +106,33 @@ new_seedlings <- function(ngrid, N.seed, N.sb, pr.est.ag, pr.sb,
     
   }
   return(list(N.rcrt=N.rcrt, N.sb=N.sb))
+}
+
+
+
+
+
+#' Local population growth: lambda-based (a la Merow 2011)
+#'
+#' This function calculates change in population size in each cell with
+#' lambda-based proportional growth.
+#' @param N.t Vector of abundances with \code{length=ngrid}
+#' @param lambda.ag Vector with lambda for each cell with \code{length=ngrid}
+#' @param sdd.rate Rate parameter for SDD exponential kernel
+#' @return Sparse tibble with grid id, starting population size, change in
+#'   population size, and updated population size accounting for emigrants
+#' @keywords lambda, growth
+#' @export
+
+grow_lambda <- function(N.t, lambda.ag, sdd.rate) {
+  
+  N.id <- which(N.t>0)
+  lam.id <- lambda.ag[N.id]
+  N.new <- tibble(id = N.id) %>%
+    mutate(N.pop=N.t[N.id],
+           N.new=N.pop * (lam.id-1),
+           N.pop.upd=N.pop + (lam.id>=1) * N.new * pexp(0.5, sdd.rate) +
+             (lam.id<1) * N.new)
+  
+  return(N.new)
 }

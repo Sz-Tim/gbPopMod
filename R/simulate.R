@@ -1,4 +1,4 @@
-#' Run simulation
+#' Run demographic simulation
 #'
 #' This function runs the simulation. Currently, it runs all time steps, but for
 #' the economic model, the structure will need to be slightly adjusted to run a
@@ -131,4 +131,67 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   }
   if(age.f.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
   return(list(N=N, N.sb=N.sb))
+}
+
+
+
+
+
+
+#' Run lambda simulation
+#'
+#' This function runs the simulation. Currently, it runs all time steps, but for
+#' the economic model, the structure will need to be slightly adjusted to run a
+#' single time step. The initialization is separated from this function for that
+#' reason.
+#' @param ngrid Number of grid cells in entire map
+#' @param ncell Number of inbound grid cells
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
+#' @param lambda Vector of length \code{n.lc} with lambdas for each land cover
+#'   type
+#' @param sdd.pr Array with sdd probabilities and neighborhoods created by
+#'   \code{\link{sdd_set_probs}}
+#' @param N.init Matrix or array with initial population sizes created by
+#'   \code{\link{pop_init}}
+#' @param control.p NULL or named list of buckthorn control treatment parameters
+#'   set with \code{\link{set_control_p}}
+#' @param verbose \code{TRUE} Give updates for each year & process?
+#' @return Matrix of abundances for each cell and time step
+#' @keywords run, simulate, lambda
+#' @export
+
+run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
+                           N.init, control.p=NULL, verbose=F) {
+  library(tidyverse); library(magrittr)
+  
+  # Unpack parameters
+  list2env(g.p, environment())
+  id.i <- lc.df %>% select(id, id.in)
+  
+  # 1. Initialize populations
+  N <- matrix(0, ngrid, tmax+1)  
+  N[,1] <- apply(N.init, 1, sum)
+  
+  for(t in 1:tmax){
+    # 2. Pre-multiply compositional parameters
+    K.ag <- as.matrix(lc.df[,4:9]) %*% K
+    lambda.ag <- as.matrix(lc.df[,4:9]) %*% lambda
+    
+    # 3. Local growth
+    if(verbose) cat("Year", t, "- Grow...")
+    N.new <- grow_lambda(N[,t], lambda.ag, K.ag, sdd.rate)
+    
+    # 4. Short distance dispersal
+    if(verbose) cat("SDD...")
+    N.emig <- sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.ag, sdd.st)
+    
+    # 5. Long distance dispersal
+    if(verbose) cat("LDD...")
+    N.emig$N <- ldd_disperse(ncell, id.i, N.emig$N, n.ldd)
+    
+    # 6. Update population sizes
+    if(verbose) cat("Update N\n")
+    N[,t+1] <- N.emig$N
+  }
+  return(N)
 }

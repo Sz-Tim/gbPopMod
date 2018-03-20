@@ -208,12 +208,70 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
 #' @keywords LDD, dispersal
 #' @export
 
-
 ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
   
   ldd.id <- id.i$id[which(id.i$id.in %in% sample(1:ncell, n.ldd, replace=T))]
   N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
 
   return(N.rcrt)
+}
+
+
+
+
+
+
+
+#' Short distance dispersal: lambda-based
+#'
+#' This function calculates the number of immigrants to each cell, accounting
+#' for distance from source cell and bird habitat preferences. It uses the
+#' output from simple lambda-based population growth rather than the demographic
+#' version. The output values account for carrying capacity.
+#' @param ncell Number of inbound grid cells
+#' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
+#'   while \code{id.in} indexes only inbound cells
+#' @param sdd.pr Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
+#'   from \code{\link{sdd_set_probs}}
+#' @param sdd.rate Rate parameter for SDD exponential kernel
+#' @param K.ag Carrying capacity of each cell output from \code{\link{cell_E}}
+#' @param sdd.st \code{Logical} denoting whether to implement short distance
+#'   dispersal stochastically
+#' @return Tibble with grid id and number of individuals limited by K
+#' @keywords SDD, dispersal, lambda
+#' @export
+
+sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.ag, sdd.st=F) {
+  # Calculate (N.arrivals | N.new, sdd.probs)
+  # Accounts for distance from source cell & bird habitat preference
+  # Returns dataframe with total population sizes.
+  
+  N.source <- N.new %>% filter(N.new > 0) %>% mutate(id.in=id.i$id.in[id])
+  N.emig <- tibble(id=id.i$id, 
+                   N=N.new$N.pop.upd[match(id.i$id, N.new$id)]) %>% 
+    mutate(id.in=id.i$id.in[id])
+  if(sdd.st) {
+    SDD.sd <- unlist(apply(N.source, 1,
+                           function(x) sample(sdd.pr[,,2,x[5]], 
+                                              x[3] * (1-pexp(.5,sdd.rate)), 
+                                              replace=TRUE,
+                                              prob=sdd.pr[,,1,x[5]])))
+    SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
+    SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
+    N.emig %<>% add_row(id=which(SDD.nonzero), 
+                        N=SDD.dep[SDD.nonzero],
+                        id.in=id.i$id.in[match(id, id.i$id)])
+  } else {
+    N.emig %<>%
+      add_row(id=apply(N.source, 1, function(x) c(sdd.pr[,,2,x[5]])) %>% c, 
+              N=apply(N.source, 1, function(x) c(x[3] * (1-pexp(.5,sdd.rate)) * 
+                                                   sdd.pr[,,1,x[5]])) %>% c,
+              id.in=id.i$id.in[match(id, id.i$id)]) 
+  }
+  N.emig %<>% filter(id != 0) %>% group_by(id) %>%
+    summarise(N=sum(N, na.rm=T))
+  N.emig$N <- round(pmin(K.ag[N.emig$id,], N.emig$N))
+  
+  return(N.emig)
 }
 
