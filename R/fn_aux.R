@@ -116,10 +116,10 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 
 #' Aggregate compositional data within each cell
 #'
-#' This function reformats and calculates expected cell-means based on land cover
-#' composition for relevant parameters.
-#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
-#'   cell id info
+#' This function reformats and calculates expected cell-means based on land
+#' cover composition for relevant parameters.
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions,
+#'   other covariates, and cell id info
 #' @param K Vector \code{length=n.lc} with carrying capacity for each land cover
 #'   type
 #' @param pr.s Vector \code{length=n.lc} with juvenile survival probability for
@@ -139,47 +139,70 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #'   out-of-bound cells with no populations modeled, \code{"sink"} results in
 #'   dispersal of seeds to out-of-bound cells but no populations modeled, and
 #'   \code{"none"} results in dispersal of seeds and populations modeled
+#' @param method Character, either: \code{"wt.mean", "lm"} where
+#'   \code{"wt.mean"} calculates each paramater as the weighted mean across land
+#'   cover types proportional to their coverage with the land cover specific
+#'   values stored in the parameter vectors, and \code{"lm"} calculates each
+#'   parameter in a regression with the slopes contained in each parameter
+#'   vector
 #' @return Named list with values aggregated within cells based on land cover
 #'   types. Includes: \describe{ \item{\code{lc.mx}}{Matrix \code{(ncol=n.lc,
-#'   nrow=ngrid)} with land cover proportions} \item{\code{K.ag}}{Vector
+#'   nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
 #'   \code{length=ngrid} with total K} \item{\code{K.lc}}{Matrix
 #'   \code{(ncol=n.lc, nrow=ngrid)} with K per land cover category}
-#'   \item{\code{pr.s.ag}}{Vector \code{length=ngrid} with pr(surv)}
+#'   \item{\code{pr.s.E}}{Vector \code{length=ngrid} with pr(surv)}
 #'   \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with relative
-#'   density among land cover categories} \item{\code{fec.ag}}{Vector
+#'   density among land cover categories} \item{\code{fec.E}}{Vector
 #'   \code{length=ngrid} with mean fruit produced per adult)}
-#'   \item{\code{pr.f.ag}}{Vector \code{length=ngrid} with fruiting probability}
-#'   \item{\code{pr.eat.ag}}{Vector \code{length=ngrid} with proportion eaten by
-#'   birds} \item{\code{pr.est.ag}}{Vector \code{length=ngrid} with seedling
+#'   \item{\code{pr.f.E}}{Vector \code{length=ngrid} with fruiting probability}
+#'   \item{\code{pr.eat.E}}{Vector \code{length=ngrid} with proportion eaten by
+#'   birds} \item{\code{pr.est.E}}{Vector \code{length=ngrid} with seedling
 #'   establishment probabilities} }
-#' @note If \code{!is.null(pr.est.trt)}, then the associated pr.est.ag values
-#'   are substituted in the cells that received a relevant management
-#'   treatments.
+#' @note If \code{method="lm"}, then each parameter vector will be treated as a
+#'   set of slopes for the covariates in lc.df with the number of covariates
+#'   used in each regression is \code{length(param)-1} and the first element of
+#'   \code{param} is the intercept.
+#' @note If \code{!is.null(pr.est.trt)}, then the associated pr.est.E values are
+#'   substituted in the cells that received a relevant management treatments.
 #' @keywords premultiply, aggregate, set up, initialize
 #' @export
 
-cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, 
-                     pr.est, pr.est.trt=NULL, edges="wall") {
+cell_E <- function(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est, 
+                   pr.est.trt=NULL, edges="wall", method="wt.mean") {
   
-  lc.mx <- as.matrix(lc.df[,4:9])
-  K.ag <- round(lc.mx %*% K)
-  K.lc <- round(t(t(lc.mx) * K))
-  rel.dens <- t(apply(lc.mx, 1, function(x) K*x/c(x%*%K)))
-  pr.s.ag <- c(lc.mx %*% pr.s)
-  fec.ag <- lc.mx %*% fec
-  pr.f.ag <- lc.mx %*% pr.f
-  pr.eat.ag <- lc.mx %*% pr.eat
-  pr.est.ag <- lc.mx %*% pr.est
+  if(method=="wt.mean") {
+    lc.mx <- as.matrix(lc.df[,4:9])
+    K.E <- round(lc.mx %*% K)
+    K.lc <- round(t(t(lc.mx) * K))
+    rel.dens <- t(apply(lc.mx, 1, function(x) K*x/c(x%*%K)))
+    pr.s.E <- c(lc.mx %*% pr.s)
+    fec.E <- lc.mx %*% fec
+    pr.f.E <- lc.mx %*% pr.f
+    pr.eat.E <- lc.mx %*% pr.eat
+    pr.est.E <- lc.mx %*% pr.est
+  } else if(method=="lm") {
+    lc.mx <- cbind(1, as.matrix(select(lc.df, 
+                              -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
+    K.E <- round(lc.mx[,length(K)] %*% K)
+    K.lc <- round(t(t(lc.mx[,length(K)]) * K))
+    rel.dens <- t(apply(lc.mx[,length(K)], 1, function(x) K*x/c(x%*%K)))
+    pr.s.E <- c(antilogit(lc.mx[,length(pr.s)] %*% pr.s))
+    fec.E <- exp(lc.mx[,length(fec)] %*% fec)
+    pr.f.E <- antilogit(lc.mx[,length(pr.f)] %*% pr.f)
+    pr.eat.E <- antilogit(lc.mx[,length(pr.eat)] %*% pr.eat)
+    pr.est.E <- antilogit(lc.mx[,length(pr.est)] %*% pr.est)
+  }
+
   
   if(!is.null(pr.est.trt)) {
-    pr.est.ag[pr.est.trt$id,] <- pr.est.trt$pr.est
+    pr.est.E[pr.est.trt$id,] <- pr.est.trt$pr.est
   }
   
-  if(edges=="sink") pr.est.ag[!lc.df$inbd] <- 0
+  if(edges=="sink") pr.est.E[!lc.df$inbd] <- 0
   
-  return(list(lc.mx=lc.mx, K.ag=K.ag, K.lc=K.lc, rel.dens=rel.dens,
-              pr.s.ag=pr.s.ag, fec.ag=fec.ag, pr.f.ag=pr.f.ag,
-              pr.eat.ag=pr.eat.ag, pr.est.ag=pr.est.ag))
+  return(list(lc.mx=lc.mx, K.E=K.E, K.lc=K.lc, rel.dens=rel.dens,
+              pr.s.E=pr.s.E, fec.E=fec.E, pr.f.E=pr.f.E,
+              pr.eat.E=pr.eat.E, pr.est.E=pr.est.E))
 }
 
 
