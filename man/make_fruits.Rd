@@ -4,16 +4,16 @@
 \alias{make_fruits}
 \title{Local fruit production}
 \usage{
-make_fruits(N.t, lc.mx, fec.ag, pr.f.ag, y.ad, age.f.d, dem.st = F)
+make_fruits(N.t, lc.mx, fec.E, pr.f.E, y.ad, age.f.d, dem.st = F)
 }
 \arguments{
 \item{N.t}{Matrix or array of abundances, with dims=c(ngrid, (lc), y.ad)}
 
 \item{lc.mx}{Matrix of land cover proportions from \code{\link{cell_E}}}
 
-\item{fec.ag}{Vector of fruit per individual from \code{\link{cell_E}}}
+\item{fec.E}{Vector of fruit per individual from \code{\link{cell_E}}}
 
-\item{pr.f.ag}{Vector of fruiting probability from \code{\link{cell_E}}}
+\item{pr.f.E}{Vector of fruiting probability from \code{\link{cell_E}}}
 
 \item{y.ad}{Maximum age at maturity (i.e., \code{max(age.f)})}
 

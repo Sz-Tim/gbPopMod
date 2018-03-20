@@ -5,11 +5,11 @@
 \title{Aggregate compositional data within each cell}
 \usage{
 cell_E(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est, pr.est.trt = NULL,
-  edges = "wall")
+  edges = "wall", method = "wt.mean")
 }
 \arguments{
-\item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
-cell id info}
+\item{lc.df}{Dataframe or tibble with xy coords, land cover proportions,
+other covariates, and cell id info}
 
 \item{K}{Vector \code{length=n.lc} with carrying capacity for each land cover
 type}
@@ -37,30 +37,41 @@ probabilities for cells with ground cover treatments; default = NULL}
 out-of-bound cells with no populations modeled, \code{"sink"} results in
 dispersal of seeds to out-of-bound cells but no populations modeled, and
 \code{"none"} results in dispersal of seeds and populations modeled}
+
+\item{method}{Character, either: \code{"wt.mean", "lm"} where
+\code{"wt.mean"} calculates each paramater as the weighted mean across land
+cover types proportional to their coverage with the land cover specific
+values stored in the parameter vectors, and \code{"lm"} calculates each
+parameter in a regression with the slopes contained in each parameter
+vector}
 }
 \value{
 Named list with values aggregated within cells based on land cover
   types. Includes: \describe{ \item{\code{lc.mx}}{Matrix \code{(ncol=n.lc,
-  nrow=ngrid)} with land cover proportions} \item{\code{K.ag}}{Vector
+  nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
   \code{length=ngrid} with total K} \item{\code{K.lc}}{Matrix
   \code{(ncol=n.lc, nrow=ngrid)} with K per land cover category}
-  \item{\code{pr.s.ag}}{Vector \code{length=ngrid} with pr(surv)}
+  \item{\code{pr.s.E}}{Vector \code{length=ngrid} with pr(surv)}
   \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with relative
-  density among land cover categories} \item{\code{fec.ag}}{Vector
+  density among land cover categories} \item{\code{fec.E}}{Vector
   \code{length=ngrid} with mean fruit produced per adult)}
-  \item{\code{pr.f.ag}}{Vector \code{length=ngrid} with fruiting probability}
-  \item{\code{pr.eat.ag}}{Vector \code{length=ngrid} with proportion eaten by
-  birds} \item{\code{pr.est.ag}}{Vector \code{length=ngrid} with seedling
+  \item{\code{pr.f.E}}{Vector \code{length=ngrid} with fruiting probability}
+  \item{\code{pr.eat.E}}{Vector \code{length=ngrid} with proportion eaten by
+  birds} \item{\code{pr.est.E}}{Vector \code{length=ngrid} with seedling
   establishment probabilities} }
 }
 \description{
-This function reformats and calculates expected cell-means based on land cover
-composition for relevant parameters.
+This function reformats and calculates expected cell-means based on land
+cover composition for relevant parameters.
 }
 \note{
-If \code{!is.null(pr.est.trt)}, then the associated pr.est.ag values
-  are substituted in the cells that received a relevant management
-  treatments.
+If \code{method="lm"}, then each parameter vector will be treated as a
+  set of slopes for the covariates in lc.df with the number of covariates
+  used in each regression is \code{length(param)-1} and the first element of
+  \code{param} is the intercept.
+
+If \code{!is.null(pr.est.trt)}, then the associated pr.est.E values are
+  substituted in the cells that received a relevant management treatments.
 }
 \keyword{aggregate,}
 \keyword{initialize}

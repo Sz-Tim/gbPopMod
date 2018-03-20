@@ -4,7 +4,7 @@
 \alias{new_seedlings}
 \title{Seed germination & establishment}
 \usage{
-new_seedlings(ngrid, N.seed, N.sb, pr.est.ag, pr.sb, dem.st = F, bank = F)
+new_seedlings(ngrid, N.seed, N.sb, pr.est.E, pr.sb, dem.st = F, bank = F)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -14,7 +14,7 @@ new_seedlings(ngrid, N.seed, N.sb, pr.est.ag, pr.sb, dem.st = F, bank = F)
 
 \item{N.sb}{Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)}
 
-\item{pr.est.ag}{Vector of establishment probabilities from
+\item{pr.est.E}{Vector of establishment probabilities from
 \code{\link{cell_E}}}
 
 \item{pr.sb}{Probability of surviving a year in the seed bank}

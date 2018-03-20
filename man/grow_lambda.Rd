@@ -4,12 +4,12 @@
 \alias{grow_lambda}
 \title{Local population growth: lambda-based (a la Merow 2011)}
 \usage{
-grow_lambda(N.t, lambda.ag, sdd.rate)
+grow_lambda(N.t, lambda.E, sdd.rate)
 }
 \arguments{
 \item{N.t}{Vector of abundances with \code{length=ngrid}}
 
-\item{lambda.ag}{Vector with lambda for each cell with \code{length=ngrid}}
+\item{lambda.E}{Vector with lambda for each cell with \code{length=ngrid}}
 
 \item{sdd.rate}{Rate parameter for SDD exponential kernel}
 }

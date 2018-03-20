@@ -34,8 +34,8 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
   n.y <- range(lc.df[,2])
   nbr <- 2 * sdd.max + 1
   sdd.i <- array(0, dim=c(nbr, nbr, 2, ncell))
-  bird.hab.ag <- as.matrix(lc.df[,lc.col]) %*% (bird.hab %>% divide_by(sum(.)))
-  if(edges=="wall") bird.hab.ag[!lc.df$inbd] <- 0
+  bird.hab.E <- as.matrix(lc.df[,lc.col]) %*% (bird.hab %>% divide_by(sum(.)))
+  if(edges=="wall") bird.hab.E[!lc.df$inbd] <- 0
   
   # generate default dispersal probability matrix
   d.pr <- matrix(0, nbr, nbr)
@@ -88,7 +88,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
                                                  byrow=TRUE)
     # weight by bird habitat preference & set cell ID to 0 if pr(target) == 0 
     ib <- sdd.i[,,2,n] != 0
-    sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.ag[sdd.i[,,2,n][ib]]
+    sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.E[sdd.i[,,2,n][ib]]
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
     
     # progress update
@@ -114,7 +114,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #'   while \code{id.in} indexes only inbound cells
 #' @param N.f Tibble of fruits produced in each cell output from
 #'   \code{\link{make_fruits}}
-#' @param pr.eat.ag Vector of proportion of fruits eaten by birds from
+#' @param pr.eat.E Vector of proportion of fruits eaten by birds from
 #'   \code{\link{cell_agg}}
 #' @param pr.s.bird Proportion of viable seeds post-digestion
 #' @param sdd.pr Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
@@ -131,7 +131,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #' @keywords dispersal, SDD
 #' @export
 
-sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird, 
+sdd_disperse <- function(id.i, N.f, pr.eat.E, pr.s.bird, 
                          sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
   
   library(tidyverse); library(magrittr)
@@ -139,7 +139,7 @@ sdd_disperse <- function(id.i, N.f, pr.eat.ag, pr.s.bird,
   # calculate seeds deposited within source cell vs emigrants
   N.source <- N.f %>%
     mutate(N.produced=(2.3*N.fruit),
-           N.emig=N.produced*(1-pexp(.5,sdd.rate))*pr.eat.ag[id,],
+           N.emig=N.produced*(1-pexp(.5,sdd.rate))*pr.eat.E[id,],
            N.drop=N.produced-N.emig) %>%
     mutate(N.emig=N.emig*pr.s.bird,
            id.in=id.i$id.in[id])
@@ -234,14 +234,14 @@ ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
 #' @param sdd.pr Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
 #'   from \code{\link{sdd_set_probs}}
 #' @param sdd.rate Rate parameter for SDD exponential kernel
-#' @param K.ag Carrying capacity of each cell output from \code{\link{cell_E}}
+#' @param K.E Carrying capacity of each cell output from \code{\link{cell_E}}
 #' @param sdd.st \code{Logical} denoting whether to implement short distance
 #'   dispersal stochastically
 #' @return Tibble with grid id and number of individuals limited by K
 #' @keywords SDD, dispersal, lambda
 #' @export
 
-sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.ag, sdd.st=F) {
+sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=F) {
   # Calculate (N.arrivals | N.new, sdd.probs)
   # Accounts for distance from source cell & bird habitat preference
   # Returns dataframe with total population sizes.
@@ -270,7 +270,7 @@ sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.ag, sdd.st=F) {
   }
   N.emig %<>% filter(id != 0) %>% group_by(id) %>%
     summarise(N=sum(N, na.rm=T))
-  N.emig$N <- round(pmin(K.ag[N.emig$id,], N.emig$N))
+  N.emig$N <- round(pmin(K.E[N.emig$id,], N.emig$N))
   
   return(N.emig)
 }

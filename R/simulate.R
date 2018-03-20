@@ -35,8 +35,8 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   pr.est.trt <- NULL
   if(!is.null(control.p)) {
     list2env(control.p, environment())
-    nTrt.grd <- ceiling(nTrt.grd * ncell)
-    nTrt.man <- ceiling(nTrt.man * ncell)
+    nTrt.grd <- ceiling(pTrt.grd * ncell)
+    nTrt.man <- ceiling(pTrt.man * ncell)
     nChg <- ceiling(pChg * ncell)
     est.trt <- N.trt <- tibble(id=numeric(), Trt=character())
   }
@@ -96,17 +96,17 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     
     # 4. Local fruit production
     if(verbose) cat("Fruits...")
-    N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.ag, pm$pr.f.ag,
+    N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.E, pm$pr.f.E,
                                   y.ad, age.f.d, dem.st)
     
     # 5. Short distance dispersal
     if(verbose) cat("SDD...")
-    N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.ag, pr.s.bird, 
+    N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.E, pr.s.bird, 
                                 sdd.pr, sdd.rate, sdd.st, edges)
     
     # 6. Seedling establishment
     if(verbose) cat("Establishment...")
-    estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.ag, 
+    estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.E, 
                                pr.sb, dem.st, bank)
     N.sb[,t+1] <- estab.out$N.sb
     
@@ -124,8 +124,8 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
         N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
       }
     } else {
-      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad] + N[,t,y.ad-1]*pm$pr.s.ag), pm$K.ag)
-      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$pr.s.ag)
+      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad] + N[,t,y.ad-1]*pm$pr.s.E), pm$K.E)
+      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$pr.s.E)
       N[,t+1,1] <- estab.out$N.rcrt
     }
   }
@@ -161,7 +161,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
 #' @export
 
 run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
-                           N.init, control.p=NULL, verbose=F) {
+                           N.init, verbose=F) {
   library(tidyverse); library(magrittr)
   
   # Unpack parameters
@@ -174,16 +174,16 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
   
   for(t in 1:tmax){
     # 2. Pre-multiply compositional parameters
-    K.ag <- as.matrix(lc.df[,4:9]) %*% K
-    lambda.ag <- as.matrix(lc.df[,4:9]) %*% lambda
+    K.E <- as.matrix(lc.df[,4:9]) %*% K
+    lambda.E <- as.matrix(lc.df[,4:9]) %*% lambda
     
     # 3. Local growth
     if(verbose) cat("Year", t, "- Grow...")
-    N.new <- grow_lambda(N[,t], lambda.ag, K.ag, sdd.rate)
+    N.new <- grow_lambda(N[,t], lambda.E, sdd.rate)
     
     # 4. Short distance dispersal
     if(verbose) cat("SDD...")
-    N.emig <- sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.ag, sdd.st)
+    N.emig <- sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st)
     
     # 5. Long distance dispersal
     if(verbose) cat("LDD...")

@@ -96,9 +96,9 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     # munge data
     ## cell summaries
     ad.mn <- apply(ad.j[lc.df$inbd,,], 1:2, mean)
-    K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
+    K.E <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
     ### logical: is cell-iter-t at K?
-    at.K <- apply(ad.j, c(2,3), function(x) x == K.ag & x > 0)
+    at.K <- apply(ad.j, c(2,3), function(x) x == K.E & x > 0)
     ### logical: did cell-iter ever reach K?
     reach.K <- at.K
     N.init <- at.K

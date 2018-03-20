@@ -4,7 +4,7 @@
 \alias{sdd_lambda}
 \title{Short distance dispersal: lambda-based}
 \usage{
-sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.ag, sdd.st = F)
+sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st = F)
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
@@ -15,7 +15,7 @@ from \code{\link{sdd_set_probs}}}
 
 \item{sdd.rate}{Rate parameter for SDD exponential kernel}
 
-\item{K.ag}{Carrying capacity of each cell output from \code{\link{cell_E}}}
+\item{K.E}{Carrying capacity of each cell output from \code{\link{cell_E}}}
 
 \item{sdd.st}{\code{Logical} denoting whether to implement short distance
 dispersal stochastically}
