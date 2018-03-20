@@ -4,8 +4,7 @@
 \alias{run_sim_lambda}
 \title{Run lambda simulation}
 \usage{
-run_sim_lambda(ngrid, ncell, g.p, lambda, sdd.pr, N.init, control.p = NULL,
-  verbose = F)
+run_sim_lambda(ngrid, ncell, g.p, lambda, sdd.pr, N.init, verbose = F)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -23,10 +22,10 @@ type}
 \item{N.init}{Matrix or array with initial population sizes created by
 \code{\link{pop_init}}}
 
+\item{verbose}{\code{TRUE} Give updates for each year & process?}
+
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
-
-\item{verbose}{\code{TRUE} Give updates for each year & process?}
 }
 \value{
 Matrix of abundances for each cell and time step
