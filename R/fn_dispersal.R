@@ -114,9 +114,9 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #'   while \code{id.in} indexes only inbound cells
 #' @param N.f Tibble of fruits produced in each cell output from
 #'   \code{\link{make_fruits}}
-#' @param pr.eat.E Vector of proportion of fruits eaten by birds from
+#' @param p.eat.E Vector of proportion of fruits eaten by birds from
 #'   \code{\link{cell_agg}}
-#' @param pr.s.bird Proportion of viable seeds post-digestion
+#' @param s.bird Proportion of viable seeds post-digestion
 #' @param sdd.pr Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
 #'   from \code{\link{sdd_set_probs}}
 #' @param sdd.rate Rate parameter for SDD exponential kernel
@@ -131,7 +131,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #' @keywords dispersal, SDD
 #' @export
 
-sdd_disperse <- function(id.i, N.f, pr.eat.E, pr.s.bird, 
+sdd_disperse <- function(id.i, N.f, p.eat.E, s.bird, 
                          sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
   
   library(tidyverse); library(magrittr)
@@ -139,9 +139,9 @@ sdd_disperse <- function(id.i, N.f, pr.eat.E, pr.s.bird,
   # calculate seeds deposited within source cell vs emigrants
   N.source <- N.f %>%
     mutate(N.produced=(2.3*N.fruit),
-           N.emig=N.produced*(1-pexp(.5,sdd.rate))*pr.eat.E[id,],
+           N.emig=N.produced*(1-pexp(.5,sdd.rate))*p.eat.E[id,],
            N.drop=N.produced-N.emig) %>%
-    mutate(N.emig=N.emig*pr.s.bird,
+    mutate(N.emig=N.emig*s.bird,
            id.in=id.i$id.in[id])
   N.seed <- N.source %>% select(id, N.drop) %>% rename(N.dep=N.drop)
   

@@ -4,7 +4,7 @@
 \alias{cell_E}
 \title{Aggregate compositional data within each cell}
 \usage{
-cell_E(lc.df, K, s.jv, fec, pr.f, pr.eat, pr.est, pr.est.trt = NULL,
+cell_E(lc.df, K, s.jv, fec, p.f, p.eat, p.est, p.est.trt = NULL,
   edges = "wall", method = "wt.mean")
 }
 \arguments{
@@ -20,16 +20,16 @@ each land cover type}
 \item{fec}{Vector \code{length=n.lc} with mean per-individual fruit
 production for each land cover type}
 
-\item{pr.f}{Vector \code{length=n.lc} with mean probability of fruiting for
+\item{p.f}{Vector \code{length=n.lc} with mean probability of fruiting for
 each land cover type}
 
-\item{pr.eat}{Vector \code{length=n.lc} with proportion of fruits eaten by
+\item{p.eat}{Vector \code{length=n.lc} with proportion of fruits eaten by
 birds for each land cover type}
 
-\item{pr.est}{Vector \code{length=n.lc} with seedling establishment
+\item{p.est}{Vector \code{length=n.lc} with seedling establishment
 probability for each land cover type}
 
-\item{pr.est.trt}{Tibble with grid id and modified establishment
+\item{p.est.trt}{Tibble with grid id and modified establishment
 probabilities for cells with ground cover treatments; default = NULL}
 
 \item{edges}{Character taking the value of one of: \code{"wall", "sink",
@@ -55,9 +55,9 @@ Named list with values aggregated within cells based on land cover
   \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with relative
   density among land cover categories} \item{\code{fec.E}}{Vector
   \code{length=ngrid} with mean fruit produced per adult)}
-  \item{\code{pr.f.E}}{Vector \code{length=ngrid} with fruiting probability}
-  \item{\code{pr.eat.E}}{Vector \code{length=ngrid} with proportion eaten by
-  birds} \item{\code{pr.est.E}}{Vector \code{length=ngrid} with seedling
+  \item{\code{p.f.E}}{Vector \code{length=ngrid} with fruiting probability}
+  \item{\code{p.eat.E}}{Vector \code{length=ngrid} with proportion eaten by
+  birds} \item{\code{p.est.E}}{Vector \code{length=ngrid} with seedling
   establishment probabilities} }
 }
 \description{
@@ -70,7 +70,7 @@ If \code{method="lm"}, then each parameter vector will be treated as a
   used in each regression is \code{length(param)-1} and the first element of
   \code{param} is the intercept.
 
-If \code{!is.null(pr.est.trt)}, then the associated pr.est.E values are
+If \code{!is.null(p.est.trt)}, then the associated p.est.E values are
   substituted in the cells that received a relevant management treatments.
 }
 \keyword{aggregate,}

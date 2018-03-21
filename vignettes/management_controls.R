@@ -8,7 +8,7 @@ data(lc.rct)
 
 # set parameters
 n.sim <- 3
-g.p <- set_g_p(tmax=10, lc.r=50, lc.c=50, n.cores=1)
+g.p <- set_g_p(tmax=150, lc.r=50, lc.c=50, n.cores=1, sdd.max=10)
 control.p <- set_control_p(null_ctrl=FALSE, 
                            t.trt=1,
                            man.i=1300:1800,  # cells with manual controls
@@ -35,6 +35,10 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
+
+out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), sdd.pr, N.init, TRUE)
+out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
+                        N=out.lam[,g.p$tmax+1])
 
 # run simulation
 if(g.p$n.cores > 1) {

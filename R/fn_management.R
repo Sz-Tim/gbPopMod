@@ -67,10 +67,10 @@ trt_ground <- function(est.trt, grd.trt) {
   
   library(tibble)
   
-  pr.est.trt <- tibble(id=est.trt$id,
-                       pr.est=grd.trt[match(est.trt$Trt, names(grd.trt))])
+  p.est.trt <- tibble(id=est.trt$id,
+                       p.est=grd.trt[match(est.trt$Trt, names(grd.trt))])
   
-  return(pr.est.trt)
+  return(p.est.trt)
 }
 
 

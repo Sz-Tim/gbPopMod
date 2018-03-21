@@ -4,7 +4,7 @@
 \alias{new_seedlings}
 \title{Seed germination & establishment}
 \usage{
-new_seedlings(ngrid, N.seed, N.sb, pr.est.E, pr.sb, dem.st = F, bank = F)
+new_seedlings(ngrid, N.seed, N.sb, p.est.E, s.sb, dem.st = F, bank = F)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -14,10 +14,10 @@ new_seedlings(ngrid, N.seed, N.sb, pr.est.E, pr.sb, dem.st = F, bank = F)
 
 \item{N.sb}{Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)}
 
-\item{pr.est.E}{Vector of establishment probabilities from
+\item{p.est.E}{Vector of establishment probabilities from
 \code{\link{cell_E}}}
 
-\item{pr.sb}{Probability of surviving a year in the seed bank}
+\item{s.sb}{Probability of surviving a year in the seed bank}
 
 \item{dem.st}{\code{Logical} denoting whether to include demographic
 stochasticity}

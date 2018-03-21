@@ -32,7 +32,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   age.f.d <- length(age.f) > 1
   
   # If buckthorn is being actively managed...
-  pr.est.trt <- NULL
+  p.est.trt <- NULL
   if(!is.null(control.p)) {
     list2env(control.p, environment())
     nTrt.grd <- ceiling(pTrt.grd * ncell)
@@ -78,7 +78,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
         est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
                               nTrt=nTrt.grd, trt.eff=grd.trt, 
                               addOwners=add.owners, trt.m1=est.trt)
-        pr.est.trt <- trt_ground(est.trt, grd.trt)
+        p.est.trt <- trt_ground(est.trt, grd.trt)
       }
       
       # 2C. Adjust N
@@ -92,22 +92,23 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     }
     
     # 3. Pre-multiply compositional parameters for cell expectations
-    pm <- cell_E(lc.df, K, pr.s, fec, pr.f, pr.eat, pr.est, pr.est.trt, edges)
+    pm <- cell_E(lc.df, K, s.jv, fec, p.f, p.eat, p.est, p.est.trt, edges,
+                 method)
     
     # 4. Local fruit production
     if(verbose) cat("Fruits...")
-    N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.E, pm$pr.f.E,
+    N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.E, pm$p.f.E,
                                   y.ad, age.f.d, dem.st)
     
     # 5. Short distance dispersal
     if(verbose) cat("SDD...")
-    N.seed <- sdd_disperse(id.i, N.f, pm$pr.eat.E, pr.s.bird, 
+    N.seed <- sdd_disperse(id.i, N.f, pm$p.eat.E, s.bird, 
                                 sdd.pr, sdd.rate, sdd.st, edges)
     
     # 6. Seedling establishment
     if(verbose) cat("Establishment...")
-    estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$pr.est.E, 
-                               pr.sb, dem.st, bank)
+    estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$p.est.E, 
+                               s.sb, dem.st, bank)
     N.sb[,t+1] <- estab.out$N.sb
     
     # 7. Long distance dispersal
@@ -118,14 +119,14 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     if(verbose) cat("Update N...\n")
     if(age.f.d) {
       for(l in 1:n.lc) {
-        N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad] + N[,t,l,age.f[l]-1]*pr.s[l]),
+        N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad] + N[,t,l,age.f[l]-1]*s.jv[l]),
                                pm$K.lc[,l])
-        N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*pr.s[l])
+        N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*s.jv[l])
         N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
       }
     } else {
-      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad] + N[,t,y.ad-1]*pm$pr.s.E), pm$K.E)
-      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$pr.s.E)
+      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad] + N[,t,y.ad-1]*pm$s.jv.E), pm$K.E)
+      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$s.jv.E)
       N[,t+1,1] <- estab.out$N.rcrt
     }
   }

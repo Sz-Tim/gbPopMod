@@ -7,10 +7,10 @@
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
   K = c(750, 10, 100, 100, 300, 100), s.jv = c(0.9, 0.1, 0.6, 0.6, 0.6,
-  0.6), s.ad = c(1, 1, 1, 1, 1, 1), pr.f = c(0.9, 0.1, 0.29, 0.23, 0.2,
-  0.3), fec = c(200, 100, 40, 20, 20, 10), age.f = rep(4, 6), s.sb = 0.3,
-  pr.est = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03), sdd.max = 15,
-  sdd.rate = 0.1, n.ldd = 1, pr.eat = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
+  0.6), s.ad = c(1, 1, 1, 1, 1, 1), p.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
+  fec = c(200, 100, 40, 20, 20, 10), age.f = rep(4, 6), s.sb = 0.3,
+  p.est = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03), sdd.max = 15,
+  sdd.rate = 0.1, n.ldd = 1, p.eat = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
   bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05), s.bird = 0.6,
   edges = "wall", method = "wt.mean")
 }
@@ -42,7 +42,7 @@ of annual juvenile survival rates}
 \item{s.ad}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 adult survival rates}
 
-\item{pr.f}{\code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
+\item{p.f}{\code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
 \code{length=n.lc} of fruiting probabilities}
 
 \item{fec}{\code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
@@ -53,7 +53,7 @@ first fruiting. Individuals at this age are considered adults}
 
 \item{s.sb}{\code{0.3} Probability of annual survival in seed bank}
 
-\item{pr.est}{\code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
+\item{p.est}{\code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 \code{length=n.lc} of seedling establishment probabilities}
 
 \item{sdd.max}{\code{15} Maximum dispersal distance in cells}
@@ -62,9 +62,9 @@ first fruiting. Individuals at this age are considered adults}
 
 \item{n.ldd}{\code{1} Number of long distance dispersal events per year}
 
-\item{pr.eat}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector
+\item{p.eat}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector
 \code{length=n.lc} of proportion of fruits eaten by birds, with
-\code{1-pr.eat} assumed to drop directly below buckthorn individuals}
+\code{1-p.eat} assumed to drop directly below buckthorn individuals}
 
 \item{bird.hab}{\code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
 \code{length=n.lc} of bird habitat preferences}
