@@ -44,7 +44,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   
   # 1. Initialize populations
   B <- matrix(0, nrow=ngrid, ncol=tmax+1)
-  pFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=tmax)
+  nFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=tmax)
   if(age.f.d) {
     N <- array(0, dim=c(ngrid, tmax+1, n.lc, y.ad))  
     N[,1,,] <- N.init
@@ -101,7 +101,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     if(verbose) cat("Fruits...")
     N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.E, pm$p.f.E,
                                   y.ad, age.f.d, dem.st)
-    pFl[N.f$id,t] <- N.f$N.rpr/N.f$N.ad
+    nFl[N.f$id,t] <- N.f$N.rpr
     
     # 5. Short distance dispersal
     if(verbose) cat("SDD...")
@@ -140,7 +140,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     }
   }
   if(age.f.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
-  return(list(N=N, B=B, pFl=pFl, nSd=nSd, nSdStay=nSdStay, D=D))
+  return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
 
 
