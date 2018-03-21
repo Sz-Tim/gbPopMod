@@ -114,6 +114,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #'   while \code{id.in} indexes only inbound cells
 #' @param N.f Tibble of fruits produced in each cell output from
 #'   \code{\link{make_fruits}}
+#'@param nSdFrt Scalar: mean number of seeds per fruit
 #' @param p.eat.E Vector of proportion of fruits eaten by birds from
 #'   \code{\link{cell_agg}}
 #' @param s.bird Proportion of viable seeds post-digestion
@@ -131,32 +132,33 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #' @keywords dispersal, SDD
 #' @export
 
-sdd_disperse <- function(id.i, N.f, p.eat.E, s.bird, 
+sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird, 
                          sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
   
   library(tidyverse); library(magrittr)
   
   # calculate seeds deposited within source cell vs emigrants
   N.source <- N.f %>%
-    mutate(N.produced=(2.3*N.fruit),
-           N.emig=N.produced*(1-pexp(.5,sdd.rate))*p.eat.E[id,],
-           N.drop=N.produced-N.emig) %>%
-    mutate(N.emig=N.emig*s.bird,
-           id.in=id.i$id.in[id])
-  N.seed <- N.source %>% select(id, N.drop) %>% rename(N.dep=N.drop)
+    mutate(N.produced=round(nSdFrt*N.fruit),
+           N.emig=N.produced*p.eat.E[id,]*s.bird*(1-pexp(.5,sdd.rate)),
+           N.dep=N.produced*p.eat.E[id,]*s.bird*pexp(.5,sdd.rate) + 
+             N.produced*(1-p.eat.E[id,])) %>%
+    mutate(id.in=id.i$id.in[id]) %>%
+    mutate_at(2:6, round)
+  N.seed <- N.source %>% select(id, N.dep)
   
   if(sdd.st) {
     N.seed$N.dep <- round(N.seed$N.dep)
     if(edges=="none") {
       SDD.sd <- unlist(apply(N.source, 1,
-                             function(x) sample(sdd.pr[,,2,x[1]], x[5], 
+                             function(x) sample(sdd.pr[,,2,x[1]], x[6], 
                                                 replace=TRUE,
                                                 prob=sdd.pr[,,1,x[1]])))
     } else {
       SDD.sd <- unlist(apply(N.source, 1,
-                             function(x) sample(sdd.pr[,,2,x[7]], x[5], 
+                             function(x) sample(sdd.pr[,,2,x[8]], x[6], 
                                                 replace=TRUE,
-                                                prob=sdd.pr[,,1,x[7]])))
+                                                prob=sdd.pr[,,1,x[8]])))
     }
     SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
     SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
@@ -170,14 +172,14 @@ sdd_disperse <- function(id.i, N.f, p.eat.E, s.bird,
         add_row(id=apply(N.source, 1, 
                          function(x) c(sdd.pr[,,2,x[1]])) %>% c, 
                 N.dep=apply(N.source, 1, 
-                            function(x) c(x[5] * sdd.pr[,,1,x[1]])) %>% c) %>%
+                            function(x) c(x[6] * sdd.pr[,,1,x[1]])) %>% c) %>%
         filter(N.dep > 0)
     } else {
       N.seed %<>% 
         add_row(id=apply(N.source, 1, 
-                         function(x) c(sdd.pr[,,2,x[7]])) %>% c, 
+                         function(x) c(sdd.pr[,,2,x[8]])) %>% c, 
                 N.dep=apply(N.source, 1, 
-                            function(x) c(x[5] * sdd.pr[,,1,x[7]])) %>% c) %>%
+                            function(x) c(x[6] * sdd.pr[,,1,x[8]])) %>% c) %>%
         filter(N.dep > 0)
     }
   }
@@ -188,7 +190,7 @@ sdd_disperse <- function(id.i, N.f, p.eat.E, s.bird,
     filter(N > 0)
   if(edges=="wall") N.seed %<>% filter(!is.na(id.i$id.in[id]))
   
-  return(N.seed)
+  return(list(N.seed=N.seed, N.source=N.source))
 }
 
 

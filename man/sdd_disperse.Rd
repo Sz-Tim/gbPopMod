@@ -4,7 +4,7 @@
 \alias{sdd_disperse}
 \title{Short distance dispersal}
 \usage{
-sdd_disperse(id.i, N.f, p.eat.E, s.bird, sdd.pr, sdd.rate, sdd.st = F,
+sdd_disperse(id.i, N.f, nSdFrt, p.eat.E, s.bird, sdd.pr, sdd.rate, sdd.st = F,
   edges = "wall")
 }
 \arguments{
@@ -13,6 +13,8 @@ while \code{id.in} indexes only inbound cells}
 
 \item{N.f}{Tibble of fruits produced in each cell output from
 \code{\link{make_fruits}}}
+
+\item{nSdFrt}{Scalar: mean number of seeds per fruit}
 
 \item{p.eat.E}{Vector of proportion of fruits eaten by birds from
 \code{\link{cell_agg}}}

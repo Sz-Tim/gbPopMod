@@ -4,8 +4,8 @@
 \alias{cell_E}
 \title{Aggregate compositional data within each cell}
 \usage{
-cell_E(lc.df, K, s.jv, fec, p.f, p.eat, p.est, p.est.trt = NULL,
-  edges = "wall", method = "wt.mean")
+cell_E(lc.df, K, s.jv, s.ad, fec, p.f, p.eat, p.est, p.est.trt = NULL,
+  edges = "wall", method = "wt.mn")
 }
 \arguments{
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions,
@@ -16,6 +16,9 @@ type}
 
 \item{s.jv}{Vector \code{length=n.lc} with juvenile survival probability for
 each land cover type}
+
+\item{s.ad}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+adult survival rates}
 
 \item{fec}{Vector \code{length=n.lc} with mean per-individual fruit
 production for each land cover type}
@@ -29,8 +32,8 @@ birds for each land cover type}
 \item{p.est}{Vector \code{length=n.lc} with seedling establishment
 probability for each land cover type}
 
-\item{p.est.trt}{Tibble with grid id and modified establishment
-probabilities for cells with ground cover treatments; default = NULL}
+\item{p.est.trt}{Tibble with grid id and modified establishment probabilities
+for cells with ground cover treatments; default = NULL}
 
 \item{edges}{Character taking the value of one of: \code{"wall", "sink",
 "none"} where \code{"wall"} results in a dispersal probability of 0 for all
@@ -38,12 +41,14 @@ out-of-bound cells with no populations modeled, \code{"sink"} results in
 dispersal of seeds to out-of-bound cells but no populations modeled, and
 \code{"none"} results in dispersal of seeds and populations modeled}
 
-\item{method}{Character, either: \code{"wt.mean", "lm"} where
-\code{"wt.mean"} calculates each paramater as the weighted mean across land
-cover types proportional to their coverage with the land cover specific
-values stored in the parameter vectors, and \code{"lm"} calculates each
-parameter in a regression with the slopes contained in each parameter
-vector}
+\item{method}{\code{"wt.mn"} Method for calculating cell expectations, taking
+values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+for each parameter is the weighted mean across land cover types
+proportional to their coverage, with the land cover specific values stored
+in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+a regression with the slopes contained in each parameter vector.
+Individuals cannot be assigned to specific land cover categories with
+\code{"lm"}, so \code{"age.f"} must be scalar.}
 }
 \value{
 Named list with values aggregated within cells based on land cover

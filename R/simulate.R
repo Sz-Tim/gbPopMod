@@ -30,6 +30,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   y.ad <- max(age.f)
   id.i <- lc.df %>% select(id, id.in)
   age.f.d <- length(age.f) > 1
+  if(method=="lm" && age.f.d) stop("age.f must be scalar if method==\"lm\"")
   
   # If buckthorn is being actively managed...
   p.est.trt <- NULL
@@ -42,7 +43,8 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
   }
   
   # 1. Initialize populations
-  N.sb <- matrix(0, nrow=ngrid, ncol=tmax+1)
+  B <- matrix(0, nrow=ngrid, ncol=tmax+1)
+  pFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=tmax)
   if(age.f.d) {
     N <- array(0, dim=c(ngrid, tmax+1, n.lc, y.ad))  
     N[,1,,] <- N.init
@@ -92,24 +94,29 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     }
     
     # 3. Pre-multiply compositional parameters for cell expectations
-    pm <- cell_E(lc.df, K, s.jv, fec, p.f, p.eat, p.est, p.est.trt, edges,
-                 method)
+    pm <- cell_E(lc.df, K, s.jv, s.ad, fec, p.f, p.eat, p.est, p.est.trt, 
+                 edges, method)
     
     # 4. Local fruit production
     if(verbose) cat("Fruits...")
     N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.E, pm$p.f.E,
                                   y.ad, age.f.d, dem.st)
+    pFl[N.f$id,t] <- N.f$N.rpr/N.f$N.ad
     
     # 5. Short distance dispersal
     if(verbose) cat("SDD...")
-    N.seed <- sdd_disperse(id.i, N.f, pm$p.eat.E, s.bird, 
+    N.Sd <- sdd_disperse(id.i, N.f, nSdFrt, pm$p.eat.E, s.bird, 
                                 sdd.pr, sdd.rate, sdd.st, edges)
+    nSd[N.Sd$N.source$id,t] <- N.Sd$N.source$N.produced
+    nSdStay[N.Sd$N.source$id,t] <- N.Sd$N.source$N.dep
+    D[N.Sd$N.seed$id,t] <- N.Sd$N.seed$N
+    D[,t] <- D[,t] - nSdStay[,t]
     
     # 6. Seedling establishment
     if(verbose) cat("Establishment...")
-    estab.out <- new_seedlings(ngrid, N.seed, N.sb[,t], pm$p.est.E, 
+    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B[,t], pm$p.est.E, 
                                s.sb, dem.st, bank)
-    N.sb[,t+1] <- estab.out$N.sb
+    B[,t+1] <- estab.out$N.sb
     
     # 7. Long distance dispersal
     if(verbose) cat("LDD...")
@@ -118,20 +125,22 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     # 8. Update abundances
     if(verbose) cat("Update N...\n")
     if(age.f.d) {
-      for(l in 1:n.lc) {
-        N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad] + N[,t,l,age.f[l]-1]*s.jv[l]),
-                               pm$K.lc[,l])
-        N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*s.jv[l])
-        N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
-      }
+        for(l in 1:n.lc) {
+          N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad]*s.ad[l] + 
+                                         N[,t,l,age.f[l]-1]*s.jv[l]),
+                                 pm$K.lc[,l])
+          N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*s.jv[l])
+          N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
+        }
     } else {
-      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad] + N[,t,y.ad-1]*pm$s.jv.E), pm$K.E)
+      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad]*pm$s.ad.E + N[,t,y.ad-1]*pm$s.jv.E), 
+                           pm$K.E)
       N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$s.jv.E)
       N[,t+1,1] <- estab.out$N.rcrt
     }
   }
   if(age.f.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
-  return(list(N=N, N.sb=N.sb))
+  return(list(N=N, B=B, pFl=pFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
 
 

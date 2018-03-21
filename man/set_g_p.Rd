@@ -9,10 +9,10 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   K = c(750, 10, 100, 100, 300, 100), s.jv = c(0.9, 0.1, 0.6, 0.6, 0.6,
   0.6), s.ad = c(1, 1, 1, 1, 1, 1), p.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
   fec = c(200, 100, 40, 20, 20, 10), age.f = rep(4, 6), s.sb = 0.3,
-  p.est = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03), sdd.max = 15,
-  sdd.rate = 0.1, n.ldd = 1, p.eat = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
-  bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05), s.bird = 0.6,
-  edges = "wall", method = "wt.mean")
+  nSdFrt = 2.3, p.est = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
+  sdd.max = 15, sdd.rate = 0.1, n.ldd = 1, p.eat = c(0.3, 0.1, 0.2, 0.2,
+  0.2, 0.1), bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05), s.bird = 0.6,
+  edges = "wall", method = "wt.mn")
 }
 \arguments{
 \item{tmax}{\code{100} Number of time steps per simulation}
@@ -42,8 +42,8 @@ of annual juvenile survival rates}
 \item{s.ad}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 adult survival rates}
 
-\item{p.f}{\code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
-\code{length=n.lc} of fruiting probabilities}
+\item{p.f}{\code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector \code{length=n.lc}
+of fruiting probabilities}
 
 \item{fec}{\code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
 mean fruit per adult}
@@ -52,6 +52,8 @@ mean fruit per adult}
 first fruiting. Individuals at this age are considered adults}
 
 \item{s.sb}{\code{0.3} Probability of annual survival in seed bank}
+
+\item{nSdFrt}{\code{2.3} Scalar: mean number of seeds per fruit}
 
 \item{p.est}{\code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 \code{length=n.lc} of seedling establishment probabilities}
@@ -62,22 +64,26 @@ first fruiting. Individuals at this age are considered adults}
 
 \item{n.ldd}{\code{1} Number of long distance dispersal events per year}
 
-\item{p.eat}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector
-\code{length=n.lc} of proportion of fruits eaten by birds, with
-\code{1-p.eat} assumed to drop directly below buckthorn individuals}
+\item{p.eat}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector \code{length=n.lc}
+of proportion of fruits eaten by birds, with \code{1-p.eat} assumed to drop
+directly below buckthorn individuals}
 
 \item{bird.hab}{\code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
 \code{length=n.lc} of bird habitat preferences}
 
 \item{s.bird}{\code{0.6} Seed viability post-digestion}
 
-\item{edges}{\code{wall} Boundary behavior, taking values of \code{wall},
-\code{sink}, or \code{none}. See boundary_behavior.Rmd for descriptions}
+\item{edges}{\code{"wall"} Boundary behavior, taking values of \code{"wall"},
+\code{"sink"}, or \code{"none"}. See boundary_behavior.Rmd for descriptions}
 
-\item{method}{\code{"wt.mean"} Method to use for calculating expected
-parameter values for each cell. If \code{"wt.mean"}, a mean is calculated
-weighted by the proportional land cover. If \code{"lm"}, a regression is
-performed treating each parameter vector as an intercept plus slopes}
+\item{method}{\code{"wt.mn"} Method for calculating cell expectations, taking
+values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+for each parameter is the weighted mean across land cover types
+proportional to their coverage, with the land cover specific values stored
+in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+a regression with the slopes contained in each parameter vector.
+Individuals cannot be assigned to specific land cover categories with
+\code{"lm"}, so \code{"age.f"} must be scalar.}
 }
 \value{
 Named list of global parameters including all arguments as elements

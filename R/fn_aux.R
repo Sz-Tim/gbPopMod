@@ -124,6 +124,8 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #'   type
 #' @param s.jv Vector \code{length=n.lc} with juvenile survival probability for
 #'   each land cover type
+#' @param s.ad \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+#'   adult survival rates
 #' @param fec Vector \code{length=n.lc} with mean per-individual fruit
 #'   production for each land cover type
 #' @param p.f Vector \code{length=n.lc} with mean probability of fruiting for
@@ -132,19 +134,21 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #'   birds for each land cover type
 #' @param p.est Vector \code{length=n.lc} with seedling establishment
 #'   probability for each land cover type
-#' @param p.est.trt Tibble with grid id and modified establishment
-#'   probabilities for cells with ground cover treatments; default = NULL
+#' @param p.est.trt Tibble with grid id and modified establishment probabilities
+#'   for cells with ground cover treatments; default = NULL
 #' @param edges Character taking the value of one of: \code{"wall", "sink",
 #'   "none"} where \code{"wall"} results in a dispersal probability of 0 for all
 #'   out-of-bound cells with no populations modeled, \code{"sink"} results in
 #'   dispersal of seeds to out-of-bound cells but no populations modeled, and
 #'   \code{"none"} results in dispersal of seeds and populations modeled
-#' @param method Character, either: \code{"wt.mean", "lm"} where
-#'   \code{"wt.mean"} calculates each paramater as the weighted mean across land
-#'   cover types proportional to their coverage with the land cover specific
-#'   values stored in the parameter vectors, and \code{"lm"} calculates each
-#'   parameter in a regression with the slopes contained in each parameter
-#'   vector
+#' @param method \code{"wt.mn"} Method for calculating cell expectations, taking
+#'   values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+#'   for each parameter is the weighted mean across land cover types
+#'   proportional to their coverage, with the land cover specific values stored
+#'   in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+#'   a regression with the slopes contained in each parameter vector.
+#'   Individuals cannot be assigned to specific land cover categories with
+#'   \code{"lm"}, so \code{"age.f"} must be scalar.
 #' @return Named list with values aggregated within cells based on land cover
 #'   types. Includes: \describe{ \item{\code{lc.mx}}{Matrix \code{(ncol=n.lc,
 #'   nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
@@ -167,14 +171,15 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #' @keywords premultiply, aggregate, set up, initialize
 #' @export
 
-cell_E <- function(lc.df, K, s.jv, fec, p.f, p.eat, p.est, 
-                   p.est.trt=NULL, edges="wall", method="wt.mean") {
+cell_E <- function(lc.df, K, s.jv, s.ad, fec, p.f, p.eat, p.est, 
+                   p.est.trt=NULL, edges="wall", method="wt.mn") {
   
-  if(method=="wt.mean") {
+  if(method=="wt.mn") {
     lc.mx <- as.matrix(lc.df[,4:9])
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))
     rel.dens <- t(apply(lc.mx, 1, function(x) K*x/c(x%*%K)))
+    s.ad.E <- c(lc.mx %*% s.ad)
     s.jv.E <- c(lc.mx %*% s.jv)
     fec.E <- lc.mx %*% fec
     p.f.E <- lc.mx %*% p.f
@@ -186,6 +191,7 @@ cell_E <- function(lc.df, K, s.jv, fec, p.f, p.eat, p.est,
     K.E <- round(lc.mx[,1:length(K)] %*% K)
     K.lc <- round(t(t(lc.mx[,1:length(K)]) * K))
     rel.dens <- t(apply(lc.mx[,1:length(K)], 1, function(x) K*x/c(x%*%K)))
+    s.ad.E <- c(antilogit(lc.mx[,1:length(s.ad)] %*% s.ad))
     s.jv.E <- c(antilogit(lc.mx[,1:length(s.jv)] %*% s.jv))
     fec.E <- exp(lc.mx[,1:length(fec)] %*% fec)
     p.f.E <- antilogit(lc.mx[,1:length(p.f)] %*% p.f)
@@ -200,7 +206,7 @@ cell_E <- function(lc.df, K, s.jv, fec, p.f, p.eat, p.est,
   if(edges=="sink") p.est.E[!lc.df$inbd] <- 0
   
   return(list(lc.mx=lc.mx, K.E=K.E, K.lc=K.lc, rel.dens=rel.dens,
-              s.jv.E=s.jv.E, fec.E=fec.E, p.f.E=p.f.E,
+              s.jv.E=s.jv.E, s.ad.E=s.ad.E, fec.E=fec.E, p.f.E=p.f.E,
               p.eat.E=p.eat.E, p.est.E=p.est.E))
 }
 
@@ -263,30 +269,35 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #'   of annual juvenile survival rates
 #' @param s.ad \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 #'   adult survival rates
-#' @param p.f \code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector
-#'   \code{length=n.lc} of fruiting probabilities
+#' @param p.f \code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector \code{length=n.lc}
+#'   of fruiting probabilities
 #' @param fec \code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
 #'   mean fruit per adult
 #' @param age.f \code{rep(4, 6)} Vector \code{length=n.lc} or scalar of age at
 #'   first fruiting. Individuals at this age are considered adults
 #' @param s.sb \code{0.3} Probability of annual survival in seed bank
+#' @param nSdFrt \code{2.3} Scalar: mean number of seeds per fruit
 #' @param p.est \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
 #'   \code{length=n.lc} of seedling establishment probabilities
 #' @param sdd.max \code{15} Maximum dispersal distance in cells
 #' @param sdd.rate \code{0.1} 1/mn for exponential dispersal kernel
 #' @param n.ldd \code{1} Number of long distance dispersal events per year
-#' @param p.eat \code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector
-#'   \code{length=n.lc} of proportion of fruits eaten by birds, with
-#'   \code{1-p.eat} assumed to drop directly below buckthorn individuals
+#' @param p.eat \code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector \code{length=n.lc}
+#'   of proportion of fruits eaten by birds, with \code{1-p.eat} assumed to drop
+#'   directly below buckthorn individuals
 #' @param bird.hab \code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
 #'   \code{length=n.lc} of bird habitat preferences
 #' @param s.bird \code{0.6} Seed viability post-digestion
-#' @param edges \code{wall} Boundary behavior, taking values of \code{wall},
-#'   \code{sink}, or \code{none}. See boundary_behavior.Rmd for descriptions
-#' @param method \code{"wt.mean"} Method to use for calculating expected
-#'   parameter values for each cell. If \code{"wt.mean"}, a mean is calculated
-#'   weighted by the proportional land cover. If \code{"lm"}, a regression is
-#'   performed treating each parameter vector as an intercept plus slopes
+#' @param edges \code{"wall"} Boundary behavior, taking values of \code{"wall"},
+#'   \code{"sink"}, or \code{"none"}. See boundary_behavior.Rmd for descriptions
+#' @param method \code{"wt.mn"} Method for calculating cell expectations, taking
+#'   values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+#'   for each parameter is the weighted mean across land cover types
+#'   proportional to their coverage, with the land cover specific values stored
+#'   in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+#'   a regression with the slopes contained in each parameter vector.
+#'   Individuals cannot be assigned to specific land cover categories with
+#'   \code{"lm"}, so \code{"age.f"} must be scalar.
 #' @return Named list of global parameters including all arguments as elements
 #' @keywords initialize, set up, global, parameter
 #' @export
@@ -298,19 +309,19 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
                     s.ad=c(1, 1, 1, 1, 1, 1),
                     p.f=c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
                     fec=c(200, 100, 40, 20, 20, 10),
-                    age.f=rep(4,6), s.sb=0.3, 
+                    age.f=rep(4,6), s.sb=0.3, nSdFrt=2.3,
                     p.est=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
                     sdd.max=15, sdd.rate=0.1, n.ldd=1,
                     p.eat=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
                     bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), s.bird=0.6,
-                    edges="wall", method="wt.mean") {
+                    edges="wall", method="wt.mn") {
   
   g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, bank=bank,
               n.cores=n.cores, lc.r=lc.r, lc.c=lc.c, n.lc=n.lc, N.p.t0=N.p.t0, 
               K=K, s.jv=s.jv, s.ad=s.ad, p.f=p.f, fec=fec, age.f=age.f, 
-              s.sb=s.sb, p.est=p.est, sdd.max=sdd.max, sdd.rate=sdd.rate, 
-              n.ldd=n.ldd, p.eat=p.eat, bird.hab=bird.hab, s.bird=s.bird, 
-              edges=edges, method=method)
+              s.sb=s.sb, nSdFrt=nSdFrt, p.est=p.est, sdd.max=sdd.max, 
+              sdd.rate=sdd.rate, n.ldd=n.ldd, p.eat=p.eat, bird.hab=bird.hab, 
+              s.bird=s.bird, edges=edges, method=method)
   
   return(g.p)
 }

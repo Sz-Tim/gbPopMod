@@ -29,12 +29,14 @@ make_fruits <- function(N.t, lc.mx, fec.E, p.f.E, y.ad, age.f.d, dem.st=F) {
   }
   if(dem.st) {
     N.f <- tibble(id = which(N.mature>0)) %>%
-      mutate(N.rpr = rbinom(n(), N.mature[id], prob=p.f.E[id]),
+      mutate(N.ad=N.mature[id],
+             N.rpr = rbinom(n(), N.mature[id], prob=p.f.E[id]),
              N.fruit = rpois(n(), lambda=N.rpr*fec.E[id])) %>% 
       filter(N.fruit > 0)
   } else {
     N.f <- tibble(id = which(N.mature>0)) %>%
-      mutate(N.rpr=(N.mature[id]) * p.f.E[id,],
+      mutate(N.ad=N.mature[id],
+             N.rpr=(N.mature[id] * p.f.E[id,]) %>% round,
              N.fruit=(N.rpr * fec.E[id,]) %>% round) %>% 
       filter(N.fruit > 0)
   }
