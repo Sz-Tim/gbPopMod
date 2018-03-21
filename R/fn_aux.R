@@ -189,8 +189,8 @@ cell_E <- function(lc.df, K, s.jv, s.ad, fec, p.f, p.eat, p.est,
     lc.mx <- cbind(1, as.matrix(select(lc.df, 
                               -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
     K.E <- round(lc.mx[,1:length(K)] %*% K)
-    K.lc <- round(t(t(lc.mx[,1:length(K)]) * K))
-    rel.dens <- t(apply(lc.mx[,1:length(K)], 1, function(x) K*x/c(x%*%K)))
+    K.lc <- NULL
+    rel.dens <- NULL
     s.ad.E <- c(antilogit(lc.mx[,1:length(s.ad)] %*% s.ad))
     s.jv.E <- c(antilogit(lc.mx[,1:length(s.jv)] %*% s.jv))
     fec.E <- exp(lc.mx[,1:length(fec)] %*% fec)
