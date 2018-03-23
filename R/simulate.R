@@ -126,17 +126,24 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     if(verbose) cat("Update N...\n")
     if(age.f.d) {
         for(l in 1:n.lc) {
+          N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
+          N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*s.jv[l])
           N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad]*s.ad[l] + 
                                          N[,t,l,age.f[l]-1]*s.jv[l]),
                                  pm$K.lc[,l])
-          N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*s.jv[l])
-          N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
         }
-    } else {
+    } else if(y.ad > 2) {
+      N[,t+1,1] <- estab.out$N.rcrt
+      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$s.jv.E)
       N[,t+1,y.ad] <- pmin(round(N[,t,y.ad]*pm$s.ad.E + N[,t,y.ad-1]*pm$s.jv.E), 
                            pm$K.E)
-      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$s.jv.E)
+    } else if(y.ad == 2 ) {
       N[,t+1,1] <- estab.out$N.rcrt
+      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad]*pm$s.ad.E + N[,t,1]*pm$s.jv.E), 
+                           pm$K.E)
+    } else {
+      N[,t+1,1] <- pmin(round(N[,t,1]*pm$s.ad.E + estab.out$N.rcrt*pm$s.jv.E), 
+                        pm$K.E)
     }
   }
   if(age.f.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
