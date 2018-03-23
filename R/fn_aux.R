@@ -1,6 +1,7 @@
 #' Antilogit function
 #'
-#' This function calculates the antilogit for the object \code{x}, returning the corresponding probability (range 0-1)
+#' This function calculates the antilogit for the object \code{x}, returning the
+#' corresponding probability (range 0-1)
 #' @param x Vector of unconstrained values
 #' @return Vector of constrained values
 #' @keywords antilogit
@@ -12,6 +13,19 @@ antilogit <- function (x) {
 
 
 
+
+#' Logit function
+#'
+#' This function calculates the logit for the probability vector \code{x},
+#' returning the corresponding unconstrained value
+#' @param x Vector of constrained values
+#' @return Vector of unconstrained values
+#' @keywords antilogit
+#' @export
+
+logit <- function (x) {
+  log(x/(1-x))
+}
 
 
 
