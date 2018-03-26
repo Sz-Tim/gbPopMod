@@ -13,6 +13,7 @@ antilogit(x)
 Vector of constrained values
 }
 \description{
-This function calculates the antilogit for the object \code{x}, returning the corresponding probability (range 0-1)
+This function calculates the antilogit for the object \code{x}, returning the
+corresponding probability (range 0-1)
 }
 \keyword{antilogit}
