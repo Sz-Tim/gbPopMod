@@ -172,13 +172,21 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
 #'   \code{\link{pop_init}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
+#' @param method \code{"wt.mn"} Method for calculating cell expectations, taking
+#'   values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+#'   for each parameter is the weighted mean across land cover types
+#'   proportional to their coverage, with the land cover specific values stored
+#'   in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+#'   a regression with the slopes contained in each parameter vector.
+#'   Individuals cannot be assigned to specific land cover categories with
+#'   \code{"lm"}, so \code{"age.f"} must be scalar.
 #' @param verbose \code{TRUE} Give updates for each year & process?
 #' @return Matrix of abundances for each cell and time step
 #' @keywords run, simulate, lambda
 #' @export
 
 run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
-                           N.init, verbose=F) {
+                           N.init, method="wt.mn", verbose=F) {
   library(tidyverse); library(magrittr)
   
   # Unpack parameters
@@ -191,8 +199,15 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
   
   for(t in 1:tmax){
     # 2. Pre-multiply compositional parameters
-    K.E <- as.matrix(lc.df[,4:9]) %*% K
-    lambda.E <- as.matrix(lc.df[,4:9]) %*% lambda
+    if(method="wt.mn") {
+      K.E <- as.matrix(lc.df[,4:9]) %*% K
+      lambda.E <- as.matrix(lc.df[,4:9]) %*% lambda
+    } else if(method="lm") {
+      lc.mx <- cbind(1, as.matrix(select(lc.df, 
+                              -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
+      K.E <- exp(lc.mx[,1:length(K)] %*% K)
+      lambda.E <- exp(lc.mx[,1:length(K)] %*% K)
+    }
     
     # 3. Local growth
     if(verbose) cat("Year", t, "- Grow...")
