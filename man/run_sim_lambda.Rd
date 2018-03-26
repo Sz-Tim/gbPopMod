@@ -4,7 +4,8 @@
 \alias{run_sim_lambda}
 \title{Run lambda simulation}
 \usage{
-run_sim_lambda(ngrid, ncell, g.p, lambda, sdd.pr, N.init, verbose = F)
+run_sim_lambda(ngrid, ncell, g.p, lambda, sdd.pr, N.init, method = "wt.mn",
+  verbose = F)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -21,6 +22,15 @@ type}
 
 \item{N.init}{Matrix or array with initial population sizes created by
 \code{\link{pop_init}}}
+
+\item{method}{\code{"wt.mn"} Method for calculating cell expectations, taking
+values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+for each parameter is the weighted mean across land cover types
+proportional to their coverage, with the land cover specific values stored
+in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+a regression with the slopes contained in each parameter vector.
+Individuals cannot be assigned to specific land cover categories with
+\code{"lm"}, so \code{"age.f"} must be scalar.}
 
 \item{verbose}{\code{TRUE} Give updates for each year & process?}
 
