@@ -207,7 +207,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
                               -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
       K.E <- exp(lc.mx[,1:length(K)] %*% K)
       lambda.E <- exp(lc.mx[,1:length(K)] %*% K)
-    }
+    } 
     
     # 3. Local growth
     if(verbose) cat("Year", t, "- Grow...")
