@@ -212,7 +212,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
       lc.mx <- cbind(1, as.matrix(select(lc.df, 
                               -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
       K.E <- exp(lc.mx[,1:length(K)] %*% K)
-      lambda.E <- exp(lc.mx[,1:length(K)] %*% lambda)
+      lambda.E <- exp(lc.mx[,1:length(lambda)] %*% lambda)
     } 
     
     # 3. Local growth
