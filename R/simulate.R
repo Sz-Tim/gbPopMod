@@ -166,6 +166,8 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param lambda Vector of length \code{n.lc} with lambdas for each land cover
 #'   type
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
 #' @param sdd.pr Array with sdd probabilities and neighborhoods created by
 #'   \code{\link{sdd_set_probs}}
 #' @param N.init Matrix or array with initial population sizes created by
@@ -185,7 +187,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
 #' @keywords run, simulate, lambda
 #' @export
 
-run_sim_lambda <- function(ngrid, ncell, g.p, lambda, sdd.pr,
+run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
                            N.init, method="wt.mn", verbose=F) {
   library(tidyverse); library(magrittr)
   

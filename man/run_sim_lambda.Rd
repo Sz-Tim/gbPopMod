@@ -4,8 +4,8 @@
 \alias{run_sim_lambda}
 \title{Run lambda simulation}
 \usage{
-run_sim_lambda(ngrid, ncell, g.p, lambda, sdd.pr, N.init, method = "wt.mn",
-  verbose = F)
+run_sim_lambda(ngrid, ncell, g.p, lambda, lc.df, sdd.pr, N.init,
+  method = "wt.mn", verbose = F)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -16,6 +16,9 @@ run_sim_lambda(ngrid, ncell, g.p, lambda, sdd.pr, N.init, method = "wt.mn",
 
 \item{lambda}{Vector of length \code{n.lc} with lambdas for each land cover
 type}
+
+\item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
+cell id info}
 
 \item{sdd.pr}{Array with sdd probabilities and neighborhoods created by
 \code{\link{sdd_set_probs}}}
