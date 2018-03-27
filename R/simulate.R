@@ -231,5 +231,5 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
     if(verbose) cat("Update N\n")
     N[,t+1] <- N.emig$N
   }
-  return(list(N=N, lam.E=pm$lambda.E))
+  return(list(N=N, lam.E=lambda.E))
 }
