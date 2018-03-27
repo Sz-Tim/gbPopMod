@@ -41,7 +41,8 @@ Individuals cannot be assigned to specific land cover categories with
 set with \code{\link{set_control_p}}}
 }
 \value{
-Matrix of abundances for each cell and time step
+Matrix N of abundances for each cell and time step and vector
+  lambda.E of predicted lambda value for each cell
 }
 \description{
 This function runs the simulation. Currently, it runs all time steps, but for

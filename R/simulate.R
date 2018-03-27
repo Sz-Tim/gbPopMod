@@ -3,20 +3,23 @@
 #' This function runs the simulation. Currently, it runs all time steps, but for
 #' the economic model, the structure will need to be slightly adjusted to run a
 #' single time step. The initialization is separated from this function for that
-#' reason. 
+#' reason.
 #' @param ngrid Number of grid cells in entire map
 #' @param ncell Number of inbound grid cells
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param sdd.pr Array with sdd probabilities and neighborhoods created by 
+#' @param sdd.pr Array with sdd probabilities and neighborhoods created by
 #'   \code{\link{sdd_set_probs}}
-#' @param N.init Matrix or array with initial population sizes created by 
+#' @param N.init Matrix or array with initial population sizes created by
 #'   \code{\link{pop_init}}
-#' @param control.p NULL or named list of buckthorn control treatment parameters 
+#' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
-#' @param verbose \code{TRUE} Give updates for each year & process? 
-#' @return Array of abundances for each cell and age group
+#' @param verbose \code{TRUE} Give updates for each year & process?
+#' @return Array N of abundances for each cell and age group, matrix B of seed
+#'   bank abundances, matrix nFl with number of flowering individuals, matrix
+#'   nSd of total seeds produced in each cell, matrix nSdStay of total seeds
+#'   remaining in each cell, and matrix D of immigrants into each cell.
 #' @keywords run, simulate
 #' @export
 
@@ -183,7 +186,8 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
 #'   Individuals cannot be assigned to specific land cover categories with
 #'   \code{"lm"}, so \code{"age.f"} must be scalar.
 #' @param verbose \code{TRUE} Give updates for each year & process?
-#' @return Matrix of abundances for each cell and time step
+#' @return Matrix N of abundances for each cell and time step and vector
+#'   lambda.E of predicted lambda value for each cell
 #' @keywords run, simulate, lambda
 #' @export
 
@@ -227,5 +231,5 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
     if(verbose) cat("Update N\n")
     N[,t+1] <- N.emig$N
   }
-  return(N)
+  return(list(N=N, lam.E=pm$lambda.E))
 }

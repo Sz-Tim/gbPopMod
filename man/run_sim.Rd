@@ -16,19 +16,22 @@ run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose = TRUE)
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
 
-\item{sdd.pr}{Array with sdd probabilities and neighborhoods created by 
+\item{sdd.pr}{Array with sdd probabilities and neighborhoods created by
 \code{\link{sdd_set_probs}}}
 
-\item{N.init}{Matrix or array with initial population sizes created by 
+\item{N.init}{Matrix or array with initial population sizes created by
 \code{\link{pop_init}}}
 
-\item{control.p}{NULL or named list of buckthorn control treatment parameters 
+\item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
 
 \item{verbose}{\code{TRUE} Give updates for each year & process?}
 }
 \value{
-Array of abundances for each cell and age group
+Array N of abundances for each cell and age group, matrix B of seed
+  bank abundances, matrix nFl with number of flowering individuals, matrix
+  nSd of total seeds produced in each cell, matrix nSdStay of total seeds
+  remaining in each cell, and matrix D of immigrants into each cell.
 }
 \description{
 This function runs the simulation. Currently, it runs all time steps, but for
