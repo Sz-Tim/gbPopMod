@@ -252,23 +252,25 @@ sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=F) {
   N.emig <- tibble(id=id.i$id, 
                    N=N.new$N.pop.upd[match(id.i$id, N.new$id)]) %>% 
     mutate(id.in=id.i$id.in[id])
-  if(sdd.st) {
-    SDD.sd <- unlist(apply(N.source, 1,
-                           function(x) sample(sdd.pr[,,2,x[5]], 
-                                              x[3] * (1-pexp(.5,sdd.rate)), 
-                                              replace=TRUE,
-                                              prob=sdd.pr[,,1,x[5]])))
-    SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
-    SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
-    N.emig %<>% add_row(id=which(SDD.nonzero), 
-                        N=SDD.dep[SDD.nonzero],
-                        id.in=id.i$id.in[match(id, id.i$id)])
-  } else {
-    N.emig %<>%
-      add_row(id=apply(N.source, 1, function(x) c(sdd.pr[,,2,x[5]])) %>% c, 
-              N=apply(N.source, 1, function(x) c(x[3] * (1-pexp(.5,sdd.rate)) * 
-                                                   sdd.pr[,,1,x[5]])) %>% c,
-              id.in=id.i$id.in[match(id, id.i$id)]) 
+  if(nrow(N.source) > 0) {
+    if(sdd.st) {
+      SDD.sd <- unlist(apply(N.source, 1,
+                             function(x) sample(sdd.pr[,,2,x[5]], 
+                                                x[3] * (1-pexp(.5,sdd.rate)), 
+                                                replace=TRUE,
+                                                prob=sdd.pr[,,1,x[5]])))
+      SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
+      SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
+      N.emig %<>% add_row(id=which(SDD.nonzero), 
+                          N=SDD.dep[SDD.nonzero],
+                          id.in=id.i$id.in[match(id, id.i$id)])
+    } else {
+      N.emig %<>%
+        add_row(id=apply(N.source, 1, function(x) c(sdd.pr[,,2,x[5]])) %>% c, 
+                N=apply(N.source, 1, function(x) c(x[3] * (1-pexp(.5,sdd.rate)) * 
+                                                     sdd.pr[,,1,x[5]])) %>% c,
+                id.in=id.i$id.in[match(id, id.i$id)]) 
+    }
   }
   N.emig %<>% filter(id != 0) %>% group_by(id) %>%
     summarise(N=sum(N, na.rm=T))
