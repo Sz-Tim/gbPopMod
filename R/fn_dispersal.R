@@ -116,7 +116,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #'   \code{\link{make_fruits}}
 #'@param nSdFrt Scalar: mean number of seeds per fruit
 #' @param p.eat.E Vector of proportion of fruits eaten by birds from
-#'   \code{\link{cell_agg}}
+#'   \code{\link{cell_E}}
 #' @param s.bird Proportion of viable seeds post-digestion
 #' @param sdd.pr Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
 #'   from \code{\link{sdd_set_probs}}

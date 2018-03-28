@@ -17,7 +17,7 @@ while \code{id.in} indexes only inbound cells}
 \item{nSdFrt}{Scalar: mean number of seeds per fruit}
 
 \item{p.eat.E}{Vector of proportion of fruits eaten by birds from
-\code{\link{cell_agg}}}
+\code{\link{cell_E}}}
 
 \item{s.bird}{Proportion of viable seeds post-digestion}
 
