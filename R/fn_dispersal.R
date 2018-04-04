@@ -260,7 +260,7 @@ sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=F) {
     if(sdd.st) {
       SDD.sd <- unlist(apply(N.source, 1,
                              function(x) sample(sdd.pr[,,2,x[5]], 
-                                                x[3] * (1-pexp(.5,sdd.rate)), 
+                                                round(x[3] * (1-pexp(.5,sdd.rate))), 
                                                 replace=TRUE,
                                                 prob=sdd.pr[,,1,x[5]])))
       SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
