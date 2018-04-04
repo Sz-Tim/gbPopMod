@@ -147,40 +147,42 @@ sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird,
     mutate_at(2:6, round)
   N.seed <- N.source %>% select(id, N.dep)
   
-  if(sdd.st) {
-    N.seed$N.dep <- round(N.seed$N.dep)
-    if(edges=="none") {
-      SDD.sd <- unlist(apply(N.source, 1,
-                             function(x) sample(sdd.pr[,,2,x[1]], x[6], 
-                                                replace=TRUE,
-                                                prob=sdd.pr[,,1,x[1]])))
+  if(sum(N.source$N.emig>0)>0) {
+    if(sdd.st) {
+      N.seed$N.dep <- round(N.seed$N.dep)
+      if(edges=="none") {
+        SDD.sd <- unlist(apply(N.source, 1,
+                               function(x) sample(sdd.pr[,,2,x[1]], x[6], 
+                                                  replace=TRUE,
+                                                  prob=sdd.pr[,,1,x[1]])))
+      } else {
+        SDD.sd <- unlist(apply(N.source, 1,
+                               function(x) sample(sdd.pr[,,2,x[8]], x[6], 
+                                                  replace=TRUE,
+                                                  prob=sdd.pr[,,1,x[8]])))
+      }
+      SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
+      SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
+      N.seed <- add_row(N.seed, 
+                        id=which(SDD.nonzero), 
+                        N.dep=SDD.dep[SDD.nonzero])
     } else {
-      SDD.sd <- unlist(apply(N.source, 1,
-                             function(x) sample(sdd.pr[,,2,x[8]], x[6], 
-                                                replace=TRUE,
-                                                prob=sdd.pr[,,1,x[8]])))
-    }
-    SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
-    SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
-    N.seed <- add_row(N.seed, 
-                      id=which(SDD.nonzero), 
-                      N.dep=SDD.dep[SDD.nonzero])
-  } else {
-    # assign emigrants to target cells & sum within each cell
-    if(edges=="none") {
-      N.seed %<>% 
-        add_row(id=apply(N.source, 1, 
-                         function(x) c(sdd.pr[,,2,x[1]])) %>% c, 
-                N.dep=apply(N.source, 1, 
-                            function(x) c(x[6] * sdd.pr[,,1,x[1]])) %>% c) %>%
-        filter(N.dep > 0)
-    } else {
-      N.seed %<>% 
-        add_row(id=apply(N.source, 1, 
-                         function(x) c(sdd.pr[,,2,x[8]])) %>% c, 
-                N.dep=apply(N.source, 1, 
-                            function(x) c(x[6] * sdd.pr[,,1,x[8]])) %>% c) %>%
-        filter(N.dep > 0)
+      # assign emigrants to target cells & sum within each cell
+      if(edges=="none") {
+        N.seed %<>% 
+          add_row(id=apply(N.source, 1, 
+                           function(x) c(sdd.pr[,,2,x[1]])) %>% c, 
+                  N.dep=apply(N.source, 1, 
+                              function(x) c(x[6] * sdd.pr[,,1,x[1]])) %>% c) %>%
+          filter(N.dep > 0)
+      } else {
+        N.seed %<>% 
+          add_row(id=apply(N.source, 1, 
+                           function(x) c(sdd.pr[,,2,x[8]])) %>% c, 
+                  N.dep=apply(N.source, 1, 
+                              function(x) c(x[6] * sdd.pr[,,1,x[8]])) %>% c) %>%
+          filter(N.dep > 0)
+      }
     }
   }
   
@@ -212,8 +214,10 @@ sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird,
 
 ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
   
-  ldd.id <- id.i$id[which(id.i$id.in %in% sample(1:ncell, n.ldd, replace=T))]
-  N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
+  if(n.ldd > 0) {
+    ldd.id <- id.i$id[which(id.i$id.in %in% sample(1:ncell, n.ldd, replace=T))]
+    N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
+  }
 
   return(N.rcrt)
 }
@@ -261,9 +265,11 @@ sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=F) {
                                                 prob=sdd.pr[,,1,x[5]])))
       SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
       SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
-      N.emig %<>% add_row(id=which(SDD.nonzero), 
-                          N=SDD.dep[SDD.nonzero],
-                          id.in=id.i$id.in[match(id, id.i$id)])
+      if(sum(SDD.nonzero)>0) {
+        N.emig %<>% add_row(id=which(SDD.nonzero), 
+                            N=SDD.dep[SDD.nonzero],
+                            id.in=id.i$id.in[match(id, id.i$id)])
+      }
     } else {
       N.emig %<>%
         add_row(id=apply(N.source, 1, function(x) c(sdd.pr[,,2,x[5]])) %>% c, 
