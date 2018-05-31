@@ -4,7 +4,7 @@
 \alias{run_sim}
 \title{Run demographic simulation}
 \usage{
-run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose = TRUE)
+run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, verbose = TRUE)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -16,7 +16,7 @@ run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose = TRUE)
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
 
-\item{sdd.pr}{Array with sdd probabilities and neighborhoods created by
+\item{sdd}{Output with short distance dispersal neighborhoods created by
 \code{\link{sdd_set_probs}}}
 
 \item{N.init}{Matrix or array with initial population sizes created by

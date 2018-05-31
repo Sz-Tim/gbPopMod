@@ -9,7 +9,7 @@
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param sdd.pr Array with sdd probabilities and neighborhoods created by
+#' @param sdd Output with short distance dispersal neighborhoods created by
 #'   \code{\link{sdd_set_probs}}
 #' @param N.init Matrix or array with initial population sizes created by
 #'   \code{\link{pop_init}}
@@ -23,7 +23,7 @@
 #' @keywords run, simulate
 #' @export
 
-run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, 
+run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, 
                     control.p, verbose=TRUE) {
   
   library(tidyverse); library(magrittr)
@@ -73,9 +73,11 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
                                                 f.c=6:9, lc.df)
         sdd.i <- tibble(id.in=unique(
-          arrayInd(which(sdd.pr %in% chg.asn$id.chg$id.in), dim(sdd.pr))[,4]), 
+          arrayInd(which(sdd$i %in% chg.asn$id.chg$id.in), dim(sdd$i))[,4]), 
           id=id.i$id[match(id.in, id.i$id.in)])
-        sdd.pr[,,,sdd.i$id.in] <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
+        sdd_new <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
+        sdd$i[,,,sdd.i$id.in] <- sdd_new$i
+        sdd$sp[sdd.i$id.in] <- sdd_new$sp
       }
       
       # 2B. Adjust p.est
@@ -109,7 +111,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd.pr, N.init,
     # 5. Short distance dispersal
     if(verbose) cat("SDD...")
     N.Sd <- sdd_disperse(id.i, N.f, nSdFrt, pm$p.eat.E, s.bird, 
-                                sdd.pr, sdd.rate, sdd.st, edges)
+                                sdd$sp, sdd.rate, sdd.st, edges)
     nSd[N.Sd$N.source$id,t] <- N.Sd$N.source$N.produced
     nSdStay[N.Sd$N.source$id,t] <- N.Sd$N.source$N.dep
     D[N.Sd$N.seed$id,t] <- N.Sd$N.seed$N

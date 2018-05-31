@@ -24,9 +24,12 @@ neighborhoods for all cells}
 \item{lc.col}{\code{4:9} Column indexes for land cover proportions}
 }
 \value{
-Array with dim(disp.rows, disp.cols, 2, ncell) where the third
+List with full neighborhoods,i, and sparse representation, sp. The
+  full array has dim(disp.rows, disp.cols, 2, ncell) where the third
   dimension contains grid id's for the neighborhood or probabilities to each
-  target cell
+  target cell. The sparse representation is a list with an element for each
+  cell, where each element is a vector of non-zero probabilities named with
+  the target cells.
 }
 \description{
 Assign base dispersal probabilities from each cell. Each layer \code{k} in

@@ -36,7 +36,7 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
 
-out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), sdd.pr, N.init, TRUE)
+out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), sdd.pr$i, N.init, TRUE)
 out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
                         N=out.lam[,g.p$tmax+1])
 
@@ -59,7 +59,7 @@ if(g.p$n.cores > 1) {
   for(s in 1:n.sim) {
     out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
     out.ad[,,s] <- out$N[,,max(g.p$age.f)]
-    out.sb[,,s] <- out$N.sb
+    out.sb[,,s] <- out$B
     rm(out)
     cat("Finished simulation", s, "of", n.sim, "\n")
   }

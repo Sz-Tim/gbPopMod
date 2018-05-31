@@ -13,9 +13,12 @@
 #'   neighborhoods for all cells
 #' @param edges \code{"wall"} Boundary behavior
 #' @param lc.col \code{4:9} Column indexes for land cover proportions
-#' @return Array with dim(disp.rows, disp.cols, 2, ncell) where the third
+#' @return List with full neighborhoods,i, and sparse representation, sp. The
+#'   full array has dim(disp.rows, disp.cols, 2, ncell) where the third
 #'   dimension contains grid id's for the neighborhood or probabilities to each
-#'   target cell
+#'   target cell. The sparse representation is a list with an element for each
+#'   cell, where each element is a vector of non-zero probabilities named with
+#'   the target cells.
 #' @keywords sdd, dispersal, probability, probabilities
 #' @export
 
@@ -98,42 +101,48 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
   }
   if(is.null(lc.new)) cat("  finished:", n, "cells\n")
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
-  return(sdd.i)
+  sdd.sparse <- vector("list", ncell)
+  for(n in 1:ncell) {
+    sdd.sparse[[n]] <- c(sdd.i[,,1,n])
+    names(sdd.sparse[[n]]) <- c(sdd.i[,,2,n])
+    sdd.sparse[[n]] <- sdd.sparse[[n]][sdd.sparse[[n]]>0]
+  }
+  return(list(i=sdd.i, sp=sdd.sparse))
 }
 
 
 
 
-#' Short distance dispersal
+#'Short distance dispersal
 #'
-#' This function calculates the number of viable seeds deposited within the
-#' short distance dispersal neighborhood of each cell, accounting for the
-#' distance from the source cell, bird habitat preference, the proportion of
-#' fruits eaten by birds, and seed viability post-digestion.
-#' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
-#'   while \code{id.in} indexes only inbound cells
-#' @param N.f Tibble of fruits produced in each cell output from
-#'   \code{\link{make_fruits}}
+#'This function calculates the number of viable seeds deposited within the short
+#'distance dispersal neighborhood of each cell, accounting for the distance from
+#'the source cell, bird habitat preference, the proportion of fruits eaten by
+#'birds, and seed viability post-digestion.
+#'@param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
+#'  while \code{id.in} indexes only inbound cells
+#'@param N.f Tibble of fruits produced in each cell output from
+#'  \code{\link{make_fruits}}
 #'@param nSdFrt Scalar: mean number of seeds per fruit
-#' @param p.eat.E Vector of proportion of fruits eaten by birds from
-#'   \code{\link{cell_E}}
-#' @param s.bird Proportion of viable seeds post-digestion
-#' @param sdd.pr Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
-#'   from \code{\link{sdd_set_probs}}
-#' @param sdd.rate Rate parameter for SDD exponential kernel
-#' @param sdd.st \code{Logical} denoting whether to implement short distance
-#'   dispersal stochastically
-#' @param edges Character taking the value of one of: \code{"wall", "sink",
-#'   "none"} where \code{"wall"} results in a dispersal probability of 0 for all
-#'   out-of-bound cells with no populations modeled, \code{"sink"} results in
-#'   dispersal of seeds to out-of-bound cells but no populations modeled, and
-#'   \code{"none"} results in dispersal of seeds and populations modeled
-#' @return Tibble with grid id and number of seeds in each cell
-#' @keywords dispersal, SDD
-#' @export
+#'@param p.eat.E Vector of proportion of fruits eaten by birds from
+#'  \code{\link{cell_E}}
+#'@param s.bird Proportion of viable seeds post-digestion
+#'@param sdd.sp List of named vectors with SDD probabilities for each cell
+#'  output from \code{\link{sdd_set_probs}}
+#'@param sdd.rate Rate parameter for SDD exponential kernel
+#'@param sdd.st \code{Logical} denoting whether to implement short distance
+#'  dispersal stochastically
+#'@param edges Character taking the value of one of: \code{"wall", "sink",
+#'  "none"} where \code{"wall"} results in a dispersal probability of 0 for all
+#'  out-of-bound cells with no populations modeled, \code{"sink"} results in
+#'  dispersal of seeds to out-of-bound cells but no populations modeled, and
+#'  \code{"none"} results in dispersal of seeds and populations modeled
+#'@return Tibble with grid id and number of seeds in each cell
+#'@keywords dispersal, SDD
+#'@export
 
 sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird, 
-                         sdd.pr, sdd.rate, sdd.st=F, edges="wall") {
+                         sdd.sp, sdd.rate, sdd.st=F, edges="wall") {
   
   library(tidyverse); library(magrittr)
   
@@ -150,44 +159,41 @@ sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird,
   if(sum(N.source$N.emig>0)>0) {
     if(sdd.st) {
       N.seed$N.dep <- round(N.seed$N.dep)
+      SDD.sd <- vector("list", nrow(N.source))
       if(edges=="none") {
-        SDD.sd <- unlist(apply(N.source, 1,
-                               function(x) sample(sdd.pr[,,2,x[1]], x[6], 
-                                                  replace=TRUE,
-                                                  prob=sdd.pr[,,1,x[1]])))
+        for(n in 1:nrow(N.source)) {
+          tmp <- rmultinom(1, N.source$N.emig[n], sdd.sp[[N.source$id[n]]])
+          SDD.sd[[n]] <- tmp[tmp>0,1]
+        }
       } else {
-        SDD.sd <- unlist(apply(N.source, 1,
-                               function(x) sample(sdd.pr[,,2,x[8]], x[6], 
-                                                  replace=TRUE,
-                                                  prob=sdd.pr[,,1,x[8]])))
+        for(n in 1:nrow(N.source)) {
+          tmp <- rmultinom(1, N.source$N.emig[n], sdd.sp[[N.source$id.in[n]]])
+          SDD.sd[[n]] <- tmp[tmp>0,1]
+        }
       }
-      SDD.dep <- tabulate(SDD.sd)  # vector of counts for 1:max(SDD.sd)
-      SDD.nonzero <- SDD.dep > 0  # cell id's with N.dep > 0
+      SDD.dep <- unlist(SDD.sd)
       N.seed <- add_row(N.seed, 
-                        id=which(SDD.nonzero), 
-                        N.dep=SDD.dep[SDD.nonzero])
+                        id=as.numeric(names(SDD.dep)), 
+                        N.dep=SDD.dep)
     } else {
       # assign emigrants to target cells & sum within each cell
       if(edges=="none") {
         N.seed %<>% 
-          add_row(id=apply(N.source, 1, 
-                           function(x) c(sdd.pr[,,2,x[1]])) %>% c, 
-                  N.dep=apply(N.source, 1, 
-                              function(x) c(x[6] * sdd.pr[,,1,x[1]])) %>% c) %>%
+          add_row(id=c(apply(N.source, 1, function(x) names(sdd.sp[[x[1]]]))), 
+                  N.dep=c(apply(N.source, 1, 
+                                function(x) c(x[6] * sdd.sp[[x[1]]])))) %>%
           filter(N.dep > 0)
       } else {
         N.seed %<>% 
-          add_row(id=apply(N.source, 1, 
-                           function(x) c(sdd.pr[,,2,x[8]])) %>% c, 
-                  N.dep=apply(N.source, 1, 
-                              function(x) c(x[6] * sdd.pr[,,1,x[8]])) %>% c) %>%
+          add_row(id=c(apply(N.source, 1, function(x) names(sdd.sp[[x[8]]]))), 
+                  N.dep=c(apply(N.source, 1, 
+                                function(x) c(x[6] * sdd.sp[[x[8]]])))) %>%
           filter(N.dep > 0)
       }
     }
   }
   
-  N.seed %<>%
-    group_by(id) %>% 
+  N.seed <- N.seed %>% group_by(id) %>% 
     summarise(N=sum(N.dep) %>% round) %>%
     filter(N > 0)
   if(edges=="wall") N.seed %<>% filter(!is.na(id.i$id.in[id]))
