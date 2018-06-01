@@ -149,7 +149,8 @@ sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird,
   # calculate seeds deposited within source cell vs emigrants
   N.source <- N.f %>%
     mutate(N.produced=round(nSdFrt*N.fruit),
-           N.emig=N.produced*p.eat.E[id,]*s.bird*(1-pexp(.5,sdd.rate)),
+           N.emig=pmin(N.produced*p.eat.E[id,]*s.bird*(1-pexp(.5,sdd.rate)),
+                       .Machine$integer.max),
            N.dep=N.produced*p.eat.E[id,]*s.bird*pexp(.5,sdd.rate) + 
              N.produced*(1-p.eat.E[id,])) %>%
     mutate(id.in=id.i$id.in[id]) %>%
