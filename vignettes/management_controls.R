@@ -1,16 +1,17 @@
 # Example of management treatments
 # load libraries
 Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
-              "fastmatch", "scales", "gganimate")
+              "fastmatch", "scales", "gganimate", "compiler")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
+enableJIT(3)  # just-in-time compilation for all loops before their first use
 theme_set(theme_bw())
 data(lc.rct)
 
 # set parameters
 n.sim <- 3
-g.p <- set_g_p(tmax=150, lc.r=50, lc.c=50, n.cores=1, sdd.max=10)
+g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.cores=1, sdd.max=10)
 control.p <- set_control_p(null_ctrl=FALSE, 
-                           t.trt=1,
+                           t.trt=80,
                            man.i=1300:1800,  # cells with manual controls
                            pTrt.man=NA,  # for random cell assignment
                            man.trt=c(M=0.05, C=0.3, MC=0.95),
@@ -36,7 +37,8 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
 
-out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), sdd.pr$i, N.init, TRUE)
+out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), 
+                          sdd.pr$i, N.init, TRUE)
 out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
                         N=out.lam[,g.p$tmax+1])
 
@@ -45,9 +47,8 @@ if(g.p$n.cores > 1) {
   require(doParallel)
   p.c <- makeCluster(g.p$n.cores)
   registerDoParallel(p.c)
-  out.p <- foreach(i=1:n.sim) %dopar% {
-    gbPopMod::run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, 
-                      N.init, control.p, verbose=F)
+  out.p <- foreach(i=1:n.sim, .packages="gbPopMod") %dopar% {
+    run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
   }
   stopCluster(p.c)
   out.ad <- map(out.p, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
