@@ -43,7 +43,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
   
   cat("\nRunning simulations\n")
-  for(j in 1:length(p.seq)) {
+  for(j in seq_along(p.seq)) {
     # setup for particular parameter value
     set.seed(225)
     g.p[[p[1]]] <- p.seq[[j]]
@@ -67,7 +67,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     # rearrange output
     ad.j <- map(out.j, ~.$N[,,max(g.p$age.f)]) %>% 
       unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
-    sb.j <- map(out.j, ~.$N.sb) %>% 
+    sb.j <- map(out.j, ~.$B) %>% 
       unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
     
     # store output
@@ -82,8 +82,8 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   
   cat("Processing output\n")
   p.c <- makeCluster(g.p$n.cores/3); registerDoSNOW(p.c)
-  foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
-    library(tidyverse); library(stringr); library(gbPopMod)
+  foreach(j=seq_along(p.seq), .combine=rbind, 
+          .packages=c("tidyverse", "stringr", "gbPopMod")) %dopar% {
     options(bitmapType='cairo')
     
     # setup
