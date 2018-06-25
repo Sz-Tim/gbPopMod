@@ -141,20 +141,28 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #'@keywords dispersal, SDD
 #'@export
 
-sdd_disperse <- function(id.i, N.f, nSdFrt, p.eat.E, s.bird, 
+sdd_disperse <- function(id.i, Fr, gamma, p.c.E, s.c, 
                          sdd.sp, sdd.rate, sdd.st=F, edges="wall") {
   
   library(tidyverse); library(magrittr)
   
   # calculate seeds deposited within source cell vs emigrants
-  N.source <- N.f %>%
-    mutate(N.produced=round(nSdFrt*N.fruit),
-           N.emig=pmin(N.produced*p.eat.E[id,]*s.bird*(1-pexp(.5,sdd.rate)),
-                       .Machine$integer.max),
-           N.dep=N.produced*p.eat.E[id,]*s.bird*pexp(.5,sdd.rate) + 
-             N.produced*(1-p.eat.E[id,])) %>%
+  N.source <- Fr %>%
+    mutate(N.produced=round(gamma*N.fruit),
+           N.emig=N.produced*p.c.E[id,]*s.c*(1-pexp(.5,sdd.rate)),
+           N.dep=N.produced*p.c.E[id,]*s.c*pexp(.5,sdd.rate) + 
+             N.produced*(1-p.c.E[id,])) %>%
     mutate(id.in=id.i$id.in[id]) %>%
-    mutate_at(2:6, round)
+    mutate_at(2:7, round)
+  while(sum(N.source$N.emig > .Machine$integer.max)>0) {
+    ovr <- which(N.source$N.emig > .Machine$integer.max)
+    for(i in seq_along(ovr)) {
+      N.source$N.emig[ovr[i]] <- N.source$N.emig[ovr[i]] - .Machine$integer.max
+      N.source <- rbind(N.source, (N.source[ovr[i],] %>%
+                                       mutate(N.emig=.Machine$integer.max,
+                                              N.dep=0, N.produced=0)))
+    }
+  }
   N.seed <- N.source %>% select(id, N.dep)
   
   if(sum(N.source$N.emig>0)>0) {
