@@ -34,10 +34,9 @@ Array N of abundances for each cell and age group, matrix B of seed
   remaining in each cell, and matrix D of immigrants into each cell.
 }
 \description{
-This function runs the simulation. Currently, it runs all time steps, but for
-the economic model, the structure will need to be slightly adjusted to run a
-single time step. The initialization is separated from this function for that
-reason.
+Run the simulation. Currently, it runs all time steps, but for the economic
+model, the structure will need to be slightly adjusted to run a single time
+step. The initialization is separated from this function for that reason.
 }
 \keyword{run,}
 \keyword{simulate}

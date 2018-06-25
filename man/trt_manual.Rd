@@ -4,12 +4,12 @@
 \alias{trt_manual}
 \title{Implement cutting & spraying treatments}
 \usage{
-trt_manual(N.t, y.ad, N.trt, man.trt)
+trt_manual(N.t, m.max, N.trt, man.trt)
 }
 \arguments{
-\item{N.t}{Matrix or array of abundances, with dims=c(ngrid, (lc), y.ad)}
+\item{N.t}{Matrix or array of abundances, with dims=c(ngrid, (lc), m.max)}
 
-\item{y.ad}{Max(age at maturity)}
+\item{m.max}{Max(age at maturity)}
 
 \item{N.trt}{Tibble output from \code{\link{trt_assign}} with the grid id and
 treatment type for each cell}
@@ -22,8 +22,8 @@ Matrix or array of the same dimensions as N.t with adjusted
   abundances
 }
 \description{
-This function adjusts the abundances within cells receiving cutting and/or
-spraying treatments.
+Adjust the abundances within cells receiving cutting and/or spraying
+treatments.
 }
 \keyword{control,}
 \keyword{cutting,}

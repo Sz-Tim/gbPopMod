@@ -13,7 +13,7 @@ logit(x)
 Vector of unconstrained values
 }
 \description{
-This function calculates the logit for the probability vector \code{x},
-returning the corresponding unconstrained value
+Calculate the logit for the probability vector \code{x}, returning the
+corresponding unconstrained value
 }
 \keyword{antilogit}

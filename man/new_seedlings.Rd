@@ -4,7 +4,7 @@
 \alias{new_seedlings}
 \title{Seed germination & establishment}
 \usage{
-new_seedlings(ngrid, N.seed, N.sb, p.est.E, s.sb, dem.st = F, bank = F)
+new_seedlings(ngrid, N.seed, B, p.E, g.D, g.B, s.B, dem.st = F, bank = F)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -12,12 +12,16 @@ new_seedlings(ngrid, N.seed, N.sb, p.est.E, s.sb, dem.st = F, bank = F)
 \item{N.seed}{\code{N.seed} output from \code{\link{ldd_disperse}} or
 \code{\link{sdd_disperse}} with grid id and number of seeds in each cell}
 
-\item{N.sb}{Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)}
+\item{B}{Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)}
 
-\item{p.est.E}{Vector of establishment probabilities from
+\item{p.E}{Vector of establishment probabilities from
 \code{\link{cell_E}}}
 
-\item{s.sb}{Probability of surviving a year in the seed bank}
+\item{g.D}{Probability of germinating in same year as produced}
+
+\item{g.B}{Probability of germinating from seed bank}
+
+\item{s.B}{Probability of surviving a year in the seed bank}
 
 \item{dem.st}{\code{Logical} denoting whether to include demographic
 stochasticity}
@@ -28,7 +32,7 @@ stochasticity}
 Tibble
 }
 \description{
-This function calculates the number of new seedlings in each cell
+Calculate the number of new seedlings in each cell
 }
 \keyword{run,}
 \keyword{simulate}

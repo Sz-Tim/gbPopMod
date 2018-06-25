@@ -3,7 +3,6 @@
 Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
               "fastmatch", "scales", "gganimate", "compiler")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
-enableJIT(3)  # just-in-time compilation for all loops before their first use
 theme_set(theme_bw())
 data(lc.rct)
 
@@ -59,7 +58,7 @@ if(g.p$n.cores > 1) {
   out.ad <- out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
   for(s in 1:n.sim) {
     out <- run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p)
-    out.ad[,,s] <- out$N[,,max(g.p$age.f)]
+    out.ad[,,s] <- out$N[,,max(g.p$m)]
     out.sb[,,s] <- out$B
     rm(out)
     cat("Finished simulation", s, "of", n.sim, "\n")

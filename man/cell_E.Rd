@@ -4,8 +4,8 @@
 \alias{cell_E}
 \title{Aggregate compositional data within each cell}
 \usage{
-cell_E(lc.df, K, s.jv, s.ad, fec, p.f, p.eat, p.est, p.est.trt = NULL,
-  edges = "wall", method = "wt.mn")
+cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt = NULL, edges = "wall",
+  method = "wt.mn")
 }
 \arguments{
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions,
@@ -14,26 +14,26 @@ other covariates, and cell id info}
 \item{K}{Vector \code{length=n.lc} with carrying capacity for each land cover
 type}
 
-\item{s.jv}{Vector \code{length=n.lc} with juvenile survival probability for
+\item{s.M}{Vector \code{length=n.lc} with juvenile survival probability for
 each land cover type}
 
-\item{s.ad}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+\item{s.N}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 adult survival rates}
 
-\item{fec}{Vector \code{length=n.lc} with mean per-individual fruit
-production for each land cover type}
+\item{mu}{Vector \code{length=n.lc} with mean per-individual fruit production
+for each land cover type}
 
 \item{p.f}{Vector \code{length=n.lc} with mean probability of fruiting for
 each land cover type}
 
-\item{p.eat}{Vector \code{length=n.lc} with proportion of fruits eaten by
-birds for each land cover type}
+\item{p.c}{Vector \code{length=n.lc} with proportion of fruits eaten by birds
+for each land cover type}
 
-\item{p.est}{Vector \code{length=n.lc} with seedling establishment
-probability for each land cover type}
+\item{p}{Vector \code{length=n.lc} with seedling establishment probability
+for each land cover type}
 
-\item{p.est.trt}{Tibble with grid id and modified establishment probabilities
-for cells with ground cover treatments; default = NULL}
+\item{p.trt}{Tibble with grid id and modified establishment probabilities for
+cells with ground cover treatments; default = NULL}
 
 \item{edges}{Character taking the value of one of: \code{"wall", "sink",
 "none"} where \code{"wall"} results in a dispersal probability of 0 for all
@@ -48,7 +48,7 @@ proportional to their coverage, with the land cover specific values stored
 in the parameter vectors. If \code{"lm"}, the expectation is calculated in
 a regression with the slopes contained in each parameter vector.
 Individuals cannot be assigned to specific land cover categories with
-\code{"lm"}, so \code{"age.f"} must be scalar.}
+\code{"lm"}, so \code{"m"} must be scalar.}
 }
 \value{
 Named list with values aggregated within cells based on land cover
@@ -56,18 +56,18 @@ Named list with values aggregated within cells based on land cover
   nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
   \code{length=ngrid} with total K} \item{\code{K.lc}}{Matrix
   \code{(ncol=n.lc, nrow=ngrid)} with K per land cover category}
-  \item{\code{s.jv.E}}{Vector \code{length=ngrid} with pr(juvenile surv)}
+  \item{\code{s.M.E}}{Vector \code{length=ngrid} with pr(juvenile surv)}
   \item{\code{rel.dens}}{Matrix \code{(ncol=n.lc, nrow=ngrid)} with relative
-  density among land cover categories} \item{\code{fec.E}}{Vector
+  density among land cover categories} \item{\code{mu.E}}{Vector
   \code{length=ngrid} with mean fruit produced per adult)}
   \item{\code{p.f.E}}{Vector \code{length=ngrid} with fruiting probability}
-  \item{\code{p.eat.E}}{Vector \code{length=ngrid} with proportion eaten by
-  birds} \item{\code{p.est.E}}{Vector \code{length=ngrid} with seedling
+  \item{\code{p.c.E}}{Vector \code{length=ngrid} with proportion eaten by
+  birds} \item{\code{p.E}}{Vector \code{length=ngrid} with seedling
   establishment probabilities} }
 }
 \description{
-This function reformats and calculates expected cell-means based on land
-cover composition for relevant parameters.
+Reformat and calculate expected cell-means based on land cover composition
+for relevant parameters.
 }
 \note{
 If \code{method="lm"}, then each parameter vector will be treated as a
@@ -75,7 +75,7 @@ If \code{method="lm"}, then each parameter vector will be treated as a
   used in each regression is \code{length(param)-1} and the first element of
   \code{param} is the intercept.
 
-If \code{!is.null(p.est.trt)}, then the associated p.est.E values are
+If \code{!is.null(p.trt)}, then the associated p.E values are
   substituted in the cells that received a relevant management treatments.
 }
 \keyword{aggregate,}

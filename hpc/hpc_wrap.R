@@ -8,18 +8,17 @@
 
 # load libraries
 Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
-              "fastmatch", "scales", "gganimate", "compiler")
+              "fastmatch", "scales", "gganimate")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
-enableJIT(3)  # just-in-time compilation for all loops before their first use
 theme_set(theme_bw())
 data(lc.rct)
 
 # set parameters
-n.sim <- 3
-g.p <- set_g_p(tmax=50, lc.r=30, lc.c=30, n.cores=3)
+n.sim <- 6
+g.p <- set_g_p(tmax=30, lc.r=30, lc.c=30, n.cores=3)
 control.p <- set_control_p()
-p <- readRDS("hpc/p.rds")[4]
-p.seq <- readRDS("hpc/p_seq.rds")[4]
+p <- readRDS("hpc/p.rds")[12:13]
+p.seq <- readRDS("hpc/p_seq.rds")[12:13]
 
 # land cover
 lc.df <- lc.rct %>% 
@@ -30,6 +29,7 @@ ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
 # sensitivity loop
+system.time({
 walk2(p, p.seq, 
      ~run_sensitivity(.x, .y, n.sim, ngrid, ncell, g.p, control.p, lc.df))
-
+})

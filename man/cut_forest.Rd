@@ -4,20 +4,20 @@
 \alias{cut_forest}
 \title{Change forested land cover to open invasible}
 \usage{
-cut_forest(id.chg, f.chg, f.c, lc.df)
+cut_forest(id.chg, forest.chg, forest.col, lc.df)
 }
 \arguments{
 \item{id.chg}{Dataframe or tibble with cell grid indexes identifying which
 cells are to change. if not input manually, can be randomly created by
 \code{\link{cut_assign}}}
 
-\item{f.chg}{Matrix with a column for each forest type corresponding with the
-forest columns in \code{lc.df} specifying the amount of each category of
-forest to be converted, and a final column \code{TotChg} with the total
-amount converted to open invasible. If not input manually, can be randomly
-created by \code{\link{cut_assign}}}
+\item{forest.chg}{Matrix with a column for each forest.col type corresponding
+with the forest.col columns in \code{lc.df} specifying the amount of each
+category of forest.col to be converted, and a final column \code{TotChg}
+with the total amount converted to open invasible. If not input manually,
+can be randomly created by \code{\link{cut_assign}}}
 
-\item{f.c}{Vector of forest column indexes within \code{lc.df}}
+\item{forest.col}{Vector of forest.col column indexes within \code{lc.df}}
 
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
@@ -27,17 +27,17 @@ List with \code{lc.df} and \code{sdd.pr} where both are sparse,
   containing only updated values for the cells with altered land cover.
 }
 \description{
-Specified pixels have a specified proportion of specified forest type
-converted to open invasible habitat. This function updates the land cover
-proportions within \code{lc.df}. This is a one way, deterministic change with
-no natural reversion to forest. The affected parameters \emph{must} be
-updated with a call to \code{\link{cell_agg}} and to
-\code{\link{sdd_set_probs}(lc.new=id.chg)}.
+Convert forest to open habitat. The specified pixels have a specified
+proportion of specified forest.col type converted to open invasible habitat.
+This function updates the land cover proportions within \code{lc.df}. This is
+a one way, deterministic change with no natural reversion to forest.col. The
+affected parameters \emph{must} be updated with a call to
+\code{\link{cell_agg}} and to \code{\link{sdd_set_probs}(lc.new=id.chg)}.
 }
 \keyword{change,}
 \keyword{control,}
 \keyword{cover}
 \keyword{cut,}
-\keyword{forest,}
+\keyword{forest.col,}
 \keyword{land}
 \keyword{owners}

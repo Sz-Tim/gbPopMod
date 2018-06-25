@@ -18,8 +18,8 @@ Sparse tibble with grid id, starting population size, change in
   population size, and updated population size accounting for emigrants
 }
 \description{
-This function calculates change in population size in each cell with
-lambda-based proportional growth.
+Calculate change in population size in each cell with lambda-based
+proportional growth.
 }
 \keyword{growth}
 \keyword{lambda,}

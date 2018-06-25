@@ -33,7 +33,7 @@ proportional to their coverage, with the land cover specific values stored
 in the parameter vectors. If \code{"lm"}, the expectation is calculated in
 a regression with the slopes contained in each parameter vector.
 Individuals cannot be assigned to specific land cover categories with
-\code{"lm"}, so \code{"age.f"} must be scalar.}
+\code{"lm"}, so \code{"m"} must be scalar.}
 
 \item{verbose}{\code{TRUE} Give updates for each year & process?}
 
@@ -45,10 +45,9 @@ Matrix N of abundances for each cell and time step and vector
   lambda.E of predicted lambda value for each cell
 }
 \description{
-This function runs the simulation. Currently, it runs all time steps, but for
-the economic model, the structure will need to be slightly adjusted to run a
-single time step. The initialization is separated from this function for that
-reason.
+Run the simulation. Currently, it runs all time steps, but for the economic
+model, the structure will need to be slightly adjusted to run a single time
+step. The initialization is separated from this function for that reason.
 }
 \keyword{lambda}
 \keyword{run,}

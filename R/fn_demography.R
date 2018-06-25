@@ -1,15 +1,15 @@
 #' Local fruit production
 #'
-#' This function calculates the number of fruits produces in ecah grid cell. It
-#' assumes no fruit production before \code{age.f} and that individuals are
-#' distributed among land cover types in densities relative to K.
-#' @param N.t Matrix or array of abundances, with dims=c(ngrid, (lc), y.ad)
+#' Calculate the number of fruits produces in ecah grid cell. It assumes no
+#' fruit production before \code{m} and that individuals are distributed among
+#' land cover types in densities relative to K.
+#' @param N.t Matrix or array of abundances, with dims=c(ngrid, (lc), m.max)
 #' @param lc.mx Matrix of land cover proportions from \code{\link{cell_E}}
-#' @param fec.E Vector of fruit per individual from \code{\link{cell_E}}
+#' @param mu.E Vector of fruit per individual from \code{\link{cell_E}}
 #' @param p.f.E Vector of fruiting probability from \code{\link{cell_E}}
-#' @param y.ad Maximum age at maturity (i.e., \code{max(age.f)})
-#' @param age.f.d \code{Logical} denoting whether \code{age.f} differs among
-#'   land cover types
+#' @param m.max Maximum age at maturity (i.e., \code{max(m)})
+#' @param m.d \code{Logical} denoting whether \code{m} differs among land cover
+#'   types
 #' @param dem.st \code{Logical} denoting whether to include demographic
 #'   stochasticity
 #' @return Tibble with grid id, number of reproducing individuals, and total
@@ -17,27 +17,27 @@
 #' @keywords fruit, reproduction, fecundity
 #' @export
 
-make_fruits <- function(N.t, lc.mx, fec.E, p.f.E, y.ad, age.f.d, dem.st=F) {
+make_fruits <- function(N.t, lc.mx, mu.E, p.f.E, m.max, m.d, dem.st=F) {
   
   library(tidyverse)
   
   # calculate N.mature in each LC in each cell
-  if(age.f.d) {
-    N.mature <- rowSums(N.t[,,y.ad])
+  if(m.d) {
+    N.mature <- rowSums(N.t[,,m.max])
   } else {
-    N.mature <- N.t[,y.ad]
+    N.mature <- N.t[,m.max]
   }
   if(dem.st) {
     N.f <- tibble(id = which(N.mature>0)) %>%
       mutate(N.ad=N.mature[id],
              N.rpr = rbinom(n(), N.mature[id], prob=p.f.E[id]),
-             N.fruit = rpois(n(), lambda=N.rpr*fec.E[id])) %>% 
+             N.fruit = rpois(n(), lambda=N.rpr*mu.E[id])) %>% 
       filter(N.fruit > 0)
   } else {
     N.f <- tibble(id = which(N.mature>0)) %>%
       mutate(N.ad=N.mature[id],
              N.rpr=(N.mature[id] * p.f.E[id,]) %>% round,
-             N.fruit=(N.rpr * fec.E[id,]) %>% round) %>% 
+             N.fruit=(N.rpr * mu.E[id,]) %>% round) %>% 
       filter(N.fruit > 0)
   }
   return(N.f)
@@ -48,14 +48,16 @@ make_fruits <- function(N.t, lc.mx, fec.E, p.f.E, y.ad, age.f.d, dem.st=F) {
 
 #' Seed germination & establishment
 #'
-#' This function calculates the number of new seedlings in each cell
+#' Calculate the number of new seedlings in each cell
 #' @param ngrid Number of grid cells in entire map
 #' @param N.seed \code{N.seed} output from \code{\link{ldd_disperse}} or
 #'   \code{\link{sdd_disperse}} with grid id and number of seeds in each cell
-#' @param N.sb Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)
-#' @param p.est.E Vector of establishment probabilities from
+#' @param B Matrix with number of seeds in seed bank; dim=c(ngrid, tmax+1)
+#' @param p.E Vector of establishment probabilities from
 #'   \code{\link{cell_E}}
-#' @param s.sb Probability of surviving a year in the seed bank
+#' @param g.D Probability of germinating in same year as produced
+#' @param g.B Probability of germinating from seed bank
+#' @param s.B Probability of surviving a year in the seed bank
 #' @param dem.st \code{Logical} denoting whether to include demographic
 #'   stochasticity
 #' @param bank \code{Logical} denoting whether to include a seed bank
@@ -63,7 +65,7 @@ make_fruits <- function(N.t, lc.mx, fec.E, p.f.E, y.ad, age.f.d, dem.st=F) {
 #' @keywords run, simulate
 #' @export
 
-new_seedlings <- function(ngrid, N.seed, N.sb, p.est.E, s.sb, 
+new_seedlings <- function(ngrid, N.seed, B, p.E, g.D, g.B, s.B, 
                           dem.st=F, bank=F) {
   
   library(tidyverse)
@@ -113,8 +115,8 @@ new_seedlings <- function(ngrid, N.seed, N.sb, p.est.E, s.sb,
 
 #' Local population growth: lambda-based (a la Merow 2011)
 #'
-#' This function calculates change in population size in each cell with
-#' lambda-based proportional growth.
+#' Calculate change in population size in each cell with lambda-based
+#' proportional growth.
 #' @param N.t Vector of abundances with \code{length=ngrid}
 #' @param lambda.E Vector with lambda for each cell with \code{length=ngrid}
 #' @param sdd.rate Rate parameter for SDD exponential kernel

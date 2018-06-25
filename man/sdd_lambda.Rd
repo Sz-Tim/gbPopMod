@@ -26,10 +26,10 @@ dispersal stochastically}
 Tibble with grid id and number of individuals limited by K
 }
 \description{
-This function calculates the number of immigrants to each cell, accounting
-for distance from source cell and bird habitat preferences. It uses the
-output from simple lambda-based population growth rather than the demographic
-version. The output values account for carrying capacity.
+Calculate the number of immigrants to each cell, accounting for distance from
+source cell and bird habitat preferences. It uses the output from simple
+lambda-based population growth rather than the demographic version. The
+output values account for carrying capacity.
 }
 \keyword{SDD,}
 \keyword{dispersal,}

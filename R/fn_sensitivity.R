@@ -65,7 +65,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     stopCluster(p.c)
     
     # rearrange output
-    ad.j <- map(out.j, ~.$N[,,max(g.p$age.f)]) %>% 
+    ad.j <- map(out.j, ~.$N[,,max(g.p$m)]) %>% 
       unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
     sb.j <- map(out.j, ~.$B) %>% 
       unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))

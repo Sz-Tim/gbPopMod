@@ -36,9 +36,8 @@ time step.}
 Tibble with grid id and treatment type
 }
 \description{
-This function randomly assigns pixels to the specified buckthorn management
-treatment. Assigned cells either overwrite the cells treated in the previous
-time step or are appended.
+Assign pixels to the specified buckthorn management treatment. Assigned cells
+either overwrite the cells treated in the previous time step or are appended.
 }
 \keyword{control,}
 \keyword{owners}

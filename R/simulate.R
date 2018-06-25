@@ -1,9 +1,8 @@
 #' Run demographic simulation
 #'
-#' This function runs the simulation. Currently, it runs all time steps, but for
-#' the economic model, the structure will need to be slightly adjusted to run a
-#' single time step. The initialization is separated from this function for that
-#' reason.
+#' Run the simulation. Currently, it runs all time steps, but for the economic
+#' model, the structure will need to be slightly adjusted to run a single time
+#' step. The initialization is separated from this function for that reason.
 #' @param ngrid Number of grid cells in entire map
 #' @param ncell Number of inbound grid cells
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
@@ -30,13 +29,13 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   
   # Unpack parameters
   list2env(g.p, environment())
-  y.ad <- max(age.f)
+  m.max <- max(m)
   id.i <- lc.df %>% select(id, id.in)
-  age.f.d <- length(age.f) > 1
-  if(method=="lm" && age.f.d) stop("age.f must be scalar if method==\"lm\"")
+  m.d <- n_distinct(m) > 1  # does m vary across cells?
+  if(method=="lm" && m.d) stop("m must be uniform if method==\"lm\"")
   
   # If buckthorn is being actively managed...
-  p.est.trt <- NULL
+  p.trt <- NULL
   if(!is.null(control.p)) {
     list2env(control.p, environment())
     nTrt.grd <- ceiling(pTrt.grd * ncell)
@@ -48,19 +47,19 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   # 1. Initialize populations
   B <- matrix(0, nrow=ngrid, ncol=tmax+1)
   nFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=tmax)
-  if(age.f.d) {
-    N <- array(0, dim=c(ngrid, tmax+1, n.lc, y.ad))  
+  if(m.d) {
+    N <- array(0, dim=c(ngrid, tmax+1, n.lc, m.max))  
     N[,1,,] <- N.init
     for(l in 1:n.lc) {
-      if(age.f[l] < y.ad) { N[,,l,age.f[l]:(y.ad-1)] <- NA }
+      if(m[l] < m.max) { N[,,l,m[l]:(m.max-1)] <- NA }
     }
   } else {
-    N <- array(0, dim=c(ngrid, tmax+1, y.ad))
+    N <- array(0, dim=c(ngrid, tmax+1, m.max))
     N[,1,] <- N.init
   }
   
   for(t in 1:tmax) {  if(verbose) cat("Year", t, "")
-    if(age.f.d) { N.t <- N[,t,,] 
+    if(m.d) { N.t <- N[,t,,] 
     } else { N.t <- N[,t,] }
     
     # 2. Implement management
@@ -68,10 +67,10 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       # 2A. Adjust LC %
       if(lc.chg && nChg >= 1) {  if(verbose) cat("Change LC...")
         # i. decide which cells change and how much of each kind of forest
-        chg.asn <- cut_assign(nChg, ncell, chg.i, lc.df, f.c=6:9)
+        chg.asn <- cut_assign(nChg, ncell, chg.i, lc.df, forest.col=6:9)
         # ii. cut forest & update SDD neighborhoods
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
-                                                f.c=6:9, lc.df)
+                                                forest.col=6:9, lc.df)
         sdd.i <- tibble(id.in=unique(
           arrayInd(which(sdd$i %in% chg.asn$id.chg$id.in), dim(sdd$i))[,4]), 
           id=id.i$id[match(id.in, id.i$id.in)])
@@ -80,12 +79,12 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
         sdd$sp[sdd.i$id.in] <- sdd_new$sp
       }
       
-      # 2B. Adjust p.est
+      # 2B. Adjust p
       if(nTrt.grd > 0 || !is.null(grd.i)) {  if(verbose) cat("Cover...")
         est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
                               nTrt=nTrt.grd, trt.eff=grd.trt, 
                               addOwners=add.owners, trt.m1=est.trt)
-        p.est.trt <- trt_ground(est.trt, grd.trt)
+        p.trt <- trt_ground(est.trt, grd.trt)
       }
       
       # 2C. Adjust N
@@ -93,25 +92,24 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
         N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
                             nTrt=nTrt.man, trt.eff=man.trt, 
                             addOwners=add.owners, trt.m1=N.trt)
-        if(age.f.d) { N[,t,,] <- trt_manual(N.t, y.ad, N.trt, man.trt)
-        } else { N[,t,] <- trt_manual(N.t, y.ad, N.trt, man.trt) }
+        if(m.d) { N[,t,,] <- trt_manual(N.t, m.max, N.trt, man.trt)
+        } else { N[,t,] <- trt_manual(N.t, m.max, N.trt, man.trt) }
       }
     }
     
     # 3. Pre-multiply compositional parameters for cell expectations
-    pm <- cell_E(lc.df, K, s.jv, s.ad, fec, p.f, p.eat, p.est, p.est.trt, 
-                 edges, method)
+    pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
     
     # 4. Local fruit production
     if(verbose) cat("Fruits...")
-    N.f <- make_fruits(N.t, pm$lc.mx, pm$fec.E, pm$p.f.E,
-                                  y.ad, age.f.d, dem.st)
+    N.f <- make_fruits(N.t, pm$lc.mx, pm$mu.E, pm$p.f.E,
+                                  m.max, m.d, dem.st)
     nFl[N.f$id,t] <- N.f$N.rpr
     
     # 5. Short distance dispersal
     if(verbose) cat("SDD...")
-    N.Sd <- sdd_disperse(id.i, N.f, nSdFrt, pm$p.eat.E, s.bird, 
-                                sdd$sp, sdd.rate, sdd.st, edges)
+    N.Sd <- sdd_disperse(id.i, N.f, gamma, pm$p.c.E, s.c, 
+                         sdd$sp, sdd.rate, sdd.st, edges)
     nSd[N.Sd$N.source$id,t] <- N.Sd$N.source$N.produced
     nSdStay[N.Sd$N.source$id,t] <- N.Sd$N.source$N.dep
     D[N.Sd$N.seed$id,t] <- N.Sd$N.seed$N
@@ -119,39 +117,39 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     
     # 6. Seedling establishment
     if(verbose) cat("Establishment...")
-    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B[,t], pm$p.est.E, 
-                               s.sb, dem.st, bank)
-    B[,t+1] <- estab.out$N.sb
+    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B[,t], pm$p.E, g.D, g.B,
+                               s.B, dem.st, bank)
+    B[,t+1] <- estab.out$B
     
     # 7. Long distance dispersal
     if(verbose) cat("LDD...")
-    estab.out$N.rcrt <- ldd_disperse(ncell, id.i, estab.out$N.rcrt, n.ldd)
+    estab.out$M.0 <- ldd_disperse(ncell, id.i, estab.out$M.0, n.ldd)
     
     # 8. Update abundances
     if(verbose) cat("Update N...\n")
-    if(age.f.d) {
+    if(m.d) {
         for(l in 1:n.lc) {
-          N[,t+1,l,1] <- round(estab.out$N.rcrt * pm$rel.dens[,l])
-          N[,t+1,l,2:(age.f[l]-1)] <- round(N[,t,l,1:(age.f[l]-2)]*s.jv[l])
-          N[,t+1,l,y.ad] <- pmin(round(N[,t,l,y.ad]*s.ad[l] + 
-                                         N[,t,l,age.f[l]-1]*s.jv[l]),
+          N[,t+1,l,1] <- round(estab.out$M.0 * pm$s.M.E)
+          N[,t+1,l,2:(m[l]-1)] <- round(N[,t,l,1:(m[l]-2)]*s.M[l])
+          N[,t+1,l,m.max] <- pmin(round(N[,t,l,m.max]*s.N[l] + 
+                                         N[,t,l,m[l]-1]*s.M[l]),
                                  pm$K.lc[,l])
         }
-    } else if(y.ad > 2) {
-      N[,t+1,1] <- estab.out$N.rcrt
-      N[,t+1,2:(y.ad-1)] <- round(N[,t,1:(y.ad-2)] * pm$s.jv.E)
-      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad]*pm$s.ad.E + N[,t,y.ad-1]*pm$s.jv.E), 
+    } else if(m.max > 2) {
+      N[,t+1,1] <- round(estab.out$M.0 * pm$s.M.E)
+      N[,t+1,2:(m.max-1)] <- round(N[,t,1:(m.max-2)] * pm$s.M.E)
+      N[,t+1,m.max] <- pmin(round(N[,t,m.max]*pm$s.N.E + N[,t,m.max-1]*pm$s.M.E), 
                            pm$K.E)
-    } else if(y.ad == 2 ) {
-      N[,t+1,1] <- estab.out$N.rcrt
-      N[,t+1,y.ad] <- pmin(round(N[,t,y.ad]*pm$s.ad.E + N[,t,1]*pm$s.jv.E), 
+    } else if(m.max == 2 ) {
+      N[,t+1,1] <- round(estab.out$M.0 * pm$s.M.E)
+      N[,t+1,m.max] <- pmin(round(N[,t,m.max]*pm$s.N.E + N[,t,1]*pm$s.M.E), 
                            pm$K.E)
     } else {
-      N[,t+1,1] <- pmin(round(N[,t,1]*pm$s.ad.E + estab.out$N.rcrt*pm$s.jv.E), 
+      N[,t+1,1] <- pmin(round(N[,t,1]*pm$s.N.E + estab.out$N.rcrt*pm$s.M.E), 
                         pm$K.E)
     }
   }
-  if(age.f.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
+  if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
   return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
 
@@ -162,10 +160,9 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
 
 #' Run lambda simulation
 #'
-#' This function runs the simulation. Currently, it runs all time steps, but for
-#' the economic model, the structure will need to be slightly adjusted to run a
-#' single time step. The initialization is separated from this function for that
-#' reason.
+#' Run the simulation. Currently, it runs all time steps, but for the economic
+#' model, the structure will need to be slightly adjusted to run a single time
+#' step. The initialization is separated from this function for that reason.
 #' @param ngrid Number of grid cells in entire map
 #' @param ncell Number of inbound grid cells
 #' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
@@ -186,7 +183,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
 #'   in the parameter vectors. If \code{"lm"}, the expectation is calculated in
 #'   a regression with the slopes contained in each parameter vector.
 #'   Individuals cannot be assigned to specific land cover categories with
-#'   \code{"lm"}, so \code{"age.f"} must be scalar.
+#'   \code{"lm"}, so \code{"m"} must be scalar.
 #' @param verbose \code{TRUE} Give updates for each year & process?
 #' @return Matrix N of abundances for each cell and time step and vector
 #'   lambda.E of predicted lambda value for each cell

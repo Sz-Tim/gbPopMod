@@ -4,22 +4,22 @@
 \alias{sdd_disperse}
 \title{Short distance dispersal}
 \usage{
-sdd_disperse(id.i, N.f, nSdFrt, p.eat.E, s.bird, sdd.sp, sdd.rate, sdd.st = F,
+sdd_disperse(id.i, Fr, gamma, p.c.E, s.c, sdd.sp, sdd.rate, sdd.st = F,
   edges = "wall")
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
 while \code{id.in} indexes only inbound cells}
 
-\item{N.f}{Tibble of fruits produced in each cell output from
+\item{Fr}{Tibble of fruits produced in each cell output from
 \code{\link{make_fruits}}}
 
-\item{nSdFrt}{Scalar: mean number of seeds per fruit}
+\item{gamma}{Scalar: mean number of seeds per fruit}
 
-\item{p.eat.E}{Vector of proportion of fruits eaten by birds from
+\item{p.c.E}{Vector of proportion of fruits eaten by birds from
 \code{\link{cell_E}}}
 
-\item{s.bird}{Proportion of viable seeds post-digestion}
+\item{s.c}{Proportion of viable seeds post-digestion}
 
 \item{sdd.sp}{List of named vectors with SDD probabilities for each cell
 output from \code{\link{sdd_set_probs}}}
@@ -39,10 +39,10 @@ dispersal of seeds to out-of-bound cells but no populations modeled, and
 Tibble with grid id and number of seeds in each cell
 }
 \description{
-This function calculates the number of viable seeds deposited within the short
-distance dispersal neighborhood of each cell, accounting for the distance from
-the source cell, bird habitat preference, the proportion of fruits eaten by
-birds, and seed viability post-digestion.
+Calculate the number of viable seeds deposited within the short distance
+dispersal neighborhood of each cell, accounting for the distance from the
+source cell, bird habitat preference, the proportion of fruits eaten by birds,
+and seed viability post-digestion.
 }
 \keyword{SDD}
 \keyword{dispersal,}

@@ -115,18 +115,18 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 
 #'Short distance dispersal
 #'
-#'This function calculates the number of viable seeds deposited within the short
-#'distance dispersal neighborhood of each cell, accounting for the distance from
-#'the source cell, bird habitat preference, the proportion of fruits eaten by
-#'birds, and seed viability post-digestion.
+#'Calculate the number of viable seeds deposited within the short distance
+#'dispersal neighborhood of each cell, accounting for the distance from the
+#'source cell, bird habitat preference, the proportion of fruits eaten by birds,
+#'and seed viability post-digestion.
 #'@param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
 #'  while \code{id.in} indexes only inbound cells
-#'@param N.f Tibble of fruits produced in each cell output from
+#'@param Fr Tibble of fruits produced in each cell output from
 #'  \code{\link{make_fruits}}
-#'@param nSdFrt Scalar: mean number of seeds per fruit
-#'@param p.eat.E Vector of proportion of fruits eaten by birds from
+#'@param gamma Scalar: mean number of seeds per fruit
+#'@param p.c.E Vector of proportion of fruits eaten by birds from
 #'  \code{\link{cell_E}}
-#'@param s.bird Proportion of viable seeds post-digestion
+#'@param s.c Proportion of viable seeds post-digestion
 #'@param sdd.sp List of named vectors with SDD probabilities for each cell
 #'  output from \code{\link{sdd_set_probs}}
 #'@param sdd.rate Rate parameter for SDD exponential kernel
@@ -215,26 +215,26 @@ sdd_disperse <- function(id.i, Fr, gamma, p.c.E, s.c,
 
 #' Long distance dispersal
 #'
-#' This function assigns n.ldd random long distance dispersal events across the
-#' landcape. A single established seed is added to each target cell
+#' Assign n.ldd random long distance dispersal events across the landcape. A
+#' single established seed is added to each target cell
 #' @param ncell Number of inbound grid cells
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
 #'   while \code{id.in} indexes only inbound cells
-#' @param N.rcrt \code{N.rcrt} output from \code{\link{new_seedlings}} with grid
-#'   id and number of new recruits in each cell
+#' @param M.0 \code{M.0} output from \code{\link{new_seedlings}} with grid id
+#'   and number of new recruits in each cell
 #' @param n.ldd Number of long distance dispersal events per time step
 #' @return Tibble with grid id and number of seeds
 #' @keywords LDD, dispersal
 #' @export
 
-ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
+ldd_disperse <- function(ncell, id.i, M.0, n.ldd) {
   
   if(n.ldd > 0) {
     ldd.id <- id.i$id[which(id.i$id.in %in% sample(1:ncell, n.ldd, replace=T))]
-    N.rcrt[ldd.id] <- N.rcrt[ldd.id] + 1
+    M.0[ldd.id] <- M.0[ldd.id] + 1
   }
 
-  return(N.rcrt)
+  return(M.0)
 }
 
 
@@ -245,10 +245,10 @@ ldd_disperse <- function(ncell, id.i, N.rcrt, n.ldd) {
 
 #' Short distance dispersal: lambda-based
 #'
-#' This function calculates the number of immigrants to each cell, accounting
-#' for distance from source cell and bird habitat preferences. It uses the
-#' output from simple lambda-based population growth rather than the demographic
-#' version. The output values account for carrying capacity.
+#' Calculate the number of immigrants to each cell, accounting for distance from
+#' source cell and bird habitat preferences. It uses the output from simple
+#' lambda-based population growth rather than the demographic version. The
+#' output values account for carrying capacity.
 #' @param ncell Number of inbound grid cells
 #' @param id.i Tibble matching cell IDs. \code{id} indexes on the entire grid
 #'   while \code{id.in} indexes only inbound cells

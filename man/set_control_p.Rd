@@ -26,8 +26,8 @@ the \link{trt_assign} function}
 the \link{trt_assign} function}
 
 \item{chg.i}{\code{NULL} Vector of cell IDs to receive land cover changes. If
-\code{NULL}, then \code{pChg * ncell} cells are assigned randomly with
-the \link{trt_assign} function}
+\code{NULL}, then \code{pChg * ncell} cells are assigned randomly with the
+\link{trt_assign} function}
 
 \item{pTrt.grd}{\code{0.05} Proportion of cells with ground treatments in
 each time step}
@@ -52,8 +52,8 @@ Named list of control parameters including all arguments as elements
   \code{NULL}
 }
 \description{
-This function sets the buckthorn control treatment parameters for the
-simulation, allowing for individual elements to be reassigned.
+Set the buckthorn control treatment parameters for the simulation, allowing
+for individual elements to be reassigned.
 }
 \keyword{control,}
 \keyword{initialize,}
