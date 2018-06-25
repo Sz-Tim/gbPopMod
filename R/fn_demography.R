@@ -68,46 +68,43 @@ new_seedlings <- function(ngrid, N.seed, N.sb, p.est.E, s.sb,
   
   library(tidyverse)
   
-  N.rcrt <- rep(0, ngrid)
+  M.D <- germ.D <- rep(0, ngrid)
   if(dem.st) {
-    
-    N.rcrt[N.seed$id] <- rbinom(nrow(N.seed), N.seed$N, p.est.E[N.seed$id])
-    
+    M.0[N.seed$id] <- rbinom(nrow(N.seed), N.seed$N, p.E[N.seed$id])
     if(bank) {
       N.sbEst <- rep(0, ngrid)
-      
       # N_est_sb
-      N.sbEst[N.seed$id] <- rbinom(nrow(N.seed), N.sb[N.seed$id], 
-                                   p.est.E[N.seed$id])
+      N.sbEst[N.seed$id] <- rbinom(nrow(N.seed), B[N.seed$id], 
+                                   p.E[N.seed$id])
       # N_est_tot = N_est + N_est_sb
-      N.rcrt[N.seed$id] <- N.rcrt[N.seed$id] + N.sbEst[N.seed$id]
+      M.0[N.seed$id] <- M.0[N.seed$id] + N.sbEst[N.seed$id]
       # N_to_sb = (N_sb_notEst + N_addedToSB) * p(SB)
-      N.sb[N.seed$id] <- rbinom(nrow(N.seed),
-                                N.sb[N.seed$id] + N.seed$N - N.rcrt[N.seed$id],
-                                s.sb)
+      B[N.seed$id] <- rbinom(nrow(N.seed),
+                                B[N.seed$id] + N.seed$N - M.0[N.seed$id],
+                                s.B)
     } else {
-      N.sb <- rep(0, ngrid)
+      B <- rep(0, ngrid)
     }
     
   } else {
-    
-    # N_est = N_seed * p(est)
-    N.rcrt[N.seed$id] <- N.seed$N * p.est.E[N.seed$id,]
-    
+    # N_est = N_seed * g.D * p(est)
+    germ.D[N.seed$id] <- round(N.seed$N * g.D)
+    M.D <- round(germ.D * p.E)
     if(bank) {
-      
+      # N_est_sb = B * g.B * p(est)
+      germ.B <- round(B * g.B)
+      M.B <- round(germ.B * p.E)
       # N_est_tot = N_est + N_est_sb
-      N.rcrt[N.seed$id] <- (N.rcrt[N.seed$id] + 
-                              N.sb[N.seed$id] * p.est.E[N.seed$id,]) %>% round
+      M.0 <- M.D + M.B
       # N_to_sb = (N_sb_notEst + N_addedToSB) * p(SB)
-      N.sb[N.seed$id] <- ((N.sb[N.seed$id]*(1-p.est.E[N.seed$id,]) + 
-                             N.seed$N - N.rcrt[N.seed$id]) * s.sb) %>% round
+      B <- B - germ.B
+      B[N.seed$id] <- B[N.seed$id] + N.seed$N - germ.D[N.seed$id]
+      B <- round(B * s.B)
     } else {
-      N.sb <- rep(0, ngrid)
+      B <- rep(0, ngrid)
     }
-    
   }
-  return(list(N.rcrt=N.rcrt, N.sb=N.sb))
+  return(list(M.0=M.0, B=B))
 }
 
 
