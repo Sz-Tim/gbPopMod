@@ -28,7 +28,7 @@
 
 global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p, 
                                lc.df, sdd, N.init, control.p=NULL, verbose=F) {
-  library(purrr); library(tidyverse)
+  library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
@@ -47,13 +47,9 @@ global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p,
     }
   } 
   if(verbose) cat("Running simulations...\n")
-  results <- as.data.frame(do.call("cbind", samples))
-  par.len <- map_int(samples, ncol)
-  par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
-  names(results) <- paste0(rep(names(samples), times=par.len), par.num)
-  results$pOcc <- NA
-  out <- vector("list", nSamp)
-  for(i in 1:nSamp) {
+  p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
+  out <- foreach(i=1:nSamp, 
+                 .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
     g.p[pars] <- map(samples, ~.[i,])
     if(any(pars %in% c("sdd.max", "sdd.rate"))) {
       sdd <- sdd_set_probs(ncell, lc.df, g.p)
@@ -61,10 +57,17 @@ global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p,
     if(any(pars=="m")) {
       N.init <- pop_init(ngrid, g.p, lc.df)
     }
-    out[[i]] <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
-    results$pOcc[i] <- sum(out[[i]]$N[,g.p$tmax+1, max(g.p$m)]>0)/ncell
-    if(verbose) cat("--Finished parameter set", i, "\n")
+    run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
   }
+  stopCluster(p.c)
+  if(verbose) cat("Calculating summaries...\n")
+  results <- as.data.frame(do.call("cbind", samples))
+  par.len <- map_int(samples, ncol)
+  par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
+  names(results) <- paste0(rep(names(samples), times=par.len), par.num)
+  results$pOcc <- NA
+  results$pOcc <- map2_dbl(.x=out, .y=samples$m, 
+                           ~sum(.x$N[,g.p$tmax+1, max(.y)]>0)/ncell)
   return(list(out=out, results=results))
 }
 
