@@ -5,7 +5,7 @@
 \title{Set short distance dispersal probabilities}
 \usage{
 sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL, edges = "wall",
-  lc.col = 4:9)
+  lc.col = 4:9, verbose = F)
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
@@ -22,6 +22,8 @@ neighborhoods for all cells}
 \item{edges}{\code{"wall"} Boundary behavior}
 
 \item{lc.col}{\code{4:9} Column indexes for land cover proportions}
+
+\item{verbose}{\code{FALSE} Give updates for number of cells completed?}
 }
 \value{
 List with full neighborhoods,i, and sparse representation, sp. The
