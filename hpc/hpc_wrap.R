@@ -11,16 +11,19 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
               "fastmatch", "scales", "gganimate")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 theme_set(theme_bw())
+
+# load files
+par_i <- read.csv("data/param_ranges.csv", stringsAsFactors=F)
 data(lc.rct)
 
 # set parameters
-n.sim <- 6
-g.p <- set_g_p(tmax=30, lc.r=30, lc.c=30, n.cores=3)
-control.p <- set_control_p()
-p <- readRDS("hpc/p.rds")[12:13]
-p.seq <- readRDS("hpc/p_seq.rds")[12:13]
+g.p <- set_g_p(tmax=30, lc.r=200, lc.c=200, n.cores=3, sdd.max=10, N.p.t0=200)
+pars <- par_i$p[c(7,11,12,16:18)]
+nSamp <- 12
 
-# land cover
+# munge
+pars.rng <- filter(par_i, p %in% pars)
+pars.rng <- pars.rng[match(pars, pars.rng$p), ]
 lc.df <- lc.rct %>% 
   filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
   mutate(id=row_number(), 
@@ -28,8 +31,13 @@ lc.df <- lc.rct %>%
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
-# sensitivity loop
-system.time({
-walk2(p, p.seq, 
-     ~run_sensitivity(.x, .y, n.sim, ngrid, ncell, g.p, control.p, lc.df))
-})
+# initialize
+sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
+N.init <- pop_init(ngrid, g.p, lc.df)
+
+# run sensitivity analysis
+out <- global_sensitivity(pars, pars.rng, nSamp, ngrid, ncell, g.p, lc.df, 
+                          sdd.pr, N.init, control.p=NULL, verbose=T)
+
+# store output
+saveRDS(out, "out/sensitivity_out.rds")
