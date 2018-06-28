@@ -19,11 +19,12 @@
 #'   target cell. The sparse representation is a list with an element for each
 #'   cell, where each element is a vector of non-zero probabilities named with
 #'   the target cells.
+#' @param verbose \code{FALSE} Give updates for number of cells completed?
 #' @keywords sdd, dispersal, probability, probabilities
 #' @export
 
 sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, 
-                          edges="wall", lc.col=4:9) {
+                          edges="wall", lc.col=4:9, verbose=F) {
   
   library(purrr); library(tidyverse); library(fastmatch)
   
@@ -73,16 +74,16 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
   n.iy <- map(yy, ~.[.>=n.y[1] & .<=n.y[2]])
   
   # generate all xy combinations & neighborhood matrix indices
-  if(is.null(lc.new)) cat("  generating neighborhoods...\n")
+  if(is.null(lc.new) && verbose) cat("  generating neighborhoods...\n")
   n.i <- map2(n.ix, n.iy, expand_v) 
   n.x <- map2(xx, n.ix, `%fin%`) %>% map(which) %>% map(range)
   n.y <- map2(yy, n.iy, `%fin%`) %>% map(which) %>% map(range)
   
   # match xy combinations with cell IDs
-  if(is.null(lc.new)) cat("  determining neighborhood cell IDs...\n")
+  if(is.null(lc.new) && verbose) cat("  determining neighborhood cell IDs...\n")
   c.i <- map(n.i, ~fmatch(., lc.df$x_y))
 
-  if(is.null(lc.new)) cat("  calculating probabilities...\n")
+  if(is.null(lc.new) && verbose) cat("  calculating probabilities...\n")
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
     sdd.i[n.y[[n]][1]:n.y[[n]][2],
@@ -96,10 +97,10 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
     
     # progress update
     if(n %% 5000 == 0) {
-      if(is.null(lc.new)) cat("  finished cell", n, "\n")
+      if(is.null(lc.new) && verbose) cat("  finished cell", n, "\n")
     }
   }
-  if(is.null(lc.new)) cat("  finished:", n, "cells\n")
+  if(is.null(lc.new) && verbose) cat("  finished:", n, "cells\n")
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
   sdd.sparse <- vector("list", ncell)
   for(n in 1:ncell) {
