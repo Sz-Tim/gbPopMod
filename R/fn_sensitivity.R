@@ -65,9 +65,7 @@ global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p,
   par.len <- map_int(samples, ncol)
   par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
   names(results) <- paste0(rep(names(samples), times=par.len), par.num)
-  results$pOcc <- NA
-  results$pOcc <- map2_dbl(.x=out, .y=samples$m, 
-                           ~sum(.x$N[,g.p$tmax+1, max(.y)]>0)/ncell)
+  results$pOcc <- map_dbl(out, ~sum(.$N[,g.p$tmax+1, dim(.$N)[3]]>0)/ncell)
   return(list(out=out, results=results))
 }
 
