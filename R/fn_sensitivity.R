@@ -1,3 +1,83 @@
+#' Run global sensitivity analysis
+#'
+#' Generate and run simulations over a set of varying parameters. It runs in
+#' parallel using the \code{snow} and \code{foreach} packages.
+#' @param pars Parameter to perform the sensitivity analysis on
+#' @param par.ranges Dataframe with col(p=parameters, min=minimum, max=maximum)
+#'   listing the ranges for each parameter
+#' @param nSamp \code{10} Number of randomly generated parameter sets
+#' @param ngrid Number of grid cells in entire map
+#' @param ncell Number of inbound grid cells
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}.
+#'   The value of parameter \code{p} will be updated within the loop for each
+#'   value in \code{p.seq}.
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
+#' @param sdd Output with short distance dispersal neighborhoods created by
+#'   \code{\link{sdd_set_probs}}
+#' @param N.init Matrix or array with initial population sizes created by
+#'   \code{\link{pop_init}}
+#' @param control.p NULL or named list of buckthorn control treatment parameters
+#'   set with \code{\link{set_control_p}}
+#' @param verbose \code{FALSE} Give updates for each year & process?
+#' @return list with elements \code{out} containing the full output from
+#'   \link{run_sim}, and \code{results} containing the parameter sets and
+#'   simulation summaries
+#' @keywords parameters, sensitivity, save, output
+#' @export
+
+global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p, 
+                               lc.df, sdd, N.init, control.p=NULL, verbose=F) {
+  # modified from Prowse et al 2016
+  if(verbose) cat("Drawing parameters...\n")
+  nPar <- length(pars)
+  samples <- map(g.p[pars], ~matrix(., nrow=nSamp, ncol=length(.), byrow=T))
+  raw.samples <- samples
+  # samples <- expand.grid(g.p[pars])
+  # samples <- samples[rep(seq_len(nrow(samples)), each=nSamp),]
+  # raw.samples <- matrix(NA, nrow=nSamp, ncol=nPar)
+  for(i in 1:nPar) {
+    # draw samples from uniform distribution
+    raw.samples[[i]][,] <- runif(prod(dim(raw.samples[[i]])), 0, 1)
+    # raw.samples[,i] <- runif(nSamp, 0, 1) 
+    # transform to parameter ranges
+    samples[[i]][,] <- qunif(raw.samples[[i]], 
+                             min=par.ranges$min[par.ranges$p==pars[i]],
+                             max=par.ranges$max[par.ranges$p==pars[i]])
+    # samples[,pars[i]] <- qunif(raw.samples[,i], 
+    #                            min=par.ranges$min[par.ranges$p==pars[i]],
+    #                            max=par.ranges$max[par.ranges$p==pars[i]])
+    if(par.ranges$integer[i]) {
+      samples[[i]][,] <- round(samples[[i]])
+      # samples[,pars[i]] <- round(samples[,pars[i]])
+    }
+  } 
+  if(verbose) cat("Running simulations...\n")
+  results <- as.data.frame(do.call("cbind", samples))
+  par.len <- map_int(samples, ncol)
+  par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
+  names(results) <- paste0(rep(names(samples), times=par.len), par.num)
+  results$pOcc <- NA
+  out <- vector("list", nSamp)
+  for(i in 1:nSamp) {
+    g.p[pars] <- map(samples, ~.[i,])
+    if(any(pars %in% c("sdd.max", "sdd.rate"))) {
+      sdd <- sdd_set_probs(ncell, lc.df, g.p)
+    }
+    if(any(pars=="m")) {
+      N.init <- pop_init(ngrid, g.p, lc.df)
+    }
+    out[[i]] <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
+    results$pOcc[i] <- sum(out[[i]]$N[,g.p$tmax+1, max(g.p$m)]>0)/ncell
+    if(verbose) cat("--Finished parameter set", i, "\n")
+  }
+  return(list(out=out, results=results))
+}
+
+
+
+
+
 #' Run sensitivity analysis
 #'
 #' This is a wrapper for running simulations over a set of varying parameters.
