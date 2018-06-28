@@ -104,6 +104,7 @@ new_seedlings <- function(ngrid, N.seed, B, p.E, g.D, g.B, s.B,
       B <- round(B * s.B)
     } else {
       B <- rep(0, ngrid)
+      M.0 <- M.D
     }
   }
   return(list(M.0=M.0, B=B))
