@@ -133,19 +133,25 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions,
 #'   other covariates, and cell id info
 #' @param K Vector \code{length=n.lc} with carrying capacity for each land cover
-#'   type
+#'   type or vector of slopes corresponding with columns in lc.df
 #' @param s.M Vector \code{length=n.lc} with juvenile survival probability for
-#'   each land cover type
+#'   each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param s.N \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
-#'   adult survival rates
+#'   adult survival rates or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param mu Vector \code{length=n.lc} with mean per-individual fruit production
-#'   for each land cover type
+#'   for each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param p.f Vector \code{length=n.lc} with mean probability of fruiting for
-#'   each land cover type
+#'   each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param p.c Vector \code{length=n.lc} with proportion of fruits eaten by birds
-#'   for each land cover type
+#'   for each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param p Vector \code{length=n.lc} with seedling establishment probability
-#'   for each land cover type
+#'   for each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param p.trt Tibble with grid id and modified establishment probabilities for
 #'   cells with ground cover treatments; default = NULL
 #' @param edges Character taking the value of one of: \code{"wall", "sink",
@@ -187,6 +193,15 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
                    p.trt=NULL, edges="wall", method="wt.mn") {
   
   if(method=="wt.mn") {
+    # scalar = same value for all LC categories
+    if(length(K)==1) K <- rep(K, 6)
+    if(length(s.N)==1) s.N <- rep(s.N, 6)
+    if(length(s.M)==1) s.M <- rep(s.M, 6)
+    if(length(mu)==1) mu <- rep(mu, 6)
+    if(length(p.f)==1) p.f <- rep(p.f, 6)
+    if(length(p.c)==1) p.c <- rep(p.c, 6)
+    if(length(p)==1) p <- rep(p, 6)
+    # take weighted mean
     lc.mx <- as.matrix(lc.df[,4:9])
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))

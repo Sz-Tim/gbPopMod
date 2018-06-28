@@ -12,25 +12,31 @@ cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt = NULL, edges = "wall",
 other covariates, and cell id info}
 
 \item{K}{Vector \code{length=n.lc} with carrying capacity for each land cover
-type}
+type or vector of slopes corresponding with columns in lc.df}
 
 \item{s.M}{Vector \code{length=n.lc} with juvenile survival probability for
-each land cover type}
+each land cover type or vector of slopes corresponding with columns in
+lc.df}
 
 \item{s.N}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
-adult survival rates}
+adult survival rates or vector of slopes corresponding with columns in
+lc.df}
 
 \item{mu}{Vector \code{length=n.lc} with mean per-individual fruit production
-for each land cover type}
+for each land cover type or vector of slopes corresponding with columns in
+lc.df}
 
 \item{p.f}{Vector \code{length=n.lc} with mean probability of fruiting for
-each land cover type}
+each land cover type or vector of slopes corresponding with columns in
+lc.df}
 
 \item{p.c}{Vector \code{length=n.lc} with proportion of fruits eaten by birds
-for each land cover type}
+for each land cover type or vector of slopes corresponding with columns in
+lc.df}
 
 \item{p}{Vector \code{length=n.lc} with seedling establishment probability
-for each land cover type}
+for each land cover type or vector of slopes corresponding with columns in
+lc.df}
 
 \item{p.trt}{Tibble with grid id and modified establishment probabilities for
 cells with ground cover treatments; default = NULL}
