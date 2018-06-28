@@ -28,28 +28,22 @@
 
 global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p, 
                                lc.df, sdd, N.init, control.p=NULL, verbose=F) {
+  library(purrr); library(tidyverse)
+  
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
   nPar <- length(pars)
   samples <- map(g.p[pars], ~matrix(., nrow=nSamp, ncol=length(.), byrow=T))
   raw.samples <- samples
-  # samples <- expand.grid(g.p[pars])
-  # samples <- samples[rep(seq_len(nrow(samples)), each=nSamp),]
-  # raw.samples <- matrix(NA, nrow=nSamp, ncol=nPar)
   for(i in 1:nPar) {
     # draw samples from uniform distribution
     raw.samples[[i]][,] <- runif(prod(dim(raw.samples[[i]])), 0, 1)
-    # raw.samples[,i] <- runif(nSamp, 0, 1) 
     # transform to parameter ranges
     samples[[i]][,] <- qunif(raw.samples[[i]], 
                              min=par.ranges$min[par.ranges$p==pars[i]],
                              max=par.ranges$max[par.ranges$p==pars[i]])
-    # samples[,pars[i]] <- qunif(raw.samples[,i], 
-    #                            min=par.ranges$min[par.ranges$p==pars[i]],
-    #                            max=par.ranges$max[par.ranges$p==pars[i]])
     if(par.ranges$integer[i]) {
       samples[[i]][,] <- round(samples[[i]])
-      # samples[,pars[i]] <- round(samples[,pars[i]])
     }
   } 
   if(verbose) cat("Running simulations...\n")
