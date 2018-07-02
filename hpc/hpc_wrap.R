@@ -13,19 +13,19 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 theme_set(theme_bw())
 
 # load files
+lc_f <- "data/9km_car.csv"
 par_i <- read.csv("data/param_ranges.csv", stringsAsFactors=F)
-data(lc.rct)
 
 # set parameters
-g.p <- set_g_p(tmax=30, lc.r=200, lc.c=200, n.cores=3, sdd.max=10, N.p.t0=200)
-pars <- par_i$p[c(7,11,12,16:18)]
-nSamp <- 12
+g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=3, sdd.max=2, sdd.rate=8, N.p.t0=30)
+pars <- par_i$p[c(11,12,16:18)]
+nSamp <- 900
 
 # munge
 pars.rng <- filter(par_i, p %in% pars)
 pars.rng <- pars.rng[match(pars, pars.rng$p), ]
-lc.df <- lc.rct %>% 
-  filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
+lc.df <- make_grid(lc_f, x.="lon", y.="lat", 4:9) %>% 
+  filter(y >= (max(.$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
   mutate(id=row_number(), 
          id.in=min_rank(na_if(inbd*id, 0)))
 ngrid <- nrow(lc.df)
@@ -40,4 +40,5 @@ out <- global_sensitivity(pars, pars.rng, nSamp, ngrid, ncell, g.p, lc.df,
                           sdd.pr, N.init, control.p=NULL, verbose=T)
 
 # store output
+write_csv(out$results, "out/sensitivity_results.csv")
 saveRDS(out, "out/sensitivity_out.rds")

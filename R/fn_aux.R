@@ -126,6 +126,44 @@ expand_cnpy <- function(Op=c(3, 7), Cl=c(3, 7), length_out=2) {
 
 
 
+#' Generate landscape grid
+#'
+#' Create rectangular landscape grid with x and y coordinates, inbound
+#' indicator, and land cover composition
+#' @param in.file File (.csv) containing land cover composition and coordinates
+#' @param lon \code{"lon"} Column name containing x (longitude) coordinates
+#' @param lat \code{"lat"} Column name containing x (latitude) coordinates
+#' @param col.inc Indexes of land cover (or other covariate) columns
+#' @param out.file \code{NULL} File to store gridded output
+#' @return Dataframe with length(x)*length(y) rows and columns \code{x, y, x_y,
+#'   inbd} and land cover or covariates
+#' @keywords landscape, grid, initialize
+#' @export
+
+make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
+  library(tidyverse)
+  raw.df <- read_csv(in.file) %>%
+    mutate(x=as.numeric(as.factor(.[[x.]])),
+           y=as.numeric(factor(.[[y.]], levels=rev(levels(factor(.[[y.]]))))),
+           x_y=paste(x, y, sep="_"))
+  lc.rct <- as.tibble(expand.grid(x=1:max(raw.df$x),
+                                  y=1:max(raw.df$y))) %>%
+    mutate(x_y=paste(x, y, sep="_"))
+  match.order <- match(lc.rct$x_y, raw.df$x_y)
+  for(i in col.inc) {
+    lc.rct[[names(raw.df)[i]]] <- raw.df[[i]][match.order]
+    lc.rct[[names(raw.df)[i]]][is.na(match.order)] <- 0
+  }
+  lc.rct$lon <- raw.df[[x.]][match.order]
+  lc.rct$lat <- raw.df[[y.]][match.order]
+  lc.rct$inbd <- !is.na(match.order)
+  if(!is.null(out.file)) saveRDS(lc.rct, paste0(out.file))
+  return(lc.rct)
+}
+
+
+
+
 #' Aggregate compositional data within each cell
 #'
 #' Reformat and calculate expected cell-means based on land cover composition

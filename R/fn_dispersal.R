@@ -155,7 +155,7 @@ sdd_disperse <- function(id.i, Fr, gamma, p.c.E, s.c,
              N.produced*(1-p.c.E[id,])) %>%
     mutate(id.in=id.i$id.in[id]) %>%
     mutate_at(2:7, round)
-  while(sum(N.source$N.emig > .Machine$integer.max)>0) {
+  while(any(N.source$N.emig > .Machine$integer.max)) {
     ovr <- which(N.source$N.emig > .Machine$integer.max)
     for(i in seq_along(ovr)) {
       N.source$N.emig[ovr[i]] <- N.source$N.emig[ovr[i]] - .Machine$integer.max
