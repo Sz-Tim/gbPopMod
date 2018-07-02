@@ -4,13 +4,13 @@
 \alias{global_sensitivity}
 \title{Run global sensitivity analysis}
 \usage{
-global_sensitivity(pars, par.ranges, nSamp, ngrid, ncell, g.p, lc.df, sdd,
-  N.init, control.p = NULL, verbose = F)
+global_sensitivity(pars, pars.rng, nSamp, ngrid, ncell, g.p, lc.df, sdd, N.init,
+  control.p = NULL, verbose = F)
 }
 \arguments{
 \item{pars}{Parameter to perform the sensitivity analysis on}
 
-\item{par.ranges}{Dataframe with col(p=parameters, min=minimum, max=maximum)
+\item{pars.rng}{Dataframe with col(p=parameters, min=minimum, max=maximum)
 listing the ranges for each parameter}
 
 \item{nSamp}{\code{10} Number of randomly generated parameter sets}

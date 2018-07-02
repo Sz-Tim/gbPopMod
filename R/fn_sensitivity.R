@@ -3,7 +3,7 @@
 #' Generate and run simulations over a set of varying parameters. It runs in
 #' parallel using the \code{snow} and \code{foreach} packages.
 #' @param pars Parameter to perform the sensitivity analysis on
-#' @param par.ranges Dataframe with col(p=parameters, min=minimum, max=maximum)
+#' @param pars.rng Dataframe with col(p=parameters, min=minimum, max=maximum)
 #'   listing the ranges for each parameter
 #' @param nSamp \code{10} Number of randomly generated parameter sets
 #' @param ngrid Number of grid cells in entire map
@@ -26,7 +26,7 @@
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p, 
+global_sensitivity <- function(pars, pars.rng, nSamp, ngrid, ncell, g.p, 
                                lc.df, sdd, N.init, control.p=NULL, verbose=F) {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   
@@ -40,9 +40,9 @@ global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p,
     raw.samples[[i]][,] <- runif(prod(dim(raw.samples[[i]])), 0, 1)
     # transform to parameter ranges
     samples[[i]][,] <- qunif(raw.samples[[i]], 
-                             min=par.ranges$min[par.ranges$p==pars[i]],
-                             max=par.ranges$max[par.ranges$p==pars[i]])
-    if(par.ranges$integer[i]) {
+                             min=pars.rng$min[pars.rng$p==pars[i]],
+                             max=pars.rng$max[pars.rng$p==pars[i]])
+    if(pars.rng$integer[i]) {
       samples[[i]][,] <- round(samples[[i]])
     }
   } 
@@ -60,12 +60,24 @@ global_sensitivity <- function(pars, par.ranges, nSamp, ngrid, ncell, g.p,
     run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
   }
   stopCluster(p.c)
+  
+  # calculate grid-wide summaries
   if(verbose) cat("Calculating summaries...\n")
   results <- as.data.frame(do.call("cbind", samples))
   par.len <- map_int(samples, ncol)
   par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
   names(results) <- paste0(rep(names(samples), times=par.len), par.num)
   results$pOcc <- map_dbl(out, ~sum(.$N[,g.p$tmax+1, dim(.$N)[3]]>0)/ncell)
+  results$pSB <- map_dbl(out, ~sum(.$B[,g.p$tmax+1]>0)/ncell)
+  results$medN <- map_dbl(out, ~median(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
+  results$medNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
+    map_dbl(~median(.[.>0]))
+  results$meanN <- map_dbl(out, ~mean(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
+  results$meanNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
+    map_dbl(~mean(.[.>0]))
+  results$sdN <- map_dbl(out, ~sd(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
+  results$sdNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
+    map_dbl(~sd(.[.>0]))
   return(list(out=out, results=results))
 }
 
