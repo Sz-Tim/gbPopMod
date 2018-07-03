@@ -4,7 +4,7 @@ This R package runs a population-level demographic cellular automata model. The 
 
 ![Simulation structure. In each time step, the sequence begins with fruit production based on the number of adults in a given cell. Boxes represent containers, with associated abundances, and text along arrows represent parameters. Parameters shown in blue vary by land cover type, while parameters in black are global.](sensitivity/model_outline.jpeg)
 
-with the following parameters and containers for each cell *i*, each time *t*, and juvenile ages *k* = 1:*m*:  
+with the following parameters and containers for each cell *i*, each time *t*, and juvenile ages *k* = `1:(m-1)`:  
 
 | Symbol | Quantity |
 | :--- | :--- |
