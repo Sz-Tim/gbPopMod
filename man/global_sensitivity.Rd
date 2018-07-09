@@ -35,7 +35,7 @@ cell id info}
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
 
-\item{verbose}{\code{FALSE} Give updates for each year & process?}
+\item{verbose}{\code{FALSE} Give updates?}
 }
 \value{
 list with elements \code{out} containing the full output from

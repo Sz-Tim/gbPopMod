@@ -19,7 +19,7 @@
 #'   \code{\link{pop_init}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
-#' @param verbose \code{FALSE} Give updates for each year & process?
+#' @param verbose \code{FALSE} Give updates?
 #' @return list with elements \code{out} containing the full output from
 #'   \link{run_sim}, and \code{results} containing the parameter sets and
 #'   simulation summaries
@@ -84,11 +84,58 @@ global_sensitivity <- function(pars, pars.rng, nSamp, ngrid, ncell, g.p,
 
 
 
-
-#' Run sensitivity analysis
+#' Emulate global sensitivity analysis output
 #'
-#' This is a wrapper for running simulations over a set of varying parameters.
-#' It runs in parallel using the \code{snow} and \code{foreach} packages.
+#' Emulate the output from a global sensitivity analysis using boosted
+#' regression trees with different interaction depths. Based on function
+#' described in Prowse et al 2016.
+#' @param sens.out Dataframe of the parameter sets and simulation summaries;
+#'   \code{results} from \link{global_sensitivity}
+#' @param pars Parameter the global sensitivity analysis included
+#' @param pars.rng Dataframe with col(p=parameters, min=minimum, max=maximum)
+#'   listing the ranges for each parameter
+#' @param prop.sub Proportion of sensitivity analysis output to use
+#' @param tree.depth Vector of regression tree interaction depths to test
+#' @param response Which response summary to use (column name from
+#'   \code{sens.out})
+#' @param verbose \code{FALSE} Give updates for each year & process?
+#' @return Success message
+#' @keywords parameters, sensitivity, save, output
+#' @export
+
+emulate_sensitivity <- function(sens.out, pars, pars.rng, prop.sub, tree.depth, 
+                                response, verbose=T) {
+  library(dismo); library(tidyverse); library(magrittr)
+  # create directories
+  dir.create("out/emulation") 
+  dir.create("out/emulation/brt") 
+  dir.create("out/emulation/results")
+  
+  # subset sensitivity results
+  sub.samp <- sample_frac(results, prop.sub)
+  
+  # statistical distribution for fitting BRTs
+  #brt.dist <- ifelse(pars.rng$probability, "bernoulli", "gaussian")
+  
+  # fit BRT emulators of different tree complexities for given response variable
+  brt.fit <- vector("list", length(tree.depth))
+  for(i in 1:length(tree.depth)) {
+    td_i <- tree.depth[i]
+    brt.fit[[i]] <- gbm.step(results, gbm.x=1:10, gbm.y=11, max.trees=200000,
+                             n.folds=5, family="gaussian", tree.complexity=td_i,
+                             bag.fraction=0.5, silent=TRUE)
+  }
+  walk(brt.fit, summary)
+}
+
+  
+
+
+#' Run univariate sensitivity analyses
+#'
+#' Running simulations over a set of varying parameters, where each parameter is
+#' changed while holding all others constant. It runs in parallel using the
+#' \code{doSNOW} and \code{foreach} packages.
 #' @param p Parameter to perform the sensitivity analysis on
 #' @param p.seq Sequence of values for the parameter
 #' @param n.sim \code{2} Number of simulations for each parameter value
@@ -101,7 +148,7 @@ global_sensitivity <- function(pars, pars.rng, nSamp, ngrid, ncell, g.p,
 #'   set with \code{\link{set_control_p}}
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param verbose \code{FALSE} Give updates for each year & process? 
+#' @param verbose \code{FALSE} Give updates for each year & process?
 #' @param makeGIFs \code{FALSE} Make a gif for each parameter set?
 #' @return Success message
 #' @keywords parameters, sensitivity, save, output
