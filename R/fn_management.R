@@ -92,6 +92,8 @@ trt_ground <- function(est.trt, grd.trt) {
 
 trt_manual <- function(N.t, m.max, N.trt, man.trt) {
   
+  library(tibble)
+  
   trt.eff <- tibble(id=N.trt$id,
                     surv=1-man.trt[match(N.trt$Trt, names(man.trt))])
   

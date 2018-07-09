@@ -128,6 +128,8 @@ new_seedlings <- function(ngrid, N.seed, B, p.E, g.D, g.B, s.B,
 
 grow_lambda <- function(N.t, lambda.E, sdd.rate) {
   
+  library(tidyverse)
+  
   N.id <- which(N.t>0)
   lam.id <- lambda.E[N.id]
   N.new <- tibble(id = N.id) %>%

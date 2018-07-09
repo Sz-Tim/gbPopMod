@@ -26,7 +26,7 @@
 sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL, 
                           edges="wall", lc.col=4:9, verbose=F) {
   
-  library(purrr); library(tidyverse); library(fastmatch)
+  library(tidyverse); library(magrittr); library(fastmatch)
   
   # unpack parameters
   sdd.max <- g.p$sdd.max
@@ -267,6 +267,7 @@ sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=F) {
   # Calculate (N.arrivals | N.new, sdd.probs)
   # Accounts for distance from source cell & bird habitat preference
   # Returns dataframe with total population sizes.
+  library(tidyverse)
   
   N.source <- N.new %>% filter(N.new > 0) %>% mutate(id.in=id.i$id.in[id])
   N.emig <- tibble(id=id.i$id, 

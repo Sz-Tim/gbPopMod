@@ -80,7 +80,7 @@ expand_v <- function(x, y, sep="_") {
 
 expand_LCs <- function(gp=g.p, param=NULL, LC="all", all.combo=FALSE, 
                        len_out=6, lc.min=rep(0.1, 6), lc.max=rep(0.9, 6)) {
-  library(tidyverse); library(purrr)
+  library(tidyverse)
   names(lc.min) <- c("Opn", "Oth", "Dec", "WP", "Evg", "Mxd")
   names(lc.max) <- names(lc.min)
   if(LC=="all") {
@@ -229,6 +229,8 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 
 cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p, 
                    p.trt=NULL, edges="wall", method="wt.mn") {
+  
+  library(tidyverse)
   
   if(method=="wt.mn") {
     # scalar = same value for all LC categories
