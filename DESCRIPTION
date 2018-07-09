@@ -17,8 +17,8 @@ Imports:
   here,
   magrittr,
   parallel, 
-  scales
-  tidyverse,
+  scales,
+  tidyverse
 RoxygenNote: 6.0.1
 Suggests: gganimate,
     knitr,
