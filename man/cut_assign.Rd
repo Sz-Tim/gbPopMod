@@ -4,10 +4,10 @@
 \alias{cut_assign}
 \title{Assign cells to convert a proportion of forest.col to open invasible}
 \usage{
-cut_assign(nChg, ncell = NULL, assign_i = NULL, lc.df, forest.col)
+cut_assign(pChg, ncell = NULL, assign_i = NULL, lc.df, forest.col)
 }
 \arguments{
-\item{nChg}{Number of inbound cells to cut}
+\item{pChg}{Proportion of inbound cells to cut}
 
 \item{ncell}{\code{NULL} Number of inbound grid cells. Required if cell IDs
 are not supplied via \code{assign_i}}

@@ -8,7 +8,7 @@
 #'   are not supplied via \code{assign_i}
 #' @param assign_i \code{NULL} Vector of inbound cell IDs to treat. If
 #'   \code{NULL}, then \code{ncell} IDs are sampled randomly for treatments
-#' @param nTrt Number of inbound grid cells to be treated. If \code{add !=
+#' @param pTrt Proportion of inbound grid cells to be treated. If \code{add !=
 #'   NULL}, then this is appended to the cells treated in the previous time
 #'   step.
 #' @param trt.eff Named vector with effects of each treatment. These names are
@@ -23,18 +23,16 @@
 #' @keywords control, treatment, owners
 #' @export
 
-
-trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, nTrt, trt.eff, 
+trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, pTrt, trt.eff, 
                        addOwners=FALSE, trt.m1=NULL) {
   
   library(tidyverse)
   
   if(is.null(assign_i)) {
-    assign_i <- sample(1:ncell, nTrt)
+    assign_i <- sample(1:ncell, ceiling(pTrt*ncell))
   } else {
     nTrt <- length(assign_i)
   }
-  
   
   trt.t <- tibble(id=id.i$id[which(id.i$id.in %in% assign_i)],
                   Trt=sample(names(trt.eff), nTrt, replace=TRUE))
@@ -113,7 +111,7 @@ trt_manual <- function(N.t, m.max, N.trt, man.trt) {
 #'
 #' Assign a specified number of random cells to have their forest.col habitat
 #' cleared by a random proportion.
-#' @param nChg Number of inbound cells to cut
+#' @param pChg Proportion of inbound cells to cut
 #' @param ncell \code{NULL} Number of inbound grid cells. Required if cell IDs
 #'   are not supplied via \code{assign_i}
 #' @param assign_i \code{NULL} Vector of inbound cell IDs to treat. If
@@ -127,11 +125,11 @@ trt_manual <- function(N.t, m.max, N.trt, man.trt) {
 #' @keywords control, cut, forest.col, land cover change, owners
 #' @export
 
-cut_assign <- function(nChg, ncell=NULL, assign_i=NULL, lc.df, forest.col) {
+cut_assign <- function(pChg, ncell=NULL, assign_i=NULL, lc.df, forest.col) {
   
   library(tidyverse)
   
-  if(is.null(assign_i)) assign_i <- sample(1:ncell, nChg)
+  if(is.null(assign_i)) assign_i <- sample(1:ncell, ceiling(pChg*ncell))
   n <- length(assign_i)
   id.chg <- dplyr::filter(lc.df, id.in %in% assign_i) %>% 
     select(id, id.in)
