@@ -4,7 +4,7 @@
 \alias{sdd_lambda}
 \title{Short distance dispersal: lambda-based}
 \usage{
-sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st = F)
+sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st = T)
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid

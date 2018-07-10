@@ -4,7 +4,7 @@
 \alias{new_seedlings}
 \title{Seed germination & establishment}
 \usage{
-new_seedlings(ngrid, N.seed, B, p.E, g.D, g.B, s.B, dem.st = F, bank = F)
+new_seedlings(ngrid, N.seed, B, p.E, g.D, g.B, s.B, dem.st = F, bank = T)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -23,10 +23,10 @@ new_seedlings(ngrid, N.seed, B, p.E, g.D, g.B, s.B, dem.st = F, bank = F)
 
 \item{s.B}{Probability of surviving a year in the seed bank}
 
-\item{dem.st}{\code{Logical} denoting whether to include demographic
+\item{dem.st}{\code{FALSE} denoting whether to include demographic
 stochasticity}
 
-\item{bank}{\code{Logical} denoting whether to include a seed bank}
+\item{bank}{\code{TRUE} denoting whether to include a seed bank}
 }
 \value{
 Tibble

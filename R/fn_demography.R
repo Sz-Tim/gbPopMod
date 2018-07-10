@@ -58,15 +58,15 @@ make_fruits <- function(N.t, lc.mx, mu.E, p.f.E, m.max, m.d, dem.st=F) {
 #' @param g.D Probability of germinating in same year as produced
 #' @param g.B Probability of germinating from seed bank
 #' @param s.B Probability of surviving a year in the seed bank
-#' @param dem.st \code{Logical} denoting whether to include demographic
+#' @param dem.st \code{FALSE} denoting whether to include demographic
 #'   stochasticity
-#' @param bank \code{Logical} denoting whether to include a seed bank
+#' @param bank \code{TRUE} denoting whether to include a seed bank
 #' @return Tibble
 #' @keywords run, simulate
 #' @export
 
 new_seedlings <- function(ngrid, N.seed, B, p.E, g.D, g.B, s.B, 
-                          dem.st=F, bank=F) {
+                          dem.st=F, bank=T) {
   
   library(tidyverse)
   

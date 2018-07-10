@@ -4,7 +4,7 @@
 \alias{sdd_disperse}
 \title{Short distance dispersal}
 \usage{
-sdd_disperse(id.i, Fr, gamma, p.c.E, s.c, sdd.sp, sdd.rate, sdd.st = F,
+sdd_disperse(id.i, Fr, gamma, p.c.E, s.c, sdd.sp, sdd.rate, sdd.st = T,
   edges = "wall")
 }
 \arguments{

@@ -35,7 +35,7 @@ trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, pTrt, trt.eff,
   }
   
   trt.t <- tibble(id=id.i$id[which(id.i$id.in %in% assign_i)],
-                  Trt=sample(names(trt.eff), nTrt, replace=TRUE))
+                  Trt=sample(names(trt.eff), ceiling(pTrt*ncell), replace=TRUE))
   
   if(addOwners) {
     return(trt.m1 %<>% add_row(id=trt.t$id, Trt=trt.t$Trt))

@@ -143,7 +143,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
 #'@export
 
 sdd_disperse <- function(id.i, Fr, gamma, p.c.E, s.c, 
-                         sdd.sp, sdd.rate, sdd.st=F, edges="wall") {
+                         sdd.sp, sdd.rate, sdd.st=T, edges="wall") {
   
   library(tidyverse); library(magrittr)
   
@@ -263,7 +263,7 @@ ldd_disperse <- function(ncell, id.i, M.0, n.ldd) {
 #' @keywords SDD, dispersal, lambda
 #' @export
 
-sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=F) {
+sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=T) {
   # Calculate (N.arrivals | N.new, sdd.probs)
   # Accounts for distance from source cell & bird habitat preference
   # Returns dataframe with total population sizes.
