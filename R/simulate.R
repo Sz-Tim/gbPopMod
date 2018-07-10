@@ -38,9 +38,6 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   p.trt <- NULL
   if(!is.null(control.p)) {
     list2env(control.p, environment())
-    nTrt.grd <- ceiling(pTrt.grd * ncell)
-    nTrt.man <- ceiling(pTrt.man * ncell)
-    nChg <- ceiling(pChg * ncell)
     est.trt <- N.trt <- tibble(id=numeric(), Trt=character())
   }
   
@@ -67,7 +64,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       # 2A. Adjust LC %
       if(lc.chg && nChg >= 1) {  if(verbose) cat("Change LC...")
         # i. decide which cells change and how much of each kind of forest
-        chg.asn <- cut_assign(nChg, ncell, chg.i, lc.df, forest.col=6:9)
+        chg.asn <- cut_assign(pChg, ncell, chg.i, lc.df, forest.col=6:9)
         # ii. cut forest & update SDD neighborhoods
         lc.df[chg.asn$id.chg$id,] <- cut_forest(chg.asn$id.chg, chg.asn$mx, 
                                                 forest.col=6:9, lc.df)
@@ -82,7 +79,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       # 2B. Adjust p
       if(nTrt.grd > 0 || !is.null(grd.i)) {  if(verbose) cat("Cover...")
         est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
-                              nTrt=nTrt.grd, trt.eff=grd.trt, 
+                              pTrt=pTrt.grd, trt.eff=grd.trt, 
                               addOwners=add.owners, trt.m1=est.trt)
         p.trt <- trt_ground(est.trt, grd.trt)
       }
@@ -90,7 +87,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       # 2C. Adjust N
       if(nTrt.man > 0 || !is.null(man.i)) {  if(verbose) cat("Cut & spray...")
         N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
-                            nTrt=nTrt.man, trt.eff=man.trt, 
+                            pTrt=pTrt.man, trt.eff=man.trt, 
                             addOwners=add.owners, trt.m1=N.trt)
         if(m.d) { N[,t,,] <- trt_manual(N.t, m.max, N.trt, man.trt)
         } else { N[,t,] <- trt_manual(N.t, m.max, N.trt, man.trt) }
@@ -231,4 +228,82 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
     N[,t+1] <- N.emig$N
   }
   return(list(N=N, lam.E=lambda.E))
+}
+
+
+
+
+#' Implement management and iterate buckthorn populations for one time step
+#'
+#' Run one time step of the simulation. Designed for the USDA-NIFA economic
+#' model using buckthorn-specific defaults.
+#' @param ngrid Number of grid cells in entire map
+#' @param ncell Number of inbound grid cells
+#' @param N.0 Array with initial population sizes, either returned from a
+#'   previous iteration or read from a stored .rds file in \code{path}
+#' @param B.0 Vector of initial seed bank abundances, either returned from a
+#'   previous iteration or read from a stored .rds file in \code{path}
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
+#' @param sdd Output with short distance dispersal neighborhoods created by
+#'   \code{\link{sdd_set_probs}}
+#' @param control.p NULL or named list of buckthorn control treatment parameters
+#'   set with \code{\link{set_control_p}}
+#' @param grd_cover.i Dataframe with a row for each cell implementing ground
+#'   cover management, and columns \code{id} and \code{Trt} detailing the cell
+#'   ID and ground cover treatment (\code{"Cov", "Com", "Lit"} for ground cover
+#'   crop, compaction, or litter, respectively).
+#' @param cut_spray.i Dataframe with a row for each cell implementing manual
+#'   management of adults, and columns \code{id} and \code{Trt} detailing the
+#'   cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
+#'   chemical, or mechanical and chemical, respectively).
+#' @param read_write \code{FALSE} Read and write \code{N} and \code{B}
+#' @param path \code{NULL} Directory for stored output. Overwrites files
+#'   (path/N.rds, path/B.rds) each iteration.
+#' @return Array N of abundances for each cell and age group, and vector B of
+#'   seed bank abundances.
+#' @keywords run, simulate
+#' @export
+
+iterate_pop <- function(ngrid, ncell, N.0, B.0, g.p, lc.df, sdd, control.p, 
+                        grd_cover.i, cut_spray.i, read_write=FALSE, path=NULL) {
+  library(gbPopMod); library(tidyverse); library(magrittr)
+  if(read_write) {
+    N.0 <- readRDS(paste0(dir, "/N.rds"))
+    B.0 <- readRDS(paste0(dir, "/B.rds"))
+  }
+  list2env(g.p, environment())
+  m.max <- max(m)
+  N <- array(0, dim=dim(N.0))
+  
+  #--- update parameters
+  p.trt <- trt_ground(grd_cover.i, c.p$grd.trt)
+  N.0 <- trt_manual(N.0, m.max, cut_spray.i, c.p$man.trt)
+  # pre-multiply compositional parameters for cell expectations
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
+  
+  #--- fruit production
+  N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, T)
+  
+  #--- short distance dispersal
+  N.Sd <- sdd_disperse(id.i, N.f, gamma, pm$p.c.E, s.c, sdd$sp, sdd.rate)
+  
+  #--- seedling establishment
+  estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B, s.B)
+  estab.out$M.0 <- ldd_disperse(ncell, id.i, estab.out$M.0, n.ldd)
+  
+  #--- update abundances
+  B <- estab.out$B
+  for(l in 1:6) {
+    N[,l,1] <- round(estab.out$M.0 * pm$s.M.E)
+    N[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
+    N[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N[,l,m[l]-1]*s.M[l]),
+                        pm$K.lc[,l])
+  }
+  if(read_write) {
+    saveRDS(N, paste0(dir, "/N.rds"))
+    saveRDS(B, paste0(dir, "/B.rds"))
+  }
+  return(list(N=N, B=B))
 }
