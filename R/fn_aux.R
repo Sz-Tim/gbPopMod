@@ -346,14 +346,14 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #'   \code{length=n.lc} of bird habitat preferences
 #' @param n.ldd \code{1} Number of long distance dispersal events per year
 #' @param s.c \code{0.6} Seed viability post-digestion
-#' @param s.B \code{0.3} Probability of annual survival in seed bank
+#' @param s.B \code{0.75} Probability of annual survival in seed bank
 #' @param s.M \code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
 #'   of annual juvenile survival rates
 #' @param s.N \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 #'   adult survival rates
 #' @param K \code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
 #'   carrying capacities for adults
-#' @param g.D \code{0.5} Probability of direct germination (i.e., a seed
+#' @param g.D \code{0} Probability of direct germination (i.e., a seed
 #'   germinates in the same year it is produced)
 #' @param g.B \code{0.5} Probability of germinating from the seed bank
 #' @param p \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
@@ -384,11 +384,11 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
                     bird.hab=c(.35, .35, 0.05, 0.1, 0.1, 0.05), 
                     n.ldd=1,
                     s.c=0.6,
-                    s.B=0.3, 
+                    s.B=0.75, 
                     s.M=c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6),
                     s.N=c(1, 1, 1, 1, 1, 1),
                     K=c(750, 10, 100, 100, 300, 100),
-                    g.D=0.5, 
+                    g.D=0, 
                     g.B=0.5,
                     p=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
                     edges="wall", method="wt.mn") {
