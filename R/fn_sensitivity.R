@@ -1,3 +1,56 @@
+#' Set parameters for global sensitivity analysis
+#'
+#' Generate parameter ranges and details for running a global sensitivity
+#' analysis.
+#' @param pars Names of parameters to perform sensitivity analysis on
+#' @return Named list with a sublist for each parameter, including the parameter
+#'   name, the type ('prob', 'cont', 'int'), whether it varies by land cover
+#'   category, and the minimum and maximum values
+#' @keywords parameters, sensitivity, initialize
+#' @export
+
+set_sensitivity_pars <- function(pars) {
+  par.ls <- list(list(param="p.f", type="prob", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="mu", type="cont", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(500, 100, 500, 500, 500, 500)),
+                 list(param="gamma", type="cont", LC=0, min=0, max=4),
+                 list(param="m", type="int", LC=1, 
+                      min=c(2, 2, 2, 2, 2, 2), 
+                      max=c(7, 7, 7, 7, 7, 7)),
+                 list(param="p.c", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="sdd.rate", type="cont", LC=0, min=0, max=2),
+                 list(param="sdd.max", type="int", LC=0, min=1, max=15),
+                 list(param="bird.hab", type="cont", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="n.ldd", type="int", LC=0, min=0, max=5),
+                 list(param="s.c", type="prob", LC=0, min=0, max=1),
+                 list(param="s.B", type="prob", LC=0, min=0, max=1),
+                 list(param="s.M", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="s.N", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="K", type="cont", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1000, 100, 500, 500, 500, 500)),
+                 list(param="g.D", type="prob", LC=0, min=0, max=1),
+                 list(param="g.B", type="prob", LC=0, min=0, max=1),
+                 list(param="p", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1))
+                 )
+  names(par.ls) <- map_chr(par.ls, ~.$param)
+  return(par.ls[pars])
+}
+
+
 #' Run global sensitivity analysis
 #'
 #' Generate and run simulations over a set of varying parameters. It runs in
