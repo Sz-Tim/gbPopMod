@@ -2,9 +2,8 @@
 #'
 #' Generate and run simulations over a set of varying parameters. It runs in
 #' parallel using the \code{snow} and \code{foreach} packages.
-#' @param pars Parameter to perform the sensitivity analysis on
-#' @param pars.rng Dataframe with col(p=parameters, min=minimum, max=maximum)
-#'   listing the ranges for each parameter
+#' @param par.ls List output from \code{\link{set_par_ranges}} with parameter to
+#'   perform the sensitivity analysis on
 #' @param nSamp \code{10} Number of randomly generated parameter sets
 #' @param ngrid Number of grid cells in entire map
 #' @param ncell Number of inbound grid cells
@@ -26,23 +25,24 @@
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-global_sensitivity <- function(pars, pars.rng, nSamp, ngrid, ncell, g.p, 
-                               lc.df, sdd, N.init, control.p=NULL, verbose=F) {
+global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, 
+                               N.init, control.p=NULL, verbose=F) {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
-  nPar <- length(pars)
-  samples <- map(g.p[pars], ~matrix(., nrow=nSamp, ncol=length(.), byrow=T))
+  nPar <- length(par.ls)
+  samples <- map(g.p[names(par.ls)], 
+                 ~matrix(., nrow=nSamp, ncol=length(.), byrow=T))
   raw.samples <- samples
   for(i in 1:nPar) {
     # draw samples from uniform distribution
     raw.samples[[i]][,] <- runif(prod(dim(raw.samples[[i]])), 0, 1)
     # transform to parameter ranges
-    samples[[i]][,] <- qunif(raw.samples[[i]], 
-                             min=pars.rng$min[pars.rng$p==pars[i]],
-                             max=pars.rng$max[pars.rng$p==pars[i]])
-    if(pars.rng$integer[i]) {
+    samples[[i]][,] <- t(qunif(t(raw.samples[[i]]), 
+                               min=par.ls[[i]]$min,
+                               max=par.ls[[i]]$max))
+    if(par.ls[[i]]$type=="int") {
       samples[[i]][,] <- round(samples[[i]])
     }
   } 
@@ -50,11 +50,11 @@ global_sensitivity <- function(pars, pars.rng, nSamp, ngrid, ncell, g.p,
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
   out <- foreach(i=1:nSamp, 
                  .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
-    g.p[pars] <- map(samples, ~.[i,])
-    if(any(pars %in% c("sdd.max", "sdd.rate"))) {
+    g.p[names(par.ls)] <- map(samples, ~.[i,])
+    if(any(names(par.ls) %in% c("sdd.max", "sdd.rate"))) {
       sdd <- sdd_set_probs(ncell, lc.df, g.p)
     }
-    if(any(pars=="m")) {
+    if(any(names(par.ls)=="m")) {
       N.init <- pop_init(ngrid, g.p, lc.df)
     }
     run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
