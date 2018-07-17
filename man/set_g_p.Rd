@@ -9,9 +9,9 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   p.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3), mu = c(200, 100, 40, 20, 20, 10),
   gamma = 2.3, m = 4, p.c = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
   sdd.rate = 0.1, sdd.max = 15, bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1,
-  0.05), n.ldd = 1, s.c = 0.6, s.B = 0.3, s.M = c(0.9, 0.1, 0.6, 0.6,
+  0.05), n.ldd = 1, s.c = 0.6, s.B = 0.75, s.M = c(0.9, 0.1, 0.6, 0.6,
   0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1), K = c(750, 10, 100, 100, 300, 100),
-  g.D = 0.5, g.B = 0.5, p = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
+  g.D = 0, g.B = 0.5, p = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
   edges = "wall", method = "wt.mn")
 }
 \arguments{
@@ -59,7 +59,7 @@ directly below buckthorn individuals}
 
 \item{s.c}{\code{0.6} Seed viability post-digestion}
 
-\item{s.B}{\code{0.3} Probability of annual survival in seed bank}
+\item{s.B}{\code{0.75} Probability of annual survival in seed bank}
 
 \item{s.M}{\code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
 of annual juvenile survival rates}
@@ -70,7 +70,7 @@ adult survival rates}
 \item{K}{\code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
 carrying capacities for adults}
 
-\item{g.D}{\code{0.5} Probability of direct germination (i.e., a seed
+\item{g.D}{\code{0} Probability of direct germination (i.e., a seed
 germinates in the same year it is produced)}
 
 \item{g.B}{\code{0.5} Probability of germinating from the seed bank}
