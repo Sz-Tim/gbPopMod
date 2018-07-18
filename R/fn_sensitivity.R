@@ -15,32 +15,32 @@ set_sensitivity_pars <- function(pars) {
                       max=c(1, 1, 1, 1, 1, 1)),
                  list(param="mu", type="cont", LC=1, 
                       min=c(0, 0, 0, 0, 0, 0), 
-                      max=c(500, 100, 500, 500, 500, 500)),
-                 list(param="gamma", type="cont", LC=0, min=0, max=4),
+                      max=c(500, 100, 300, 300, 300, 300)),
+                 list(param="gamma", type="cont", LC=0, min=1, max=4),
                  list(param="m", type="int", LC=1, 
                       min=c(2, 2, 2, 2, 2, 2), 
                       max=c(7, 7, 7, 7, 7, 7)),
                  list(param="p.c", type="prob", LC=1,
                       min=c(0, 0, 0, 0, 0, 0), 
                       max=c(1, 1, 1, 1, 1, 1)),
-                 list(param="sdd.rate", type="cont", LC=0, min=0, max=2),
-                 list(param="sdd.max", type="int", LC=0, min=1, max=15),
+                 list(param="sdd.rate", type="cont", LC=0, min=0.5, max=3),
+                 list(param="sdd.max", type="int", LC=0, min=2, max=7),
                  list(param="bird.hab", type="cont", LC=1, 
                       min=c(0, 0, 0, 0, 0, 0), 
                       max=c(1, 1, 1, 1, 1, 1)),
                  list(param="n.ldd", type="int", LC=0, min=0, max=5),
-                 list(param="s.c", type="prob", LC=0, min=0, max=1),
+                 list(param="s.c", type="prob", LC=0, min=0.3, max=0.9),
                  list(param="s.B", type="prob", LC=0, min=0, max=1),
                  list(param="s.M", type="prob", LC=1,
-                      min=c(0, 0, 0, 0, 0, 0), 
-                      max=c(1, 1, 1, 1, 1, 1)),
+                      min=c(0.5, 0, 0.2, 0.2, 0.2, 0.2), 
+                      max=c(1, 0.5, 1, 1, 1, 1)),
                  list(param="s.N", type="prob", LC=1,
-                      min=c(0, 0, 0, 0, 0, 0), 
+                      min=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5), 
                       max=c(1, 1, 1, 1, 1, 1)),
                  list(param="K", type="cont", LC=1, 
                       min=c(0, 0, 0, 0, 0, 0), 
-                      max=c(1000, 100, 500, 500, 500, 500)),
-                 list(param="g.D", type="prob", LC=0, min=0, max=1),
+                      max=c(2000, 100, 1000, 1000, 1000, 1000)),
+                 list(param="g.D", type="prob", LC=0, min=0, max=0.1),
                  list(param="g.B", type="prob", LC=0, min=0, max=1),
                  list(param="p", type="prob", LC=1,
                       min=c(0, 0, 0, 0, 0, 0), 
@@ -101,7 +101,7 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
   } 
   if(verbose) cat("Running simulations...\n")
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
-  out <- foreach(i=1:nSamp, 
+  out <- foreach(i=1:nSamp, .errorhandling="pass",
                  .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
     g.p[names(par.ls)] <- map(samples, ~.[i,])
     if(any(names(par.ls) %in% c("sdd.max", "sdd.rate"))) {
@@ -122,7 +122,8 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
   names(results) <- paste0(rep(names(samples), times=par.len), par.num)
   results$pOcc <- map_dbl(out, ~sum(.$N[,g.p$tmax+1, dim(.$N)[3]]>0)/ncell)
   results$pSB <- map_dbl(out, ~sum(.$B[,g.p$tmax+1]>0)/ncell)
-  results$medN <- map_dbl(out, ~median(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
+  results$medN <- map_dbl(out, ~median(.$N[lc.df$inbd,g.p$tmax+1, 
+                                           dim(.$N)[3]], na.rm=T))
   results$medNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
     map_dbl(~median(.[.>0]))
   results$meanN <- map_dbl(out, ~mean(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
@@ -143,12 +144,12 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
 #' regression trees with different interaction depths. Based on function
 #' described in Prowse et al 2016.
 #' @param sens.out Dataframe of the parameter sets and simulation summaries;
-#'   \code{results} from \link{global_sensitivity}
-#' @param pars Parameter the global sensitivity analysis included
-#' @param pars.rng Dataframe with col(p=parameters, min=minimum, max=maximum)
-#'   listing the ranges for each parameter
-#' @param prop.sub Proportion of sensitivity analysis output to use
-#' @param tree.depth Vector of regression tree interaction depths to test
+#'   \code{.$results} from \link{global_sensitivity}
+#' @param par.ls List output from \code{\link{set_par_ranges}} with parameter to
+#'   perform the sensitivity analysis on
+#' @param prop.sub \code{0.8} Proportion of sensitivity analysis output to use
+#' @param tree.depth \code{c(1,3,5)} Vector of regression tree interaction
+#'   depths to test
 #' @param response Which response summary to use (column name from
 #'   \code{sens.out})
 #' @param verbose \code{FALSE} Give updates for each year & process?
@@ -156,29 +157,31 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-emulate_sensitivity <- function(sens.out, pars, pars.rng, prop.sub, tree.depth, 
-                                response, verbose=T) {
-  library(dismo); library(tidyverse); library(magrittr)
-  # create directories
-  dir.create("out/emulation") 
-  dir.create("out/emulation/brt") 
-  dir.create("out/emulation/results")
-  
+emulate_sensitivity <- function(sens.out, par.ls, prop.sub=0.8, 
+                                tree.depth=c(1,3,5), response) {
+  library(tidyverse); library(magrittr)
   # subset sensitivity results
-  sub.samp <- sample_frac(results, prop.sub)
-  
-  # statistical distribution for fitting BRTs
-  #brt.dist <- ifelse(pars.rng$probability, "bernoulli", "gaussian")
+  sub.samp <- sample_frac(sens.out, prop.sub)
   
   # fit BRT emulators of different tree complexities for given response variable
   brt.fit <- vector("list", length(tree.depth))
+  x <- which(str_split_fixed(names(sens.out), "_", 2)[,1] %in% names(par.ls))
+  y <- which(names(sens.out)==response)
   for(i in 1:length(tree.depth)) {
     td_i <- tree.depth[i]
-    brt.fit[[i]] <- gbm.step(results, gbm.x=1:10, gbm.y=11, max.trees=200000,
-                             n.folds=5, family="gaussian", tree.complexity=td_i,
-                             bag.fraction=0.5, silent=TRUE)
+    brt.fit[[i]] <- dismo::gbm.step(sub.samp, gbm.x=x, gbm.y=y, 
+                                    max.trees=200000, n.folds=5, 
+                                    family="gaussian", tree.complexity=td_i,
+                                    bag.fraction=0.8, silent=T, plot.main=F)
   }
-  walk(brt.fit, summary)
+  names(brt.fit) <- tree.depth
+  brt.all <- map_df(brt.fit, gbm::summary.gbm, .id="depth", plotit=FALSE) %>%
+    mutate(param=str_split_fixed(var, "_", 2)[,1])
+  brt.par <- brt.all %>% group_by(depth, param) %>%
+    summarise(rel.inf=sum(rel.inf)) %>% 
+    ungroup %>% group_by(depth) %>%
+    mutate(rel.inf=rel.inf/sum(rel.inf))
+  return(list(brt.all=brt.all, brt.par=brt.par))
 }
 
   
