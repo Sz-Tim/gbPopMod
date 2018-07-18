@@ -4,21 +4,20 @@
 \alias{emulate_sensitivity}
 \title{Emulate global sensitivity analysis output}
 \usage{
-emulate_sensitivity(sens.out, pars, pars.rng, prop.sub, tree.depth, response,
-  verbose = T)
+emulate_sensitivity(sens.out, par.ls, prop.sub = 0.8, tree.depth = c(1, 3,
+  5), response)
 }
 \arguments{
 \item{sens.out}{Dataframe of the parameter sets and simulation summaries;
-\code{results} from \link{global_sensitivity}}
+\code{.$results} from \link{global_sensitivity}}
 
-\item{pars}{Parameter the global sensitivity analysis included}
+\item{par.ls}{List output from \code{\link{set_par_ranges}} with parameter to
+perform the sensitivity analysis on}
 
-\item{pars.rng}{Dataframe with col(p=parameters, min=minimum, max=maximum)
-listing the ranges for each parameter}
+\item{prop.sub}{\code{0.8} Proportion of sensitivity analysis output to use}
 
-\item{prop.sub}{Proportion of sensitivity analysis output to use}
-
-\item{tree.depth}{Vector of regression tree interaction depths to test}
+\item{tree.depth}{\code{c(1,3,5)} Vector of regression tree interaction
+depths to test}
 
 \item{response}{Which response summary to use (column name from
 \code{sens.out})}
