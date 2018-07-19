@@ -4,12 +4,11 @@
 
 # load most recent version of package on GitHub
 # source("hpc/git_gb_token.R")
-# devtools::install_github("Sz-Tim/gbPopMod", auth_token=git_gb_token, 
-#                          dependencies=TRUE)
+# devtools::install_github("Sz-Tim/gbPopMod", auth_token=git_gb_token)
 
 # load libraries
 Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
-              "fastmatch", "scales", "gganimate")
+              "fastmatch", "scales")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 theme_set(theme_bw())
 
@@ -17,10 +16,10 @@ theme_set(theme_bw())
 lc_f <- "data/9km_car.csv"
 
 # set parameters
-g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=4, 
+g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=16, 
                m=c(3,3,7,7,7,7), sdd.max=5, sdd.rate=1, N.p.t0=40)
 par.ls <- set_sensitivity_pars(names(g.p)[10:25])
-nSamp <- 300
+nSamp <- 10000
 
 # load landscape
 lc.df <- read_csv(lc_f) %>% 
