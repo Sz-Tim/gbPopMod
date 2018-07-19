@@ -4,7 +4,8 @@
 
 # load most recent version of package on GitHub
 # source("hpc/git_gb_token.R")
-# devtools::install_github("Sz-Tim/gbPopMod", auth_token=git_gb_token)
+# devtools::install_github("Sz-Tim/gbPopMod", auth_token=git_gb_token, 
+#                          dependencies=TRUE)
 
 # load libraries
 Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
@@ -39,16 +40,20 @@ out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
 
 nMetric <- 8
 nPar <- ncol(out$results)-nMetric
-par.brt <- vector("list", nMetric)
+brt.sum <- vector("list", nMetric)
 for(i in 1:nMetric) {
   metric <- names(out$results)[nPar+i]
-  names(par.brt)[[i]] <- metric
-  brt.out <- emulate_sensitivity(out$results, par.ls, response=metric)
-  par.brt[[i]] <- brt.out$brt.par
+  emulate_sensitivity(out$results, par.ls, g.p$n.cores, resp=metric)
+  brt.sum[[i]] <- emulation_summary(metric)
 }
-par.brt <- bind_rows(par.brt, .id="metric")
+ri.df <- map_dfr(brt.sum, ~.$ri.df)
+cvDev.df <- map_dfr(brt.sum, ~.$cvDev.df)
+betaDiv.df <- map_dfr(brt.sum, ~.$betaDiv.df)
+
 
 # store output
 write_csv(out$results, "out/sensitivity_results.csv")
-write_csv(par.brt, "out/BRT_by_param.csv")
+write_csv(ri.df, "out/BRT_RI.csv")
+write_csv(cvDev.df, "out/BRT_cvDev.csv")
+write_csv(betaDiv.df, "out/BRT_betaDiv.csv")
 #saveRDS(out, "out/sensitivity_out.rds")
