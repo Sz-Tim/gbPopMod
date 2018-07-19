@@ -204,7 +204,7 @@ emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10,
 #' @export
 
 emulation_summary <- function(resp=resp) {
-  library(gbm); library(MDM); library(tidyverse)
+  library(gbm); library(tidyverse)
   f <- dir("out/brt", resp)
   f.i <- str_split_fixed(f, "-", 3)
   cvDev.df <- betaDiv.df <- data.frame(response=as.character(resp),
@@ -219,7 +219,9 @@ emulation_summary <- function(resp=resp) {
     cvDev.df$Dev[i] <- brt$cv.statistics$deviance.mean
     # relative influence
     ri.ls[[i]] <- brt$contributions %>%
-      mutate(td=cvDev.df$td[i], smp=cvDev.df$smp[i])
+      mutate(td=cvDev.df$td[i], 
+             smp=cvDev.df$smp[i], 
+             response=cvDev.df$response[i])
   }
   ri.df <- bind_rows(ri.ls) %>% 
     mutate(param=str_split_fixed(var, "_", 2)[,1]) %>%
