@@ -4,8 +4,8 @@
 \alias{emulate_sensitivity}
 \title{Emulate global sensitivity analysis output}
 \usage{
-emulate_sensitivity(sens.out, par.ls, prop.sub = 0.8, tree.depth = c(1, 3,
-  5), response)
+emulate_sensitivity(sens.out, par.ls, n.cores = 1, n.sub = 10, td = c(1,
+  3, 5), resp)
 }
 \arguments{
 \item{sens.out}{Dataframe of the parameter sets and simulation summaries;
@@ -14,15 +14,14 @@ emulate_sensitivity(sens.out, par.ls, prop.sub = 0.8, tree.depth = c(1, 3,
 \item{par.ls}{List output from \code{\link{set_par_ranges}} with parameter to
 perform the sensitivity analysis on}
 
-\item{prop.sub}{\code{0.8} Proportion of sensitivity analysis output to use}
+\item{n.cores}{\code{1} Number of cores for fitting subsample BRTs}
 
-\item{tree.depth}{\code{c(1,3,5)} Vector of regression tree interaction
-depths to test}
+\item{n.sub}{\code{10} Number of subsamples for each emulation}
 
-\item{response}{Which response summary to use (column name from
-\code{sens.out})}
+\item{td}{\code{c(1,3,5)} Vector of regression tree interaction depths to
+test}
 
-\item{verbose}{\code{FALSE} Give updates for each year & process?}
+\item{resp}{Which response summary to use (column name from \code{sens.out})}
 }
 \value{
 Success message
@@ -30,7 +29,8 @@ Success message
 \description{
 Emulate the output from a global sensitivity analysis using boosted
 regression trees with different interaction depths. Based on function
-described in Prowse et al 2016.
+described in Prowse et al 2016. Writes files to out/brt, creating /brt if
+necessary
 }
 \keyword{output}
 \keyword{parameters,}

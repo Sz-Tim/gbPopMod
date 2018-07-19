@@ -51,6 +51,8 @@ set_sensitivity_pars <- function(pars) {
 }
 
 
+
+
 #' Run global sensitivity analysis
 #'
 #' Generate and run simulations over a set of varying parameters. It runs in
@@ -142,49 +144,103 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
 #'
 #' Emulate the output from a global sensitivity analysis using boosted
 #' regression trees with different interaction depths. Based on function
-#' described in Prowse et al 2016.
+#' described in Prowse et al 2016. Writes files to out/brt, creating /brt if
+#' necessary
 #' @param sens.out Dataframe of the parameter sets and simulation summaries;
 #'   \code{.$results} from \link{global_sensitivity}
 #' @param par.ls List output from \code{\link{set_par_ranges}} with parameter to
 #'   perform the sensitivity analysis on
-#' @param prop.sub \code{0.8} Proportion of sensitivity analysis output to use
-#' @param tree.depth \code{c(1,3,5)} Vector of regression tree interaction
-#'   depths to test
-#' @param response Which response summary to use (column name from
-#'   \code{sens.out})
-#' @param verbose \code{FALSE} Give updates for each year & process?
+#' @param n.cores \code{1} Number of cores for fitting subsample BRTs
+#' @param n.sub \code{10} Number of subsamples for each emulation
+#' @param td \code{c(1,3,5)} Vector of regression tree interaction depths to
+#'   test
+#' @param resp Which response summary to use (column name from \code{sens.out})
 #' @return Success message
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-emulate_sensitivity <- function(sens.out, par.ls, prop.sub=0.8, 
-                                tree.depth=c(1,3,5), response) {
-  library(tidyverse); library(magrittr)
-  # subset sensitivity results
-  sub.samp <- sample_frac(sens.out, prop.sub)
-  
-  # fit BRT emulators of different tree complexities for given response variable
-  brt.fit <- vector("list", length(tree.depth))
+emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10, 
+                                td=c(1,3,5), resp) {
+  library(tidyverse); library(doSNOW)
+  if(!dir.exists("out/brt/")) dir.create("out/brt/")
   x <- which(str_split_fixed(names(sens.out), "_", 2)[,1] %in% names(par.ls))
-  y <- which(names(sens.out)==response)
-  for(i in 1:length(tree.depth)) {
-    td_i <- tree.depth[i]
-    brt.fit[[i]] <- dismo::gbm.step(sub.samp, gbm.x=x, gbm.y=y, 
-                                    max.trees=200000, n.folds=5, 
-                                    family="gaussian", tree.complexity=td_i,
-                                    bag.fraction=0.8, silent=T, plot.main=F)
+  y <- which(names(sens.out)==resp)
+  sub.prop <- seq(0.5, 1, length.out=n.sub)
+  
+  p.c <- makeCluster(n.cores); registerDoSNOW(p.c)
+  out <- foreach(i=1:n.sub,
+                 .packages=c("gbPopMod", "tidyverse")) %dopar% {
+    # subset sensitivity results
+    sub.samp <- sample_frac(sens.out, sub.prop[i])
+    n <- nrow(sub.samp)
+    
+    # fit BRTs of different tree complexities for given response variable
+    for(j in 1:length(td)) {
+      td_j <- td[j]
+      brt.fit <- dismo::gbm.step(sub.samp, gbm.x=x, gbm.y=y, 
+                                 max.trees=200000, n.folds=5, 
+                                 family="gaussian", tree.complexity=td_j,
+                                 bag.fraction=0.8, silent=T, plot.main=F)
+      saveRDS(brt.fit, paste0("out/brt/", resp, "_td-", td_j, "-", n, ".rds"))
+    }
   }
-  names(brt.fit) <- tree.depth
-  brt.all <- map_df(brt.fit, gbm::summary.gbm, .id="depth", plotit=FALSE) %>%
-    mutate(param=str_split_fixed(var, "_", 2)[,1])
-  brt.par <- brt.all %>% group_by(depth, param) %>%
-    summarise(rel.inf=sum(rel.inf)) %>% 
-    ungroup %>% group_by(depth) %>%
-    mutate(rel.inf=rel.inf/sum(rel.inf))
-  return(list(brt.all=brt.all, brt.par=brt.par))
+  stopCluster(p.c)
+  return("Finished fitting BRTs")
 }
 
-  
+
+
+
+#' Summarize BRT emulations
+#'
+#' Summarize the output from global sensitivity analysis boosted regression
+#' trees emulations. Based on function described in Prowse et al 2016. Reads BRT
+#' output saved via emulate_sensitivity
+#' @param resp Which response summary to use (column name from \code{sens.out})
+#' @return List of three dataframes: relative influences, cross-validation
+#'   deviances, and beta diversity of relative influences (i.e., for stability),
+#'   each across different subsample sizes and tree complexities.
+#' @keywords parameters, sensitivity, save, output
+#' @export
+
+emulation_summary <- function(resp=resp) {
+  library(gbm); library(MDM); library(tidyverse)
+  f <- dir("out/brt", resp)
+  f.i <- str_split_fixed(f, "-", 3)
+  cvDev.df <- betaDiv.df <- data.frame(response=as.character(resp),
+                                       td=f.i[,2],
+                                       smp=str_remove(f.i[,3], ".rds"))
+  cvDev.df$Dev <- NA
+  betaDiv.df$beta <- NA
+  ri.ls <- vector("list", length(f))
+  for(i in seq_along(f)) {
+    brt <- readRDS(paste0("out/brt/", f[i]))
+    # cross validation deviance
+    cvDev.df$Dev[i] <- brt$cv.statistics$deviance.mean
+    # relative influence
+    ri.ls[[i]] <- brt$contributions %>%
+      mutate(td=cvDev.df$td[i], smp=cvDev.df$smp[i])
+  }
+  ri.df <- bind_rows(ri.ls) %>% 
+    mutate(param=str_split_fixed(var, "_", 2)[,1]) %>%
+    group_by(td, smp, param) %>%
+    summarise(rel.inf=sum(rel.inf)) %>% 
+    ungroup %>% group_by(td, smp) %>%
+    mutate(rel.inf=rel.inf/sum(rel.inf))
+  smp_i <- unique(ri.df$smp)
+  for(i in unique(ri.df$td)) {
+    for(j in 2:n_distinct(ri.df$smp)) {
+      temp <- ri.df %>% ungroup %>% filter(td==i & smp %in% smp_i[c(j-1,j)]) %>%
+        spread(smp, rel.inf) %>% dplyr::select(c(-1, -2)) %>% as.matrix
+      beta.div <- as.numeric(MDM::ed(t(temp), q=1, retq=T)['beta'])
+      betaDiv.df$beta[betaDiv.df$td==i & betaDiv.df$smp==smp_i[j]] <- beta.div
+    }
+  }
+
+  return(list(ri.df=ri.df, cvDev.df=cvDev.df, betaDiv.df=betaDiv.df))
+}
+
+
 
 
 #' Run univariate sensitivity analyses
