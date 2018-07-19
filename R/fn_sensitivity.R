@@ -83,6 +83,7 @@ set_sensitivity_pars <- function(pars) {
 global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, 
                                N.init, control.p=NULL, verbose=F) {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
+  if(!dir.exists("out/sims/")) dir.create("out/sims/")
   
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
@@ -112,29 +113,31 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
     if(any(names(par.ls)=="m")) {
       N.init <- pop_init(ngrid, g.p, lc.df)
     }
-    run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
+    sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
+    saveRDS(sim_i$N[,g.p$tmax+1, dim(sim_i$N)[3]], 
+            paste0("out/sims/N_", str_pad(i, nchar(nSamp), "left", "0")))
+    saveRDS(sim_i$B[,g.p$tmax+1], 
+            paste0("out/sims/B_", str_pad(i, nchar(nSamp), "left", "0")))
   }
   stopCluster(p.c)
   
   # calculate grid-wide summaries
   if(verbose) cat("Calculating summaries...\n")
+  N <- map(dir("out/sims", "N_", full.names=T), readRDS)
+  B <- map(dir("out/sims", "B_", full.names=T), readRDS)
   results <- as.data.frame(do.call("cbind", samples))
   par.len <- map_int(samples, ncol)
   par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
   names(results) <- paste0(rep(names(samples), times=par.len), par.num)
-  results$pOcc <- map_dbl(out, ~sum(.$N[,g.p$tmax+1, dim(.$N)[3]]>0)/ncell)
-  results$pSB <- map_dbl(out, ~sum(.$B[,g.p$tmax+1]>0)/ncell)
-  results$medN <- map_dbl(out, ~median(.$N[lc.df$inbd,g.p$tmax+1, 
-                                           dim(.$N)[3]], na.rm=T))
-  results$medNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
-    map_dbl(~median(.[.>0]))
-  results$meanN <- map_dbl(out, ~mean(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
-  results$meanNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
-    map_dbl(~mean(.[.>0]))
-  results$sdN <- map_dbl(out, ~sd(.$N[lc.df$inbd,g.p$tmax+1, dim(.$N)[3]]))
-  results$sdNg0 <- map(out, ~.$N[,g.p$tmax+1, dim(.$N)[3]]) %>% 
-    map_dbl(~sd(.[.>0]))
-  return(list(out=out, results=results))
+  results$pOcc <- map_dbl(N, ~sum(.>0)/ncell)
+  results$pSB <- map_dbl(B, ~sum(.>0)/ncell)
+  results$medN <- map_dbl(N, ~median(.[lc.df$inbd], na.rm=T))
+  results$medNg0 <- map_dbl(N, ~median(.[.>0]))
+  results$meanN <- map_dbl(N, ~mean(.[lc.df$inbd]))
+  results$meanNg0 <- map_dbl(N, ~mean(.[.>0]))
+  results$sdN <- map_dbl(N, ~sd(.[lc.df$inbd]))
+  results$sdNg0 <- map_dbl(N, ~sd(.[.>0]))
+  return(results)
 }
 
 
