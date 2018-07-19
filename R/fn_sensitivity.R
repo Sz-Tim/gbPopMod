@@ -205,9 +205,9 @@ emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10,
 
 emulation_summary <- function(resp=resp) {
   library(gbm); library(tidyverse)
-  f <- dir("out/brt", resp)
+  f <- dir("out/brt", paste0(resp, "_"))
   f.i <- str_split_fixed(f, "-", 3)
-  cvDev.df <- betaDiv.df <- data.frame(response=as.character(resp),
+  cvDev.df <- betaDiv.df <- tibble(response=resp,
                                        td=f.i[,2],
                                        smp=str_remove(f.i[,3], ".rds"))
   cvDev.df$Dev <- NA
@@ -218,22 +218,22 @@ emulation_summary <- function(resp=resp) {
     # cross validation deviance
     cvDev.df$Dev[i] <- brt$cv.statistics$deviance.mean
     # relative influence
-    ri.ls[[i]] <- brt$contributions %>%
+    ri.ls[[i]] <- as.tibble(brt$contributions) %>%
       mutate(td=cvDev.df$td[i], 
              smp=cvDev.df$smp[i], 
              response=cvDev.df$response[i])
   }
   ri.df <- bind_rows(ri.ls) %>% 
     mutate(param=str_split_fixed(var, "_", 2)[,1]) %>%
-    group_by(td, smp, param) %>%
+    group_by(response, td, smp, param) %>%
     summarise(rel.inf=sum(rel.inf)) %>% 
-    ungroup %>% group_by(td, smp) %>%
+    ungroup %>% group_by(response, td, smp) %>%
     mutate(rel.inf=rel.inf/sum(rel.inf))
   smp_i <- unique(ri.df$smp)
   for(i in unique(ri.df$td)) {
     for(j in 2:n_distinct(ri.df$smp)) {
       temp <- ri.df %>% ungroup %>% filter(td==i & smp %in% smp_i[c(j-1,j)]) %>%
-        spread(smp, rel.inf) %>% dplyr::select(c(-1, -2)) %>% as.matrix
+        spread(smp, rel.inf) %>% dplyr::select(-(1:3)) %>% as.matrix
       beta.div <- as.numeric(MDM::ed(t(temp), q=1, retq=T)['beta'])
       betaDiv.df$beta[betaDiv.df$td==i & betaDiv.df$smp==smp_i[j]] <- beta.div
     }
