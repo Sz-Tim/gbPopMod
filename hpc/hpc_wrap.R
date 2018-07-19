@@ -38,11 +38,11 @@ out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
                           sdd.pr, N.init, control.p=NULL, verbose=T)
 
 nMetric <- 8
-nPar <- ncol(out$results)-nMetric
+nPar <- ncol(out)-nMetric
 brt.sum <- vector("list", nMetric)
 for(i in 1:nMetric) {
-  metric <- names(out$results)[nPar+i]
-  emulate_sensitivity(out$results, par.ls, g.p$n.cores, resp=metric)
+  metric <- names(out)[nPar+i]
+  emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric)
   brt.sum[[i]] <- emulation_summary(metric)
 }
 ri.df <- map_dfr(brt.sum, ~.$ri.df)
