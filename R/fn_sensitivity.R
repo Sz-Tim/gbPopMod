@@ -115,9 +115,9 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
     }
     sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
     saveRDS(sim_i$N[,g.p$tmax+1, dim(sim_i$N)[3]], 
-            paste0("out/sims/N_", str_pad(i, nchar(nSamp), "left", "0")))
+            paste0("out/sims/N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
     saveRDS(sim_i$B[,g.p$tmax+1], 
-            paste0("out/sims/B_", str_pad(i, nchar(nSamp), "left", "0")))
+            paste0("out/sims/B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
   
