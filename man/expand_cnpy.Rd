@@ -19,11 +19,10 @@ white pine, other evergreen, and mixed forests)}
 List of vectors, each length 6
 }
 \description{
-This function is similar to \code{\link[base]{expand.grid}} but inputs two
-vectors with min and max parameter values (one set for open canopy and one
-set for closed canopy) in addition to a length.out parameter, and returns a
-list of vectors, with an element for each combination of land cover
-parameters.
+Similar to \code{\link[base]{expand.grid}} but inputs two vectors with min
+and max parameter values (one set for open canopy and one set for closed
+canopy) in addition to a length.out parameter, and returns a list of vectors,
+with an element for each combination of land cover parameters.
 }
 \keyword{expand.grid,}
 \keyword{sensitivity}

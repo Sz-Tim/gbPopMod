@@ -4,23 +4,25 @@
 \alias{sdd_disperse}
 \title{Short distance dispersal}
 \usage{
-sdd_disperse(id.i, N.f, pr.eat.ag, pr.s.bird, sdd.pr, sdd.rate, sdd.st = F,
+sdd_disperse(id.i, Fr, gamma, p.c.E, s.c, sdd.sp, sdd.rate, sdd.st = T,
   edges = "wall")
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id.inbd} indexes only inbound cells}
+while \code{id.in} indexes only inbound cells}
 
-\item{N.f}{Tibble of fruits produced in each cell output from
+\item{Fr}{Tibble of fruits produced in each cell output from
 \code{\link{make_fruits}}}
 
-\item{pr.eat.ag}{Vector of proportion of fruits eaten by birds from
-\code{\link{cell_agg}}}
+\item{gamma}{Scalar: mean number of seeds per fruit}
 
-\item{pr.s.bird}{Proportion of viable seeds post-digestion}
+\item{p.c.E}{Vector of proportion of fruits eaten by birds from
+\code{\link{cell_E}}}
 
-\item{sdd.pr}{Array with dim(i:disp.rows, j:disp.cols, k:2, n:ncell) output
-from \code{\link{sdd_set_probs}}}
+\item{s.c}{Proportion of viable seeds post-digestion}
+
+\item{sdd.sp}{List of named vectors with SDD probabilities for each cell
+output from \code{\link{sdd_set_probs}}}
 
 \item{sdd.rate}{Rate parameter for SDD exponential kernel}
 
@@ -37,10 +39,10 @@ dispersal of seeds to out-of-bound cells but no populations modeled, and
 Tibble with grid id and number of seeds in each cell
 }
 \description{
-This function calculates the number of viable seeds deposited within the
-short distance dispersal neighborhood of each cell, accounting for the
-distance from the source cell, bird habitat preference, the proportion of
-fruits eaten by birds, and seed viability post-digestion.
+Calculate the number of viable seeds deposited within the short distance
+dispersal neighborhood of each cell, accounting for the distance from the
+source cell, bird habitat preference, the proportion of fruits eaten by birds,
+and seed viability post-digestion.
 }
 \keyword{SDD}
 \keyword{dispersal,}

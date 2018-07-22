@@ -4,21 +4,21 @@
 \alias{make_fruits}
 \title{Local fruit production}
 \usage{
-make_fruits(N.t, lc.mx, fec.ag, pr.f.ag, y.ad, age.f.d, dem.st = F)
+make_fruits(N.t, lc.mx, mu.E, p.f.E, m.max, m.d, dem.st = F)
 }
 \arguments{
-\item{N.t}{Matrix or array of abundances, with dims=c(ngrid, (lc), y.ad)}
+\item{N.t}{Matrix or array of abundances, with dims=c(ngrid, (lc), m.max)}
 
-\item{lc.mx}{Matrix of land cover proportions from \code{\link{cell_agg}}}
+\item{lc.mx}{Matrix of land cover proportions from \code{\link{cell_E}}}
 
-\item{fec.ag}{Vector of fruit per individual from \code{\link{cell_agg}}}
+\item{mu.E}{Vector of fruit per individual from \code{\link{cell_E}}}
 
-\item{pr.f.ag}{Vector of fruiting probability from \code{\link{cell_agg}}}
+\item{p.f.E}{Vector of fruiting probability from \code{\link{cell_E}}}
 
-\item{y.ad}{Maximum age at maturity (i.e., \code{max(age.f)})}
+\item{m.max}{Maximum age at maturity (i.e., \code{max(m)})}
 
-\item{age.f.d}{\code{Logical} denoting whether \code{age.f} differs among
-land cover types}
+\item{m.d}{\code{Logical} denoting whether \code{m} differs among land cover
+types}
 
 \item{dem.st}{\code{Logical} denoting whether to include demographic
 stochasticity}
@@ -28,9 +28,9 @@ Tibble with grid id, number of reproducing individuals, and total
   fruit produces within the cell
 }
 \description{
-This function calculates the number of fruits produces in ecah grid cell. It
-assumes no fruit production before \code{age.f} and that individuals are
-distributed among land cover types in densities relative to K.
+Calculate the number of fruits produces in ecah grid cell. It assumes no
+fruit production before \code{m} and that individuals are distributed among
+land cover types in densities relative to K.
 }
 \keyword{fecundity}
 \keyword{fruit,}

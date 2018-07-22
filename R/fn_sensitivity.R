@@ -1,7 +1,258 @@
-#' Run sensitivity analysis
+#' Set parameters for global sensitivity analysis
 #'
-#' This is a wrapper for running simulations over a set of varying parameters.
-#' It runs in parallel using the \code{snow} and \code{foreach} packages.
+#' Generate parameter ranges and details for running a global sensitivity
+#' analysis.
+#' @param pars Names of parameters to perform sensitivity analysis on
+#' @return Named list with a sublist for each parameter, including the parameter
+#'   name, the type ('prob', 'cont', 'int'), whether it varies by land cover
+#'   category, and the minimum and maximum values
+#' @keywords parameters, sensitivity, initialize
+#' @export
+
+set_sensitivity_pars <- function(pars) {
+  par.ls <- list(list(param="p.f", type="prob", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="mu", type="cont", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(500, 500, 500, 500, 500, 500)),
+                 list(param="gamma", type="cont", LC=0, min=1, max=4),
+                 list(param="m", type="int", LC=1, 
+                      min=c(2, 2, 2, 2, 2, 2), 
+                      max=c(8, 8, 8, 8, 8, 8)),
+                 list(param="p.c", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="sdd.rate", type="cont", LC=0, min=0.5, max=3),
+                 list(param="sdd.max", type="int", LC=0, min=2, max=7),
+                 list(param="bird.hab", type="cont", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="n.ldd", type="int", LC=0, min=0, max=10),
+                 list(param="s.c", type="prob", LC=0, min=0.3, max=0.9),
+                 list(param="s.B", type="prob", LC=0, min=0, max=1),
+                 list(param="s.M", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="s.N", type="prob", LC=1,
+                      min=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5), 
+                      max=c(1, 1, 1, 1, 1, 1)),
+                 list(param="K", type="cont", LC=1, 
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(2000, 100, 1000, 1000, 1000, 1000)),
+                 list(param="g.D", type="prob", LC=0, min=0, max=1),
+                 list(param="g.B", type="prob", LC=0, min=0, max=1),
+                 list(param="p", type="prob", LC=1,
+                      min=c(0, 0, 0, 0, 0, 0), 
+                      max=c(1, 1, 1, 1, 1, 1))
+                 )
+  names(par.ls) <- map_chr(par.ls, ~.$param)
+  return(par.ls[pars])
+}
+
+
+
+
+#' Run global sensitivity analysis
+#'
+#' Generate and run simulations over a set of varying parameters. It runs in
+#' parallel using the \code{snow} and \code{foreach} packages.
+#' @param par.ls List output from \code{\link{set_par_ranges}} with parameter to
+#'   perform the sensitivity analysis on
+#' @param nSamp \code{10} Number of randomly generated parameter sets
+#' @param ngrid Number of grid cells in entire map
+#' @param ncell Number of inbound grid cells
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}.
+#'   The value of parameter \code{p} will be updated within the loop for each
+#'   value in \code{p.seq}.
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
+#' @param sdd Output with short distance dispersal neighborhoods created by
+#'   \code{\link{sdd_set_probs}}
+#' @param N.init Matrix or array with initial population sizes created by
+#'   \code{\link{pop_init}}
+#' @param control.p NULL or named list of buckthorn control treatment parameters
+#'   set with \code{\link{set_control_p}}
+#' @param verbose \code{FALSE} Give updates?
+#' @return list with elements \code{out} containing the full output from
+#'   \link{run_sim}, and \code{results} containing the parameter sets and
+#'   simulation summaries
+#' @keywords parameters, sensitivity, save, output
+#' @export
+
+global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, 
+                               N.init, control.p=NULL, verbose=F) {
+  library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
+  if(!dir.exists("out/sims/")) dir.create("out/sims/")
+  
+  # modified from Prowse et al 2016
+  if(verbose) cat("Drawing parameters...\n")
+  nPar <- length(par.ls)
+  samples <- map(g.p[names(par.ls)], 
+                 ~matrix(., nrow=nSamp, ncol=length(.), byrow=T))
+  raw.samples <- samples
+  for(i in 1:nPar) {
+    # draw samples from uniform distribution
+    raw.samples[[i]][,] <- runif(prod(dim(raw.samples[[i]])), 0, 1)
+    # transform to parameter ranges
+    samples[[i]][,] <- t(qunif(t(raw.samples[[i]]), 
+                               min=par.ls[[i]]$min,
+                               max=par.ls[[i]]$max))
+    if(par.ls[[i]]$type=="int") {
+      samples[[i]][,] <- round(samples[[i]])
+    }
+  } 
+  if(verbose) cat("Running simulations...\n")
+  p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
+  out <- foreach(i=1:nSamp, .errorhandling="pass",
+                 .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
+    g.p[names(par.ls)] <- map(samples, ~.[i,])
+    if(any(names(par.ls) %in% c("sdd.max", "sdd.rate"))) {
+      sdd <- sdd_set_probs(ncell, lc.df, g.p)
+    }
+    if(any(names(par.ls)=="m")) {
+      N.init <- pop_init(ngrid, g.p, lc.df)
+    }
+    sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
+    saveRDS(sim_i$N[,g.p$tmax+1, dim(sim_i$N)[3]], 
+            paste0("out/sims/N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    saveRDS(sim_i$B[,g.p$tmax+1], 
+            paste0("out/sims/B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+  }
+  stopCluster(p.c)
+  
+  # calculate grid-wide summaries
+  if(verbose) cat("Calculating summaries...\n")
+  N <- map(dir("out/sims", "N_", full.names=T), readRDS)
+  B <- map(dir("out/sims", "B_", full.names=T), readRDS)
+  results <- as.data.frame(do.call("cbind", samples))
+  par.len <- map_int(samples, ncol)
+  par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
+  names(results) <- paste0(rep(names(samples), times=par.len), par.num)
+  results$pOcc <- map_dbl(N, ~sum(.>0)/ncell)
+  results$pSB <- map_dbl(B, ~sum(.>0)/ncell)
+  results$medN <- map_dbl(N, ~median(.[lc.df$inbd], na.rm=T))
+  results$medNg0 <- map_dbl(N, ~median(.[.>0]))
+  results$meanN <- map_dbl(N, ~mean(.[lc.df$inbd]))
+  results$meanNg0 <- map_dbl(N, ~mean(.[.>0]))
+  results$sdN <- map_dbl(N, ~sd(.[lc.df$inbd]))
+  results$sdNg0 <- map_dbl(N, ~sd(.[.>0]))
+  return(results)
+}
+
+
+
+
+#' Emulate global sensitivity analysis output
+#'
+#' Emulate the output from a global sensitivity analysis using boosted
+#' regression trees with different interaction depths. Based on function
+#' described in Prowse et al 2016. Writes files to out/brt, creating /brt if
+#' necessary
+#' @param sens.out Dataframe of the parameter sets and simulation summaries;
+#'   \code{.$results} from \link{global_sensitivity}
+#' @param par.ls List output from \code{\link{set_par_ranges}} with parameter to
+#'   perform the sensitivity analysis on
+#' @param n.cores \code{1} Number of cores for fitting subsample BRTs
+#' @param n.sub \code{10} Number of subsamples for each emulation
+#' @param td \code{c(1,3,5)} Vector of regression tree interaction depths to
+#'   test
+#' @param resp Which response summary to use (column name from \code{sens.out})
+#' @return Success message
+#' @keywords parameters, sensitivity, save, output
+#' @export
+
+emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10, 
+                                td=c(1,3,5), resp) {
+  library(tidyverse); library(doSNOW)
+  if(!dir.exists("out/brt/")) dir.create("out/brt/")
+  x <- which(str_split_fixed(names(sens.out), "_", 2)[,1] %in% names(par.ls))
+  y <- which(names(sens.out)==resp)
+  sub.prop <- seq(0.5, 1, length.out=n.sub)
+  
+  p.c <- makeCluster(n.cores); registerDoSNOW(p.c)
+  out <- foreach(i=1:n.sub,
+                 .packages=c("gbPopMod", "tidyverse")) %dopar% {
+    # subset sensitivity results
+    sub.samp <- sample_frac(sens.out, sub.prop[i])
+    n <- nrow(sub.samp)
+    
+    # fit BRTs of different tree complexities for given response variable
+    for(j in 1:length(td)) {
+      td_j <- td[j]
+      brt.fit <- dismo::gbm.step(sub.samp, gbm.x=x, gbm.y=y, 
+                                 max.trees=200000, n.folds=5, 
+                                 family="gaussian", tree.complexity=td_j,
+                                 bag.fraction=0.8, silent=T, plot.main=F)
+      saveRDS(brt.fit, paste0("out/brt/", resp, "_td-", td_j, "-", n, ".rds"))
+    }
+  }
+  stopCluster(p.c)
+  return("Finished fitting BRTs")
+}
+
+
+
+
+#' Summarize BRT emulations
+#'
+#' Summarize the output from global sensitivity analysis boosted regression
+#' trees emulations. Based on function described in Prowse et al 2016. Reads BRT
+#' output saved via emulate_sensitivity
+#' @param resp Which response summary to use (column name from \code{sens.out})
+#' @return List of three dataframes: relative influences, cross-validation
+#'   deviances, and beta diversity of relative influences (i.e., for stability),
+#'   each across different subsample sizes and tree complexities.
+#' @keywords parameters, sensitivity, save, output
+#' @export
+
+emulation_summary <- function(resp=resp) {
+  library(gbm); library(tidyverse)
+  f <- dir("out/brt", paste0(resp, "_"))
+  f.i <- str_split_fixed(f, "-", 3)
+  cvDev.df <- betaDiv.df <- tibble(response=resp,
+                                       td=f.i[,2],
+                                       smp=str_remove(f.i[,3], ".rds"))
+  cvDev.df$Dev <- NA
+  betaDiv.df$beta <- NA
+  ri.ls <- vector("list", length(f))
+  for(i in seq_along(f)) {
+    brt <- readRDS(paste0("out/brt/", f[i]))
+    # cross validation deviance
+    cvDev.df$Dev[i] <- brt$cv.statistics$deviance.mean
+    # relative influence
+    ri.ls[[i]] <- as.tibble(brt$contributions) %>%
+      mutate(td=cvDev.df$td[i], 
+             smp=cvDev.df$smp[i], 
+             response=cvDev.df$response[i])
+  }
+  ri.df <- bind_rows(ri.ls) %>% 
+    mutate(param=str_split_fixed(var, "_", 2)[,1]) %>%
+    group_by(response, td, smp, param) %>%
+    summarise(rel.inf=sum(rel.inf)) %>% 
+    ungroup %>% group_by(response, td, smp) %>%
+    mutate(rel.inf=rel.inf/sum(rel.inf))
+  smp_i <- unique(ri.df$smp)
+  for(i in unique(ri.df$td)) {
+    for(j in 2:n_distinct(ri.df$smp)) {
+      temp <- ri.df %>% ungroup %>% filter(td==i & smp %in% smp_i[c(j-1,j)]) %>%
+        spread(smp, rel.inf) %>% dplyr::select(-(1:3)) %>% as.matrix
+      beta.div <- as.numeric(MDM::ed(t(temp), q=1, retq=T)['beta'])
+      betaDiv.df$beta[betaDiv.df$td==i & betaDiv.df$smp==smp_i[j]] <- beta.div
+    }
+  }
+
+  return(list(ri.df=ri.df, cvDev.df=cvDev.df, betaDiv.df=betaDiv.df))
+}
+
+
+
+
+#' Run univariate sensitivity analyses
+#'
+#' Running simulations over a set of varying parameters, where each parameter is
+#' changed while holding all others constant. It runs in parallel using the
+#' \code{doSNOW} and \code{foreach} packages.
 #' @param p Parameter to perform the sensitivity analysis on
 #' @param p.seq Sequence of values for the parameter
 #' @param n.sim \code{2} Number of simulations for each parameter value
@@ -14,7 +265,7 @@
 #'   set with \code{\link{set_control_p}}
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param verbose \code{FALSE} Give updates for each year & process? 
+#' @param verbose \code{FALSE} Give updates for each year & process?
 #' @param makeGIFs \code{FALSE} Make a gif for each parameter set?
 #' @return Success message
 #' @keywords parameters, sensitivity, save, output
@@ -43,7 +294,7 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
   
   cat("\nRunning simulations\n")
-  for(j in 1:length(p.seq)) {
+  for(j in seq_along(p.seq)) {
     # setup for particular parameter value
     set.seed(225)
     g.p[[p[1]]] <- p.seq[[j]]
@@ -65,9 +316,9 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     stopCluster(p.c)
     
     # rearrange output
-    ad.j <- map(out.j, ~.$N[,,max(g.p$age.f)]) %>% 
+    ad.j <- map(out.j, ~.$N[,,max(g.p$m)]) %>% 
       unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
-    sb.j <- map(out.j, ~.$N.sb) %>% 
+    sb.j <- map(out.j, ~.$B) %>% 
       unlist %>% array(., dim=c(ngrid, g.p$tmax+1, n.sim))
     
     # store output
@@ -82,8 +333,8 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
   
   cat("Processing output\n")
   p.c <- makeCluster(g.p$n.cores/3); registerDoSNOW(p.c)
-  foreach(j=1:length(p.seq), .combine=rbind) %dopar% {
-    library(tidyverse); library(stringr); library(gbPopMod)
+  foreach(j=seq_along(p.seq), .combine=rbind, 
+          .packages=c("tidyverse", "stringr", "gbPopMod")) %dopar% {
     options(bitmapType='cairo')
     
     # setup
@@ -96,9 +347,9 @@ run_sensitivity <- function(p, p.seq, n.sim, ngrid, ncell, g.p, control.p,
     # munge data
     ## cell summaries
     ad.mn <- apply(ad.j[lc.df$inbd,,], 1:2, mean)
-    K.ag <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
+    K.E <- round(as.matrix(lc.df[,4:9]) %*% g.p$K)
     ### logical: is cell-iter-t at K?
-    at.K <- apply(ad.j, c(2,3), function(x) x == K.ag & x > 0)
+    at.K <- apply(ad.j, c(2,3), function(x) x == K.E & x > 0)
     ### logical: did cell-iter ever reach K?
     reach.K <- at.K
     N.init <- at.K

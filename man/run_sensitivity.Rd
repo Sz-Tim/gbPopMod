@@ -2,7 +2,7 @@
 % Please edit documentation in R/fn_sensitivity.R
 \name{run_sensitivity}
 \alias{run_sensitivity}
-\title{Run sensitivity analysis}
+\title{Run univariate sensitivity analyses}
 \usage{
 run_sensitivity(p, p.seq, n.sim, ngrid, ncell, g.p, control.p, lc.df,
   verbose = FALSE, makeGIFs = FALSE)
@@ -36,8 +36,9 @@ cell id info}
 Success message
 }
 \description{
-This is a wrapper for running simulations over a set of varying parameters.
-It runs in parallel using the \code{snow} and \code{foreach} packages.
+Running simulations over a set of varying parameters, where each parameter is
+changed while holding all others constant. It runs in parallel using the
+\code{doSNOW} and \code{foreach} packages.
 }
 \keyword{output}
 \keyword{parameters,}

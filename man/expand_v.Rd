@@ -17,8 +17,8 @@ expand_v(x, y, sep = "_")
 Vector (character)
 }
 \description{
-This function is similar to \code{\link[base]{expand.grid}} but inputs two
-vectors and returns a single character vector with the values from the two
-vectors separated by "_" by default.
+Similar to \code{\link[base]{expand.grid}} but inputs two vectors and returns
+a single character vector with the values from the two vectors separated by
+"_" by default.
 }
 \keyword{expand.grid}

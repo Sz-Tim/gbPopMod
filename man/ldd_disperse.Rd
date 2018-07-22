@@ -4,16 +4,16 @@
 \alias{ldd_disperse}
 \title{Long distance dispersal}
 \usage{
-ldd_disperse(ncell, id.i, N.rcrt, n.ldd)
+ldd_disperse(ncell, id.i, M.0, n.ldd)
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
 
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id.inbd} indexes only inbound cells}
+while \code{id.in} indexes only inbound cells}
 
-\item{N.rcrt}{\code{N.rcrt} output from \code{\link{new_seedlings}} with grid
-id and number of new recruits in each cell}
+\item{M.0}{\code{M.0} output from \code{\link{new_seedlings}} with grid id
+and number of new recruits in each cell}
 
 \item{n.ldd}{Number of long distance dispersal events per time step}
 }
@@ -21,8 +21,8 @@ id and number of new recruits in each cell}
 Tibble with grid id and number of seeds
 }
 \description{
-This function assigns n.ldd random long distance dispersal events across the
-landcape. A single established seed is added to each target cell
+Assign n.ldd random long distance dispersal events across the landcape. A
+single established seed is added to each target cell
 }
 \keyword{LDD,}
 \keyword{dispersal}

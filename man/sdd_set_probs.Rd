@@ -4,7 +4,8 @@
 \alias{sdd_set_probs}
 \title{Set short distance dispersal probabilities}
 \usage{
-sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL, edges = "wall")
+sdd_set_probs(ncell, lc.df, g.p, lc.new = NULL, edges = "wall",
+  lc.col = 4:9, verbose = F)
 }
 \arguments{
 \item{ncell}{Number of inbound grid cells}
@@ -17,11 +18,20 @@ cell id info}
 \item{lc.new}{Vector of indexes of cells that need to have their SDD
 neighborhood recalculated; defaults to \code{NULL} and calculates SDD
 neighborhoods for all cells}
+
+\item{edges}{\code{"wall"} Boundary behavior}
+
+\item{lc.col}{\code{4:9} Column indexes for land cover proportions}
+
+\item{verbose}{\code{FALSE} Give updates for number of cells completed?}
 }
 \value{
-Array with dim(disp.rows, disp.cols, 2, ncell) where the third
+List with full neighborhoods,i, and sparse representation, sp. The
+  full array has dim(disp.rows, disp.cols, 2, ncell) where the third
   dimension contains grid id's for the neighborhood or probabilities to each
-  target cell
+  target cell. The sparse representation is a list with an element for each
+  cell, where each element is a vector of non-zero probabilities named with
+  the target cells.
 }
 \description{
 Assign base dispersal probabilities from each cell. Each layer \code{k} in

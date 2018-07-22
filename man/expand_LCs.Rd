@@ -31,16 +31,15 @@ values be generated?}
 List of vectors, each length 6
 }
 \description{
-This function is similar to \code{\link[base]{expand.grid}} but inputs a
-vector of minimum values and a vector of maximum values in addition to a
-length.out parameter. It returns a list of vectors, with an element for each
-combination of land cover parameters. By default, \code{all.combo=FALSE} and
-all land covers are incremented jointly. If \code{all.combo=TRUE}, then all
-combinations of land cover parameter values will be output. If
-\code{LC="all"}, then all land cover types will be incremented across the
-specifie range. If \code{LC} is set to a specific land cover category, then
-only that category will be incremented while the other categories are held
-constant.
+Similar to \code{\link[base]{expand.grid}} but inputs a vector of minimum
+values and a vector of maximum values in addition to a length.out parameter.
+It returns a list of vectors, with an element for each combination of land
+cover parameters. By default, \code{all.combo=FALSE} and all land covers are
+incremented jointly. If \code{all.combo=TRUE}, then all combinations of land
+cover parameter values will be output. If \code{LC="all"}, then all land
+cover types will be incremented across the specifie range. If \code{LC} is
+set to a specific land cover category, then only that category will be
+incremented while the other categories are held constant.
 }
 \keyword{expand.grid,}
 \keyword{sensitivity}

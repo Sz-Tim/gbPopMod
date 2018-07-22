@@ -4,16 +4,22 @@
 \alias{trt_assign}
 \title{Assign landowner treatments}
 \usage{
-trt_assign(id.i, ncell, nTrt, trt.eff, addOwners = FALSE, trt.m1 = NULL)
+trt_assign(id.i, ncell = NULL, assign_i = NULL, pTrt, trt.eff,
+  addOwners = FALSE, trt.m1 = NULL)
 }
 \arguments{
 \item{id.i}{Tibble matching cell IDs. \code{id} indexes on the entire grid
-while \code{id.inbd} indexes only inbound cells}
+while \code{id.in} indexes only inbound cells}
 
-\item{ncell}{Number of inbound grid cells}
+\item{ncell}{\code{NULL} Number of inbound grid cells. Required if cell IDs
+are not supplied via \code{assign_i}}
 
-\item{nTrt}{Proportion of inbound grid cells to be treated. If add != NULL,
-then this is appended to the cells treated in the previous time step.}
+\item{assign_i}{\code{NULL} Vector of inbound cell IDs to treat. If
+\code{NULL}, then \code{ncell} IDs are sampled randomly for treatments}
+
+\item{pTrt}{Proportion of inbound grid cells to be treated. If \code{add !=
+NULL}, then this is appended to the cells treated in the previous time
+step.}
 
 \item{trt.eff}{Named vector with effects of each treatment. These names are
 sampled and assigned to cells}
@@ -30,9 +36,8 @@ time step.}
 Tibble with grid id and treatment type
 }
 \description{
-This function randomly assigns pixels to the specified buckthorn management
-treatment. Assigned cells either overwrite the cells treated in the previous
-time step or are appended.
+Assign pixels to the specified buckthorn management treatment. Assigned cells
+either overwrite the cells treated in the previous time step or are appended.
 }
 \keyword{control,}
 \keyword{owners}

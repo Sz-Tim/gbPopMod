@@ -17,8 +17,8 @@ probability}
 Tibble with grid id and establishment probabilities
 }
 \description{
-This function overwrites the establishment probabilities for cells receiving
-a ground cover treatment
+Overwrite the establishment probabilities for cells receiving a ground cover
+treatment
 }
 \keyword{compaction,}
 \keyword{control,}

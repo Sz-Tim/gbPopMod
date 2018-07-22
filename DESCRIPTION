@@ -10,17 +10,18 @@ Encoding: UTF-8
 LazyData: true
 Imports:
   devtools,
-  tidyverse,
+  dismo,
+  doSNOW,
+  fastmatch,
+  foreach,
+  here,
   magrittr,
-  pacman,
-  stringr, 
-  purrr,
   parallel, 
-  pbapply, 
-  fastmatch
+  scales,
+  tidyverse
 RoxygenNote: 6.0.1
 Suggests: gganimate,
     knitr,
-    roxygen2,
-    rmarkdown
+    rmarkdown,
+    roxygen2
 VignetteBuilder: knitr

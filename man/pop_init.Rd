@@ -16,11 +16,11 @@ cell id info}
 }
 \value{
 Matrix or array of initial abundances with \code{dim=c(ngrid, (n.lc),
-  y.ad)}
+  m.max)}
 }
 \description{
-This function initializes populations randomly with populated cells
-containing adults at 50% K and juveniles at 10% K
+Initialize populations randomly with populated cells containing adults at 50%
+K and juveniles at 10% K
 }
 \keyword{initialize,}
 \keyword{set}
