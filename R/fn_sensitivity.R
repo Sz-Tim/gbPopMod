@@ -74,6 +74,7 @@ set_sensitivity_pars <- function(pars) {
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
 #' @param verbose \code{FALSE} Give updates?
+#' @param sim.dir \code{"out/sims/"} Directory to store simulation output
 #' @return list with elements \code{out} containing the full output from
 #'   \link{run_sim}, and \code{results} containing the parameter sets and
 #'   simulation summaries
@@ -81,9 +82,10 @@ set_sensitivity_pars <- function(pars) {
 #' @export
 
 global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, 
-                               N.init, control.p=NULL, verbose=F) {
+                               N.init, control.p=NULL, 
+                               verbose=FALSE, sim.dir="out/sims/") {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
-  if(!dir.exists("out/sims/")) dir.create("out/sims/")
+  if(!dir.exists(sim.dir)) dir.create(sim.dir, recursive=TRUE)
   
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
@@ -115,16 +117,16 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
     }
     sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
     saveRDS(sim_i$N[,g.p$tmax+1, dim(sim_i$N)[3]], 
-            paste0("out/sims/N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+            paste0(sim.dir, "N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
     saveRDS(sim_i$B[,g.p$tmax+1], 
-            paste0("out/sims/B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+            paste0(sim.dir, "B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
   
   # calculate grid-wide summaries
   if(verbose) cat("Calculating summaries...\n")
-  N <- map(dir("out/sims", "N_", full.names=T), readRDS)
-  B <- map(dir("out/sims", "B_", full.names=T), readRDS)
+  N <- map(dir(sim.dir, "N_", full.names=T), readRDS)
+  B <- map(dir(sim.dir, "B_", full.names=T), readRDS)
   results <- as.data.frame(do.call("cbind", samples))
   par.len <- map_int(samples, ncol)
   par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
@@ -158,14 +160,16 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
 #' @param td \code{c(1,3,5)} Vector of regression tree interaction depths to
 #'   test
 #' @param resp Which response summary to use (column name from \code{sens.out})
+#' @param brt.dir \code{"out/brt/"} Directory to store boosted regression tree
+#'   output
 #' @return Success message
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
 emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10, 
-                                td=c(1,3,5), resp) {
+                                td=c(1,3,5), resp, brt.dir="out/brt/") {
   library(tidyverse); library(doSNOW)
-  if(!dir.exists("out/brt/")) dir.create("out/brt/")
+  if(!dir.exists(brt.dir)) dir.create(brt.dir)
   x <- which(str_split_fixed(names(sens.out), "_", 2)[,1] %in% names(par.ls))
   y <- which(names(sens.out)==resp)
   sub.prop <- seq(0.5, 1, length.out=n.sub)
@@ -184,7 +188,7 @@ emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10,
                                  max.trees=200000, n.folds=5, 
                                  family="gaussian", tree.complexity=td_j,
                                  bag.fraction=0.8, silent=T, plot.main=F)
-      saveRDS(brt.fit, paste0("out/brt/", resp, "_td-", td_j, "-", n, ".rds"))
+      saveRDS(brt.fit, paste0(brt.dir, resp, "_td-", td_j, "-", n, ".rds"))
     }
   }
   stopCluster(p.c)
@@ -203,12 +207,14 @@ emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10,
 #' @return List of three dataframes: relative influences, cross-validation
 #'   deviances, and beta diversity of relative influences (i.e., for stability),
 #'   each across different subsample sizes and tree complexities.
+#' @param brt.dir \code{"out/brt/"} Directory with stored boosted regression
+#'   tree output
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-emulation_summary <- function(resp=resp) {
+emulation_summary <- function(resp=resp, brt.dir="out/brt/") {
   library(gbm); library(tidyverse)
-  f <- dir("out/brt", paste0(resp, "_"))
+  f <- dir(brt.dir, paste0(resp, "_"))
   f.i <- str_split_fixed(f, "-", 3)
   cvDev.df <- betaDiv.df <- tibble(response=resp,
                                        td=f.i[,2],
@@ -217,7 +223,7 @@ emulation_summary <- function(resp=resp) {
   betaDiv.df$beta <- NA
   ri.ls <- vector("list", length(f))
   for(i in seq_along(f)) {
-    brt <- readRDS(paste0("out/brt/", f[i]))
+    brt <- readRDS(paste0(brt.dir, f[i]))
     # cross validation deviance
     cvDev.df$Dev[i] <- brt$cv.statistics$deviance.mean
     # relative influence

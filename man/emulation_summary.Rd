@@ -4,10 +4,13 @@
 \alias{emulation_summary}
 \title{Summarize BRT emulations}
 \usage{
-emulation_summary(resp = resp)
+emulation_summary(resp = resp, brt.dir = "out/brt/")
 }
 \arguments{
 \item{resp}{Which response summary to use (column name from \code{sens.out})}
+
+\item{brt.dir}{\code{"out/brt/"} Directory with stored boosted regression
+tree output}
 }
 \value{
 List of three dataframes: relative influences, cross-validation

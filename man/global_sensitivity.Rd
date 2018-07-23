@@ -5,7 +5,7 @@
 \title{Run global sensitivity analysis}
 \usage{
 global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, N.init,
-  control.p = NULL, verbose = F)
+  control.p = NULL, verbose = FALSE, sim.dir = "out/sims/")
 }
 \arguments{
 \item{par.ls}{List output from \code{\link{set_par_ranges}} with parameter to
@@ -34,6 +34,8 @@ cell id info}
 set with \code{\link{set_control_p}}}
 
 \item{verbose}{\code{FALSE} Give updates?}
+
+\item{sim.dir}{\code{"out/sims/"} Directory to store simulation output}
 }
 \value{
 list with elements \code{out} containing the full output from

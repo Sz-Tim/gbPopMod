@@ -34,25 +34,27 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 N.init <- pop_init(ngrid, g.p, lc.df)
 
 # run sensitivity analysis
-out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
-                          sdd.pr, N.init, control.p=NULL, verbose=T)
+out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd.pr, 
+                          N.init, control.p=NULL, verbose=T, 
+                          sim.dir=paste0("out/", par_span, "/sims/"))
+write_csv(out, paste0("out/", par_span, "/sensitivity_results.csv"))
 
 nMetric <- 8
 nPar <- ncol(out)-nMetric
 brt.sum <- vector("list", nMetric)
 for(i in 1:nMetric) {
   metric <- names(out)[nPar+i]
-  emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric)
-  brt.sum[[i]] <- emulation_summary(metric)
+  emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric, 
+                      brt.dir=paste0("out/", par_span, "/brt/"))
+  brt.sum[[i]] <- emulation_summary(metric, paste0("out/", par_span, "/brt/"))
 }
-ri.df <- map_dfr(brt.sum, ~.$ri.df)
-cvDev.df <- map_dfr(brt.sum, ~.$cvDev.df)
-betaDiv.df <- map_dfr(brt.sum, ~.$betaDiv.df)
+
+write_csv(map_dfr(brt.sum, ~.$ri.df), 
+          paste0("out/", par_span, "/BRT_RI.csv"))
+write_csv(map_dfr(brt.sum, ~.$cvDev.df), 
+          paste0("out/", par_span, "/BRT_cvDev.csv"))
+write_csv(map_dfr(brt.sum, ~.$betaDiv.df), 
+          paste0("out/", par_span, "/BRT_betaDiv.csv"))
 
 
-# store output
-write_csv(out$results, "out/sensitivity_results.csv")
-write_csv(ri.df, "out/BRT_RI.csv")
-write_csv(cvDev.df, "out/BRT_cvDev.csv")
-write_csv(betaDiv.df, "out/BRT_betaDiv.csv")
-#saveRDS(out, "out/sensitivity_out.rds")
+
