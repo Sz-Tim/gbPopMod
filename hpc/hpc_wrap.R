@@ -14,12 +14,13 @@ theme_set(theme_bw())
 
 # set landscape file
 lc_f <- "data/9km_car.csv"
+par_span <- "gb"
 
 # set parameters
-g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=16, 
-               m=c(3,3,7,7,7,7), sdd.max=5, sdd.rate=1, N.p.t0=40)
-par.ls <- set_sensitivity_pars(names(g.p)[10:25])
-nSamp <- 10000
+g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=4, 
+               sdd.max=5, sdd.rate=1, N.p.t0=40)
+par.ls <- set_sensitivity_pars(names(g.p)[10:25], par_span)
+nSamp <- 300
 
 # load landscape
 lc.df <- read_csv(lc_f) %>% 

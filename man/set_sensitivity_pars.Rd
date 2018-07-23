@@ -4,10 +4,15 @@
 \alias{set_sensitivity_pars}
 \title{Set parameters for global sensitivity analysis}
 \usage{
-set_sensitivity_pars(pars)
+set_sensitivity_pars(pars, span = "total")
 }
 \arguments{
 \item{pars}{Names of parameters to perform sensitivity analysis on}
+
+\item{span}{\code{"total"} Span for parameter ranges, either \code{"total"}
+(i.e., all probabilities [0,1], large ranges for all others, identical
+ranges across land cover types) or \code{"gb"} (i.e., plausible ranges for
+glossy buckthorn based on experiments, literature, and expert knowledge)}
 }
 \value{
 Named list with a sublist for each parameter, including the parameter
