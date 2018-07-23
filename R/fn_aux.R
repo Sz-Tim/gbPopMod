@@ -335,8 +335,8 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #' @param mu \code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
 #'   mean fruit per adult
 #' @param gamma \code{2.3} Scalar: mean number of seeds per fruit
-#' @param m \code{4} Vector \code{length=n.lc} or scalar of age at first
-#'   fruiting. Individuals at this age are considered adults
+#' @param m \code{c(3, 3, 7, 7, 7, 7)} Vector \code{length=n.lc} or scalar of
+#'   age at first fruiting. Individuals at this age are considered adults
 #' @param p.c \code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector \code{length=n.lc}
 #'   of proportion of fruits eaten by birds, with \code{1-p.c} assumed to drop
 #'   directly below buckthorn individuals
@@ -377,7 +377,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
                     p.f=c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3),
                     mu=c(200, 100, 40, 20, 20, 10),
                     gamma=2.3, 
-                    m=4, 
+                    m=c(3, 3, 7, 7, 7, 7), 
                     p.c=c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
                     sdd.rate=0.1, 
                     sdd.max=15, 

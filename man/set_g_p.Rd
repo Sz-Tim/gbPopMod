@@ -7,11 +7,11 @@
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
   p.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3), mu = c(200, 100, 40, 20, 20, 10),
-  gamma = 2.3, m = 4, p.c = c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1),
-  sdd.rate = 0.1, sdd.max = 15, bird.hab = c(0.35, 0.35, 0.05, 0.1, 0.1,
-  0.05), n.ldd = 1, s.c = 0.6, s.B = 0.75, s.M = c(0.9, 0.1, 0.6, 0.6,
-  0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1), K = c(750, 10, 100, 100, 300, 100),
-  g.D = 0, g.B = 0.5, p = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
+  gamma = 2.3, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.3, 0.1, 0.2, 0.2, 0.2,
+  0.1), sdd.rate = 0.1, sdd.max = 15, bird.hab = c(0.35, 0.35, 0.05, 0.1,
+  0.1, 0.05), n.ldd = 1, s.c = 0.6, s.B = 0.75, s.M = c(0.9, 0.1, 0.6,
+  0.6, 0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1), K = c(750, 10, 100, 100, 300,
+  100), g.D = 0, g.B = 0.5, p = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
   edges = "wall", method = "wt.mn")
 }
 \arguments{
@@ -41,8 +41,8 @@ mean fruit per adult}
 
 \item{gamma}{\code{2.3} Scalar: mean number of seeds per fruit}
 
-\item{m}{\code{4} Vector \code{length=n.lc} or scalar of age at first
-fruiting. Individuals at this age are considered adults}
+\item{m}{\code{c(3, 3, 7, 7, 7, 7)} Vector \code{length=n.lc} or scalar of
+age at first fruiting. Individuals at this age are considered adults}
 
 \item{p.c}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector \code{length=n.lc}
 of proportion of fruits eaten by birds, with \code{1-p.c} assumed to drop
