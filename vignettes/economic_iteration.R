@@ -11,8 +11,10 @@
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
 # install the package along with all other required packages with:
-devtools::install_github("Sz-Tim/gbPopMod", dependencies=TRUE,
+if(!requite(gbPopMod)){
+  devtools::install_github("Sz-Tim/gbPopMod", dependencies=TRUE,
                          auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
+}
 # The following packages are called by various gbPopMod functions:
 # - here: easier file directory navigation
 # - doSNOW: running in parallel
@@ -41,7 +43,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-lc.df <- read_csv("data/20a_full.csv") # test: 9km_car.csv; full: 20a_full.csv
+lc.df <- suppressMessages(read_csv("data/20a_full.csv")) # test: 9km_car.csv; full: 20a_full.csv
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)

@@ -84,6 +84,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
   c.i <- map(n.i, ~fmatch(., lc.df$x_y))
 
   if(is.null(lc.new) && verbose) cat("  calculating probabilities...\n")
+  if(is.null(lc.new) && verbose) pbar <- txtProgressBar(min=1, max=ncell, style=3)
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
     sdd.i[n.y[[n]][1]:n.y[[n]][2],
@@ -96,11 +97,15 @@ sdd_set_probs <- function(ncell, lc.df, g.p, lc.new=NULL,
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
     
     # progress update
-    if(n %% 5000 == 0) {
-      if(is.null(lc.new) && verbose) cat("  finished cell", n, "\n")
+    #if(n %% 5000 == 0) {
+    #  if(is.null(lc.new) && verbose) cat("  finished cell", n, "\n")
+    #}
+    if(is.null(lc.new) && verbose){
+      setTxtProgressBar(pbar, n)
     }
+      
   }
-  if(is.null(lc.new) && verbose) cat("  finished:", n, "cells\n")
+  if(is.null(lc.new) && verbose) cat("\n  finished:", n, "cells\n")
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
   sdd.sparse <- vector("list", ncell)
   for(n in 1:ncell) {
