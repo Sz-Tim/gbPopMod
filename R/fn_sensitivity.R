@@ -74,7 +74,7 @@ set_sensitivity_pars <- function(pars, span="total") {
                         min=c(0, 0, 0, 0, 0, 0), 
                         max=c(2000, 100, 1000, 1000, 1000, 1000)),
                    list(param="g.D", type="prob", LC=0, min=0, max=0.01),
-                   list(param="g.B", type="prob", LC=0, min=0, max=1),
+                   list(param="g.B", type="prob", LC=0, min=0, max=.5),
                    list(param="p", type="prob", LC=1,
                         min=c(0, 0, 0, 0, 0, 0), 
                         max=c(0.2, 0.2, 0.2, 0.2, 0.2, 0.2))
@@ -247,13 +247,13 @@ emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10,
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-emulation_summary <- function(resp=resp, brt.dir="out/brt/") {
+emulation_summary <- function(resp, brt.dir="out/brt/") {
   library(gbm); library(tidyverse)
   f <- dir(brt.dir, paste0(resp, "_"))
   f.i <- str_split_fixed(f, "-", 3)
   cvDev.df <- betaDiv.df <- tibble(response=resp,
-                                       td=f.i[,2],
-                                       smp=str_remove(f.i[,3], ".rds"))
+                                   td=f.i[,2],
+                                   smp=str_remove(f.i[,3], ".rds"))
   cvDev.df$Dev <- NA
   betaDiv.df$beta <- NA
   ri.ls <- vector("list", length(f))

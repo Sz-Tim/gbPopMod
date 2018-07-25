@@ -4,7 +4,7 @@
 \alias{emulation_summary}
 \title{Summarize BRT emulations}
 \usage{
-emulation_summary(resp = resp, brt.dir = "out/brt/")
+emulation_summary(resp, brt.dir = "out/brt/")
 }
 \arguments{
 \item{resp}{Which response summary to use (column name from \code{sens.out})}
