@@ -3,12 +3,16 @@
 Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
               "fastmatch", "scales", "gganimate", "compiler")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
-theme_set(theme_bw())
-data(lc.rct)
+theme_set(theme_light())
+#data(lc.rct)
+
+lambda_values <- c(3,.2,.8,.8,1.7,.8)
 
 # set parameters
 n.sim <- 3
+# sets global simulation parameters
 g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.cores=1, sdd.max=10)
+# sets control parameter
 control.p <- set_control_p(null_ctrl=FALSE, 
                            t.trt=80,
                            man.i=1300:1800,  # cells with manual controls
@@ -31,15 +35,17 @@ ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
 # short distance dispersal neighborhoods
-sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
+sdd.pr <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
 
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
 
-out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), 
-                          sdd.pr$i, N.init, TRUE)
-out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
-                        N=out.lam[,g.p$tmax+1])
+# how is this related to run_sim? This simulation does not have management controls
+# out.lam <- run_sim_lambda(ngrid, ncell, g.p, lambda_values, 
+#                          lc.df, sdd.pr$i, N.init, TRUE)
+# TODO: is this needed?
+# out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% lambda_values),
+#                        N=out.lam$N[,g.p$tmax+1])
 
 # run simulation
 if(g.p$n.cores > 1) {

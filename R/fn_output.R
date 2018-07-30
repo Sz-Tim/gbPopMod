@@ -27,8 +27,6 @@ save_pars <- function(p.wd, g.p, control.p, verbose=TRUE) {
 }
 
 
-
-
 #' Save simulation output as .rds files
 #'
 #' This function saves both the global and buckthorn control parameters used in
@@ -121,8 +119,6 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 }
 
 
-
-
 #' Save gifs of buckthorn distribution through time
 #'
 #' This function saves gifs of the distribution of buckthorn. This includes
@@ -144,36 +140,46 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 
 make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
   library(gganimate); options(bitmapType='cairo')
-  theme_set(theme_bw() + theme(panel.grid=element_blank()))
+  theme_set(theme_light() + theme(panel.grid=element_blank()))
   
   # filenames
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP", "ad_L5")
   f.full <- paste0(p.wd, f.nm, ".gif")
   
-  p.gif <- ggplot(N.out, aes(x=x, y=-y, frame=year, colour=inbd)) + 
+  N.out.p <- N.out %>% mutate(year=as.integer(year),inbd=as.factor(inbd))
+  
+  p.gif <- ggplot(N.out.p, aes(x=x, y=-y, color=inbd, frame=year)) + 
+    geom_tile(aes_string(fill=f.nm[1])) +
     scale_fill_gradient(low="white", high="red") + 
     scale_colour_manual(values=c("gray", NA))
+  print(p.gif)
   
+  library(reshape2)
+  n1 <- N.out.p %>% filter(year == 1)
+  n1.m <- acast(n1, x ~ y, value.var = 'ad_Ab')
+  
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[1])) )
+    
   # Adult abundance
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[1])) + 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[1])) + 
               ggtitle(paste(txt, "Adult mean(abundance). Year")), 
             filename=f.full[1], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[2])) + 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[2])) + 
               ggtitle(paste(txt, "Seed mean(log abundance). Year")), 
             filename=f.full[2], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[3])) + 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[3])) + 
               ggtitle(paste(txt, "Adult sd(abundance). Year")), 
             filename=f.full[3], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[4])) + 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[4])) + 
               ggtitle(paste(txt, "Seed sd(log abundance). Year")), 
             filename=f.full[4], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[5])) + 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[5])) + 
               ggtitle(paste(txt, "Adult mean(presence). Year")), 
             filename=f.full[5], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[6])) + 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[6])) + 
               ggtitle(paste(txt, "Seed mean(presence). Year")), 
             filename=f.full[6], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[7])) %+% 
+  animate(p=p.gif + geom_tile(aes_string(fill=f.nm[7])) %+% 
               scale_fill_gradient2(low="white", mid="blue", 
                                    high="pink", midpoint=1) +
               ggtitle(paste(txt, "Adult mean(0 < abundance ≤ 5). Year")), 

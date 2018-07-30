@@ -11,7 +11,7 @@
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
 # install the package along with all other required packages with:
-if(!requite(gbPopMod)){
+if(!require(gbPopMod)){
   devtools::install_github("Sz-Tim/gbPopMod", dependencies=TRUE,
                          auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
 }
