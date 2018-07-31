@@ -75,7 +75,7 @@ par.rng$gamma$max <- quantile(frt_data, 0.75)
 
 ## m: Age at adulthood
 #--- Source: Expert opinion (Tom Lee)
-par.best$m <- c(2, 2, 6, 6, 6, 6)
+par.best$m <- c(3, 3, 7, 7, 7, 7)
 par.rng$m$min <- c(2, 2, 4, 4, 4, 4)
 par.rng$m$max <- c(4, 4, 8, 8, 8, 8)
 
@@ -153,9 +153,9 @@ par.rng$s.B$max <- exp(-1/(3*1.25))
 
 ## s.N: Annual survival rate for adults
 #--- Source: Expert opinion -- no observed mortality in USDA time frame
-par.best$s.N <- 1
-par.rng$s.N$min <- 0.9
-par.rng$s.N$max <- 1
+par.best$s.N <- rep(1, 6)
+par.rng$s.N$min <- rep(0.9, 6)
+par.rng$s.N$max <- rep(1, 6)
 
 
 ## K: Carrying capacity for adults
@@ -169,9 +169,9 @@ if(res=="20ac") {
                                       q25=quantile(n_g1m_9km2, 0.25),
                                       q75=quantile(n_g1m_9km2, 0.75))
 }
-par.best$K <- dens_data$mn[c(2,2,1,1,1,1)]
-par.rng$K$min <- dens_data$q25[c(2,2,1,1,1,1)]
-par.rng$K$max <- dens_data$q75[c(2,2,1,1,1,1)]
+par.best$K <- with(dens_data, c(mn[2], 10, mn[1], mn[1], mn[1], mn[1]))
+par.rng$K$min <- with(dens_data, c(q25[2], 0, q25[1], q25[1], q25[1], q25[1]))
+par.rng$K$max <- with(dens_data, c(q75[2], 100, q75[1], q75[1], q75[1], q75[1]))
 
 
 
