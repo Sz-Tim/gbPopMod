@@ -6,13 +6,14 @@
 \usage{
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
-  p.f = c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3), mu = c(200, 100, 40, 20, 20, 10),
-  gamma = 2.3, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.3, 0.1, 0.2, 0.2, 0.2,
-  0.1), sdd.rate = 0.1, sdd.max = 15, bird.hab = c(0.35, 0.35, 0.05, 0.1,
-  0.1, 0.05), n.ldd = 1, s.c = 0.6, s.B = 0.75, s.M = c(0.9, 0.1, 0.6,
-  0.6, 0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1), K = c(750, 10, 100, 100, 300,
-  100), g.D = 0, g.B = 0.5, p = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
-  edges = "wall", method = "wt.mn")
+  p.f = c(0.65, 0.65, 0.1, 0.15, 0.15, 0.1), mu = c(1948, 87, 87, 172, 172,
+  87), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149, 0.149, 0.273,
+  0.233, 0.233, 0.273), sdd.rate = 0.133, sdd.max = 77, bird.hab = c(0.32,
+  0.36, 0.05, 0.09, 0.09, 0.09), n.ldd = 1, s.c = 0.585, s.B = 0.72,
+  s.M = c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1),
+  K = c(47009, 10, 6937, 6937, 6937, 6937), g.D = 0, g.B = 0.2,
+  p = c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03), edges = "wall",
+  method = "wt.mn")
 }
 \arguments{
 \item{tmax}{\code{100} Number of time steps per simulation}
@@ -95,7 +96,7 @@ Named list of global parameters including all arguments as elements
 }
 \description{
 Set the global parameters for the simulation, allowing for individual
-elements to be reassigned.
+elements to be reassigned. Default parameters assume 8.1 hectare cells.
 }
 \keyword{global,}
 \keyword{initialize,}
