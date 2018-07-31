@@ -41,7 +41,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-lc.df <- read_csv("data/20a_full.csv") # test: 9km_car.csv; full: 20a_full.csv
+lc.df <- read_csv("data/USDA_9km2.csv") # test: 9km_car.csv; full: 20a_full.csv
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)
@@ -51,8 +51,8 @@ id.i <- lc.df %>% select(id, id.in)
 # This is to allow simpler spatial calculations (e.g., SDD neighborhoods)
 
 #--- set parameters as default; ?set_control_p; ?set_g_p
-tmax <- 3
-g.p <- set_g_p(m=c(7,7,3,3,3,3), g.D=0)
+tmax <- 100
+g.p <- set_g_p(m=c(3,3,7,7,7,7), g.D=0)
 c.p <- set_control_p(null_ctrl=FALSE, 
                      pTrt.man=0.2,  # 5% of cells cut and/or spray
                      pTrt.grd=0.2,  # 5% of cells use ground cover
@@ -66,7 +66,7 @@ N.init <- pop_init(ngrid, g.p, lc.df)  # eventually will be stored & loaded
 B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
 N <- array(0, dim=c(ngrid, tmax+1, 6, max(g.p$m))) # [cell, year, LC, age]
 N[,1,,] <- N.init
-for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:6] <- NA } }
+for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
 
 
 for(t in 1:tmax) {
@@ -119,10 +119,11 @@ for(t in 1:tmax) {
                      grd_cover.i, cut_spray.i, read_write=FALSE, path=NULL)
   N[,t+1,,] <- out$N
   B[,t+1] <- out$B
+  if(t %% 10 == 0) cat("Finished time", t, "\n")
 }
 
 # visualize output
-N.tot <- apply(N[,,,7], 1:2, sum) # sum adults across land cover categories
+N.tot <- apply(N[,,,max(g.p$m)], 1:2, sum) # sum adults across LC categories
 out.df <- lc.df %>%
   mutate(N.0=N.tot[,1],
          B.0=B[,1],
@@ -134,11 +135,11 @@ matplot(t(B), type="l", lty=1, col=rgb(0,0,0,0.3))
 # final maps
 theme_set(theme_bw())
 ggplot(out.df, aes(x=lon, y=lat)) + 
-  geom_tile(aes(fill=N.final)) + geom_point(aes(colour=N.0>0)) +
+  geom_tile(aes(fill=log(N.final))) + geom_point(aes(colour=N.0>0)) +
   scale_fill_gradient(low="white", high="red") +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue"))
 ggplot(out.df, aes(x=lon, y=lat)) + 
-  geom_tile(aes(fill=B.final)) + geom_point(aes(colour=N.0>0)) +
+  geom_tile(aes(fill=log(B.final))) + geom_point(aes(colour=N.0>0)) +
   scale_fill_gradient(low="white", high="red") +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue"))
 ggplot(out.df, aes(x=lon, y=lat)) + 
