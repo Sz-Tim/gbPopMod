@@ -7,13 +7,14 @@
 #'   (i.e., all probabilities [0,1], large ranges for all others, identical
 #'   ranges across land cover types) or \code{"gb"} (i.e., plausible ranges for
 #'   glossy buckthorn based on experiments, literature, and expert knowledge)
+#' @param res \code{"20ac"} Resolution of grid. Either "20ac" or "9km2"
 #' @return Named list with a sublist for each parameter, including the parameter
 #'   name, the type ('prob', 'cont', 'int'), whether it varies by land cover
 #'   category, and the minimum and maximum values
 #' @keywords parameters, sensitivity, initialize
 #' @export
 
-set_sensitivity_pars <- function(pars, span="total") {
+set_sensitivity_pars <- function(pars, span="total", res="20ac") {
   if(span=="total") {
     par.ls <- list(list(param="p.f", type="prob", LC=1, 
                         min=rep(0,6), max=rep(1,6)),
@@ -24,8 +25,12 @@ set_sensitivity_pars <- function(pars, span="total") {
                         min=rep(2,6), max=rep(8,6)),
                    list(param="p.c", type="prob", LC=1,
                         min=rep(0,6), max=rep(1,6)),
-                   list(param="sdd.rate", type="cont", LC=0, min=0.5, max=3),
-                   list(param="sdd.max", type="int", LC=0, min=2, max=7),
+                   list(param="sdd.rate", type="cont", LC=0, 
+                        min=ifelse(res=="20ac", 0.05, 0.5), 
+                        max=ifelse(res=="20ac", 0.5, 5)),
+                   list(param="sdd.max", type="int", LC=0, 
+                        min=ifelse(res=="20ac", 2, 2), 
+                        max=ifelse(res=="20ac", 100, 15)),
                    list(param="bird.hab", type="cont", LC=1, 
                         min=rep(0,6), max=rep(1,6)),
                    list(param="n.ldd", type="int", LC=0, min=0, max=10),
@@ -44,26 +49,30 @@ set_sensitivity_pars <- function(pars, span="total") {
     )
   } else if(span=="gb"){
     par.ls <- list(list(param="p.f", type="prob", LC=1, 
-                        min=c(0.5, 0, 0, 0, 0, 0), 
-                        max=c(1, 1, 0.5, 0.5, 0.5, 0.5)),
+                        min=c(0.4875, 0.4875, 0.075, 0.1125, 0.1125, 0.075), 
+                        max=c(0.8125, 0.8125, 0.125, 0.1875, 0.1875, 0.125)),
                    list(param="mu", type="cont", LC=1, 
-                        min=c(0, 0, 0, 0, 0, 0), 
-                        max=c(500, 500, 100, 100, 100, 100)),
-                   list(param="gamma", type="cont", LC=0, min=1, max=4),
+                        min=c(1461, 65, 65, 128, 128, 65), 
+                        max=c(2435, 109, 109, 215, 215, 109)),
+                   list(param="gamma", type="cont", LC=0, min=2.3775, max=2.595),
                    list(param="m", type="int", LC=1, 
-                        min=c(2, 2, 5, 5, 5, 5), 
-                        max=c(4, 8, 8, 8, 8, 8)),
+                        min=c(2, 2, 4, 4, 4, 4), 
+                        max=c(3, 2, 4, 4, 4, 4)),
                    list(param="p.c", type="prob", LC=1,
-                        min=c(0.05, 0.05, 0.05, 0.05, 0.05, 0.05), 
-                        max=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5)),
-                   list(param="sdd.rate", type="cont", LC=0, min=0.5, max=3),
-                   list(param="sdd.max", type="int", LC=0, min=2, max=7),
+                        min=c(0.113, 0.113, 0.222, 0.205, 0.205, 0.222), 
+                        max=c(0.206, 0.206, 0.314, 0.25, 0.25, 0.314)),
+                   list(param="sdd.rate", type="cont", LC=0, 
+                        min=ifelse(res=="20ac", 0.107, 1.12), 
+                        max=ifelse(res=="20ac", 0.178, 1.87)),
+                   list(param="sdd.max", type="int", LC=0, 
+                        min=ifelse(res=="20ac", 15, 5), 
+                        max=ifelse(res=="20ac", 97, 9)),
                    list(param="bird.hab", type="cont", LC=1, 
                         min=c(0, 0, 0, 0, 0, 0), 
                         max=c(1, 1, 1, 1, 1, 1)),
                    list(param="n.ldd", type="int", LC=0, min=1, max=5),
-                   list(param="s.c", type="prob", LC=0, min=0.3, max=0.9),
-                   list(param="s.B", type="prob", LC=0, min=0.3, max=0.9),
+                   list(param="s.c", type="prob", LC=0, min=0.4875, max=0.605),
+                   list(param="s.B", type="prob", LC=0, min=0.641, max=0.766),
                    list(param="s.M", type="prob", LC=1,
                         min=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5), 
                         max=c(1, 1, 1, 1, 1, 1)),
@@ -71,13 +80,13 @@ set_sensitivity_pars <- function(pars, span="total") {
                         min=c(0.9, 0.9, 0.9, 0.9, 0.9, 0.9), 
                         max=c(1, 1, 1, 1, 1, 1)),
                    list(param="K", type="cont", LC=1, 
-                        min=c(0, 0, 0, 0, 0, 0), 
-                        max=c(2000, 100, 1000, 1000, 1000, 1000)),
-                   list(param="g.D", type="prob", LC=0, min=0, max=0.01),
-                   list(param="g.B", type="prob", LC=0, min=0, max=.5),
+                        min=c(32554, 0, 2305, 2305, 2305, 2305), 
+                        max=c(64523, 100, 8964, 8964, 8964, 8964)),
+                   list(param="g.D", type="prob", LC=0, min=0, max=0),
+                   list(param="g.B", type="prob", LC=0, min=0.18, max=0.28),
                    list(param="p", type="prob", LC=1,
                         min=c(0, 0, 0, 0, 0, 0), 
-                        max=c(0.2, 0.2, 0.2, 0.2, 0.2, 0.2))
+                        max=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5))
     )
   }
   
