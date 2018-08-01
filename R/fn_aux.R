@@ -330,34 +330,34 @@ pop_init <- function(ngrid, g.p, lc.df) {
 #' @param lc.c \code{100} Maximum number of columns (\code{x}) in landscape
 #' @param n.lc \code{6} Number of land cover categories
 #' @param N.p.t0 \code{10} Number of cells with buckthorn at t=1
-#' @param p.f \code{c(0.9, 0.1, 0.29, 0.23, 0.2, 0.3)} Vector \code{length=n.lc}
-#'   of fruiting probabilities
-#' @param mu \code{c(200, 100, 40, 20, 20, 10)} Vector \code{length=n.lc} of
+#' @param p.f \code{c(0.45, 0.45, 0.29, 0.15, 0.15, 0.17)} Vector
+#'   \code{length=n.lc} of fruiting probabilities
+#' @param mu \code{c(1948, 14, 14, 41, 41, 21)} Vector \code{length=n.lc} of
 #'   mean fruit per adult
-#' @param gamma \code{2.3} Scalar: mean number of seeds per fruit
+#' @param gamma \code{2.48} Scalar: mean number of seeds per fruit
 #' @param m \code{c(3, 3, 7, 7, 7, 7)} Vector \code{length=n.lc} or scalar of
 #'   age at first fruiting. Individuals at this age are considered adults
 #' @param p.c \code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector \code{length=n.lc}
 #'   of proportion of fruits eaten by birds, with \code{1-p.c} assumed to drop
 #'   directly below buckthorn individuals
-#' @param sdd.rate \code{0.1} 1/mn for exponential dispersal kernel
-#' @param sdd.max \code{15} Maximum dispersal distance in cells
-#' @param bird.hab \code{c(0.35, 0.35, 0.05, 0.1, 0.1, 0.05)} Vector
+#' @param sdd.rate \code{0.133} 1/mn for exponential dispersal kernel
+#' @param sdd.max \code{77} Maximum dispersal distance in cells
+#' @param bird.hab \code{c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09)} Vector
 #'   \code{length=n.lc} of bird habitat preferences
 #' @param n.ldd \code{1} Number of long distance dispersal events per year
-#' @param s.c \code{0.6} Seed viability post-digestion
-#' @param s.B \code{0.75} Probability of annual survival in seed bank
+#' @param s.c \code{0.585} Seed viability post-digestion
+#' @param s.B \code{0.72} Probability of annual survival in seed bank
 #' @param s.M \code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
 #'   of annual juvenile survival rates
 #' @param s.N \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 #'   adult survival rates
-#' @param K \code{c(750, 10, 100, 100, 300, 100)} Vector (length=n.lc) of
+#' @param K \code{c(47009, 10, 6937, 6937, 6937, 6937)} Vector (length=n.lc) of
 #'   carrying capacities for adults
 #' @param g.D \code{0} Probability of direct germination (i.e., a seed
 #'   germinates in the same year it is produced)
-#' @param g.B \code{0.5} Probability of germinating from the seed bank
-#' @param p \code{c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)} Vector
-#'   \code{length=n.lc} of seedling establishment probabilities
+#' @param g.B \code{0.2} Probability of germinating from the seed bank
+#' @param p \code{c(0.35, 0.05, 0.4, 0.1, 0.1, 0.15)} Vector \code{length=n.lc}
+#'   of seedling establishment probabilities
 #' @param edges \code{"wall"} Boundary behavior, taking values of \code{"wall"},
 #'   \code{"sink"}, or \code{"none"}. See boundary_behavior.Rmd for descriptions
 #' @param method \code{"wt.mn"} Method for calculating cell expectations, taking
@@ -374,8 +374,8 @@ pop_init <- function(ngrid, g.p, lc.df) {
 
 set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4, 
                     lc.r=100, lc.c=100, n.lc=6, N.p.t0=10,
-                    p.f=c(0.65, 0.65, 0.1, 0.15, 0.15, 0.1),
-                    mu=c(1948, 87, 87, 172, 172, 87),
+                    p.f=c(0.45, 0.45, 0.29, 0.15, 0.15, 0.17),
+                    mu=c(1948, 14, 14, 41, 41, 21),
                     gamma=2.48, 
                     m=c(3, 3, 7, 7, 7, 7), 
                     p.c=c(0.149, 0.149, 0.273, 0.233, 0.233, 0.273),
@@ -390,7 +390,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
                     K=c(47009, 10, 6937, 6937, 6937, 6937),
                     g.D=0, 
                     g.B=0.2,
-                    p=c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03),
+                    p=c(0.35, 0.05, 0.4, 0.1, 0.1, 0.15),
                     edges="wall", method="wt.mn") {
   
   g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, bank=bank,

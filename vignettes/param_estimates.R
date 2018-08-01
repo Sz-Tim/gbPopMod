@@ -29,6 +29,9 @@ dens_lee <- read_csv("data/gb/Lee_density.csv") %>% group_by(Canopy)
 fec_lee <- read_csv("data/gb/Lee_fecundity.csv")
 emerge_lee <- read_csv("data/gb/Lee_emerge.csv")
 germ_lee <- read_csv("data/gb/Lee_germ.csv")
+ann_aiello <- read_csv("data/gb/Aiello_fral-df-ann.csv") %>%
+  mutate(nhlc=factor(nhlc, labels=c("Opn", "Dec", "Mxd", "WP"))) %>%
+  filter(!is.na(nhlc))
 # Storage
 par.best <- set_g_p()
 par.rng <- set_sensitivity_pars(names(par.best))
@@ -41,26 +44,39 @@ par.rng <- set_sensitivity_pars(names(par.best))
 ## p.f: Mean flowering probability
 #--- Source: Allen Lab field + Aiello-Lammens field
 p.f_allen <- flwr_allen %>% group_by(Plot_type) %>% summarise(p.f=mean(Fruit))
-par.best$p.f <- p.f_allen$p.f[c(1,1,2,3,3,2)]
+p.f_aiello <- ann_aiello %>% group_by(nhlc) %>% summarise(p.f=mean(fruit>0))
+par.best$p.f <- c(mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])),
+                  mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])),
+                  p.f_aiello$p.f[2], p.f_allen$p.f[3], p.f_allen$p.f[3],
+                  mean(c(p.f_allen$p.f[2], p.f_aiello$p.f[3])))
 par.rng$p.f$min <- par.best$p.f * 0.75
 par.rng$p.f$max <- pmin(1, par.best$p.f * 1.25)
 
 
 ## mu: Mean number of fruits from a flowering adult
-#--- Source: Tom Lee field + Allen Lab field + literature
+#--- Source: Tom Lee field + Allen Lab field + Aiello-Lammens field
 # issues: 
 #  - Lee = cleared only (ideal conditions)
 #  - Allen = only 2 branches; cleared + mixed + wp
-#  - No data for Other, Dec, Evg
+#  - Aiello-Lammens = cleared, deciduous, mixed
+#  - No data for Other, Evg
+prop <- c("open"=NA, "closed"=NA)
 mu_lee <- filter(fec_lee, nFruit>0)$nFruit
+mu_aiello <- filter(ann_aiello, fruit>0) %>% group_by(nhlc) %>% 
+  summarise(mu=mean(fruit))
 mu_allen <- fec_allen %>% filter(Treatment=="closed") %>%
   group_by(Plot_type, Plant) %>%
-  summarise(tot_fruit=sum(T_t1, na.rm=TRUE)) %>% ungroup
-prop <- mean(filter(mu_allen, Plot_type=="cleared")$tot_fruit)/mean(mu_lee)
-mu_allen <- mutate(mu_allen, est_fruit=tot_fruit/prop) %>% 
+  summarise(tot_fruit=sum(T_t1, na.rm=TRUE)) %>% ungroup %>%
+  mutate(canopy=case_when(Plot_type == "cleared" ~ "open",
+                          Plot_type != "cleared" ~ "closed"))
+prop[1] <- mean(filter(mu_allen, Plot_type=="cleared")$tot_fruit)/mean(mu_lee)
+prop[2] <- mean(filter(mu_allen, Plot_type=="mixed")$tot_fruit)/mu_aiello$mu[3]
+mu_allen <- mu_allen %>% 
+  mutate(est_fruit=case_when(canopy == "open" ~ tot_fruit/prop[1],
+                             canopy == "closed" ~ tot_fruit/prop[2])) %>% 
   group_by(Plot_type) %>% summarise(mn=mean(est_fruit))
-par.best$mu <- c(mean(mu_lee), min(mu_allen$mn), mu_allen$mn[2], 
-                 mean(mu_allen$mn[3]), mu_allen$mn[3], mu_allen$mn[2])
+par.best$mu <- c(mean(mu_lee), min(mu_allen$mn), mu_aiello$mu[2], 
+                 mu_allen$mn[3], mu_allen$mn[3], mu_allen$mn[2])
 par.rng$mu$min <- par.best$mu * 0.75
 par.rng$mu$max <- par.best$mu * 1.25
   
@@ -160,15 +176,10 @@ par.rng$s.N$max <- rep(1, 6)
 
 ## K: Carrying capacity for adults
 #--- Source: Tom Lee field (but mainly for WP)
-if(res=="20ac") {
-  dens_data <- dens_lee %>% summarise(mn=mean(n_g1m_20ac),
-                                      q25=quantile(n_g1m_20ac, 0.25),
-                                      q75=quantile(n_g1m_20ac, 0.75))
-} else {
-  dens_data <- dens_lee %>% summarise(mn=mean(n_g1m_9km2),
-                                      q25=quantile(n_g1m_9km2, 0.25),
-                                      q75=quantile(n_g1m_9km2, 0.75))
-}
+dens_data <- dens_lee %>% summarise(mn=mean(n_g1m_ha),
+                                    q25=quantile(n_g1m_ha, 0.25),
+                                    q75=quantile(n_g1m_ha, 0.75))
+dens_data[,2:4] <- dens_data[,2:4] * ifelse(res=="20ac", 8.1, 900)
 par.best$K <- with(dens_data, c(mn[2], 10, mn[1], mn[1], mn[1], mn[1]))
 par.rng$K$min <- with(dens_data, c(q25[2], 0, q25[1], q25[1], q25[1], q25[1]))
 par.rng$K$max <- with(dens_data, c(q75[2], 100, q75[1], q75[1], q75[1], q75[1]))
@@ -196,6 +207,7 @@ par.rng$g.B$max <- quantile(germ_data, 0.75)
 
 ## p: Proportion of germinants that establish
 #--- Source: Tom Lee field + Allen Lab field
+par.best$p <- c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)/par.best$g.B
 par.rng$p$min <- par.best$p * 0.75
 par.rng$p$max <- pmin(1, par.best$p * 1.25)
 
