@@ -12,18 +12,17 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 theme_set(theme_bw())
 
-# set landscape file
-lc_f <- "data/9km_car.csv"
-par_span <- "gb"
+# set resolution & parameter span
+res <- c("20ac", "9km2")[2]
+par_span <- c("total", "gb")[2]
 
 # set parameters
-g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=4, 
-               sdd.max=5, sdd.rate=1, N.p.t0=40)
-par.ls <- set_sensitivity_pars(names(g.p)[10:25], par_span)
-nSamp <- 300
+g.p <- set_g_p(tmax=30, lc.r=100, lc.c=100, n.cores=4, N.p.t0=4)
+par.ls <- set_sensitivity_pars(names(g.p)[10:26], par_span, res)
+nSamp <- 200
 
 # load landscape
-lc.df <- read_csv(lc_f) %>% 
+lc.df <- read_csv(paste0("data/USDA_", res, ".csv")) %>% 
   filter(y >= (max(.$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
   mutate(id=row_number(), 
          id.in=min_rank(na_if(inbd*id, 0)))
@@ -37,8 +36,8 @@ N.init <- pop_init(ngrid, g.p, lc.df)
 # run sensitivity analysis
 out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd.pr, 
                           N.init, control.p=NULL, verbose=T, 
-                          sim.dir=paste0("out/", par_span, "/sims/"))
-write_csv(out, paste0("out/", par_span, "/sensitivity_results.csv"))
+                          sim.dir=paste0("out/", res, "/", par_span, "/sims/"))
+write_csv(out, paste0("out/", res, "/", par_span, "/gsa_results.csv"))
 
 nMetric <- 8
 nPar <- ncol(out)-nMetric
@@ -46,16 +45,17 @@ brt.sum <- vector("list", nMetric)
 for(i in 1:nMetric) {
   metric <- names(out)[nPar+i]
   emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric, 
-                      brt.dir=paste0("out/", par_span, "/brt/"))
-  brt.sum[[i]] <- emulation_summary(metric, paste0("out/", par_span, "/brt/"))
+                      brt.dir=paste0("out/", res, "/", par_span, "/brt/"))
+  brt.sum[[i]] <- emulation_summary(metric, 
+                                    paste0("out/", res, "/", par_span, "/brt/"))
 }
 
 write_csv(map_dfr(brt.sum, ~.$ri.df), 
-          paste0("out/", par_span, "/BRT_RI.csv"))
+          paste0("out/", res, "/", par_span, "/BRT_RI.csv"))
 write_csv(map_dfr(brt.sum, ~.$cvDev.df), 
-          paste0("out/", par_span, "/BRT_cvDev.csv"))
+          paste0("out/", res, "/", par_span, "/BRT_cvDev.csv"))
 write_csv(map_dfr(brt.sum, ~.$betaDiv.df), 
-          paste0("out/", par_span, "/BRT_betaDiv.csv"))
+          paste0("out/", res, "/", par_span, "/BRT_betaDiv.csv"))
 
 
 
