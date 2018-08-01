@@ -5,29 +5,41 @@ fec_allen <- read.csv("data/gb/Allen_fecundity.csv") %>%
 # i_t1 = immature fruit at t=1
 # m_t1 = mature fruit at t=1
 # T_t1 = total fruit at t=1 (i+m)
-# b_t1 = fruit in bag at t=1
+# b_t1 = fruit in bag at t=1 (should accumulate)
 
 # new fruit on closed branches:
-#  on_branch_t1 = on_branch_t0 - new_in_bag + new_on_branch
+#  on_branch_t1 = on_branch_t0 - new_in_bag + new_on_branch (+ consumed)
 #  T_t1 = T_t0 - (b_t1-b_t0) + n_t1
 #  n_t1 = T_t1 - T_t0 + b_t1 - b_t0
 # ***Using total (vs. mature) fruit: 
 #    - CW_WP Plant 4 has m=0 for all t
-#    - some immature fruits might mature, drop between observations
+#    - some immature fruits might mature & drop between observations
+# ***Sometimes n_t1 is negative -- assume underestimate of new_in_bag?
 
 # new fruit on open branches:
-#  on_branch_t1 = on_branch_t0 - fruit_dropped - fruit_consumed + new_on_branch
-#  fruit_consumed = on_branch_t0 - on_branch_t1 - fruit_dropped + new_on_branch
+#  on_branch_t1 = on_branch_t0 - fruit_dropped + new_on_branch - fruit_consumed
+#  fruit_consumed = on_branch_t0 - on_branch_t1 + new_on_branch - fruit_dropped
+#  c_e = T_t0 - T_t1 + n_e + d_e
 
 # assume fruit production rate is constant among branches on each plant
-#    - new_on_branch/on_branch_t0? 
-#    - fails for on_branch_t0 == 0
-#    - new_on_branch_open_t1 = mean(new_on_branch_closed_t1)
-# assume fruit drop rate is constant among branches on each plant
-# assume new_in_bag represents fruit_dropped 
+#  new_rate = new_on_branch / (on_branch_t1 + new_in_bag + consumed)
+#  n_rate = n_t1 / (T_t1 + (b_t1-b_t0) + c_e)
+#  n_rate = n_e / (T_t1 + d_e + c_e)
 
-# fruit production rate: new_mature/total_mature = n_t1/m_t1
-# fruit drop rate: new_in_bag/total_mature = (b_t1-b_t0)/m_t1
+# assume fruit drop rate is constant among branches on each plant
+#  drop_rate = new_in_bag / (on_branch_t1 + new_in_bag + consumed)
+#  d_rate = (b_t1-b_t0) / (T_t1 + (b_t1-b_t0) + c_e)
+#  d_rate = d_e / (T_t1 + d_e + c_e)
+
+# use plant-specific *_rate to estimate fruit_dropped, new_on_branch for open
+#  n_e = n_rate*T_t1 + n_rate*d_e + n_rate*c_e
+#  d_e = (d_rate*(T_t1+c_e))/(1-d_rate)
+#  c_e = T_t0 - T_t1 + n_e + d_e
+#      = T_t0 - T_t1 + 
+#        n_rate*T_t1 + n_rate*(d_rate*(T_t1+c_e))/(1-d_rate) + n_rate*c_e + 
+#        (d_rate*(T_t1+c_e))/(1-d_rate)
+#      = (T_t0*(1-d_rate))/(1-n_rate) - T_t1
+
 
 for(i in 2:n_distinct(fec_allen$t_1)) {
   for(j in 1:n_distinct(fec_allen$Plot_abbrev)) {
@@ -56,9 +68,9 @@ fec_allen <- fec_allen %>%
 rates.df <- fec_allen %>%
   filter(Treatment=="closed") %>%
   mutate(n_t1=T_t1-T_t0+b_t1-b_t0) 
-n_neg <- which(rates.df$n_t1 < 0)
-rates.df$b_t1[n_neg] <- rates.df$b_t1[n_neg] - rates.df$n_t1[n_neg]
-rates.df$n_t1[n_neg] <- 0
+# n_neg <- which(rates.df$n_t1 < 0)
+# rates.df$b_t1[n_neg] <- rates.df$b_t1[n_neg] - rates.df$n_t1[n_neg]
+# rates.df$n_t1[n_neg] <- 0
 rates.df <- rates.df %>%
   mutate(delta_b=b_t1-b_t0) %>%
   group_by(Plot_abbrev, Plant) %>%
