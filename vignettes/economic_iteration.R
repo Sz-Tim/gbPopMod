@@ -41,7 +41,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-lc.df <- read_csv("data/USDA_9km2.csv") # test: 9km_car.csv; full: 20a_full.csv
+lc.df <- read_csv("data/USDA_20ac.csv") # USDA_9km2.csv or USDA_20ac.csv
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)
@@ -51,11 +51,11 @@ id.i <- lc.df %>% select(id, id.in)
 # This is to allow simpler spatial calculations (e.g., SDD neighborhoods)
 
 #--- set parameters as default; ?set_control_p; ?set_g_p
-tmax <- 100
-g.p <- set_g_p(m=c(3,3,7,7,7,7), g.D=0)
+tmax <- 20
+g.p <- set_g_p(tmax=tmax, n.cores=4, sdd.max=20)
 c.p <- set_control_p(null_ctrl=FALSE, 
-                     pTrt.man=0.2,  # 5% of cells cut and/or spray
-                     pTrt.grd=0.2,  # 5% of cells use ground cover
+                     pTrt.man=0.01,  # 1% of cells cut and/or spray
+                     pTrt.grd=0.01,  # 1% of cells use ground cover
                      lc.chg=TRUE,
                      pChg=.01  # 1% of cells harvest forest
 )
