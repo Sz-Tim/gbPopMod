@@ -17,9 +17,9 @@ res <- c("20ac", "9km2")[2]
 par_span <- c("total", "gb")[2]
 
 # set parameters
-g.p <- set_g_p(tmax=30, lc.r=100, lc.c=100, n.cores=4, N.p.t0=4)
-par.ls <- set_sensitivity_pars(names(g.p)[10:26], par_span, res)
-nSamp <- 200
+g.p <- set_g_p(tmax=30, lc.r=Inf, lc.c=Inf, n.cores=4, N.p.t0=4)
+par.ls <- set_sensitivity_pars(names(g.p)[10:26][-(6:7)], par_span, res)
+nSamp <- 400
 
 # load landscape
 lc.df <- read_csv(paste0("data/USDA_", res, ".csv")) %>% 
@@ -30,12 +30,11 @@ ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
 # initialize
-sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 N.init <- pop_init(ngrid, g.p, lc.df)
 
 # run sensitivity analysis
-out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd.pr, 
-                          N.init, control.p=NULL, verbose=T, 
+out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
+                          sdd=NULL, N.init, control.p=NULL, verbose=T, 
                           sim.dir=paste0("out/", res, "/", par_span, "/sims/"))
 write_csv(out, paste0("out/", res, "/", par_span, "/gsa_results.csv"))
 

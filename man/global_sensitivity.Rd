@@ -4,8 +4,8 @@
 \alias{global_sensitivity}
 \title{Run global sensitivity analysis}
 \usage{
-global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, N.init,
-  control.p = NULL, verbose = FALSE, sim.dir = "out/sims/")
+global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd = NULL,
+  N.init, control.p = NULL, verbose = FALSE, sim.dir = "out/sims/")
 }
 \arguments{
 \item{par.ls}{List output from \code{\link{set_par_ranges}} with parameter to
@@ -24,7 +24,7 @@ value in \code{p.seq}.}
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
 
-\item{sdd}{Output with short distance dispersal neighborhoods created by
+\item{sdd}{\code{NULL} Output with short distance dispersal neighborhoods created by
 \code{\link{sdd_set_probs}}}
 
 \item{N.init}{Matrix or array with initial population sizes created by

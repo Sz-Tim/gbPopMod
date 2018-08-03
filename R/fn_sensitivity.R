@@ -111,7 +111,7 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 #'   value in \code{p.seq}.
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param sdd Output with short distance dispersal neighborhoods created by
+#' @param sdd \code{NULL} Output with short distance dispersal neighborhoods created by
 #'   \code{\link{sdd_set_probs}}
 #' @param N.init Matrix or array with initial population sizes created by
 #'   \code{\link{pop_init}}
@@ -125,8 +125,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 #' @keywords parameters, sensitivity, save, output
 #' @export
 
-global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd, 
-                               N.init, control.p=NULL, 
+global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
+                               sdd=NULL, N.init, control.p=NULL, 
                                verbose=FALSE, sim.dir="out/sims/") {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   if(!dir.exists(sim.dir)) dir.create(sim.dir, recursive=TRUE)
@@ -148,12 +148,15 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd,
       samples[[i]][,] <- round(samples[[i]])
     }
   } 
+  if(is.null(sdd) && !any(grepl("sdd", names(par.ls)))) {
+    sdd <- sdd_set_probs(ncell, lc.df, g.p)
+  }
   if(verbose) cat("Running simulations...\n")
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
   out <- foreach(i=1:nSamp, .errorhandling="pass",
                  .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
     g.p[names(par.ls)] <- map(samples, ~.[i,])
-    if(any(names(par.ls) %in% c("sdd.max", "sdd.rate"))) {
+    if(any(grepl("sdd", names(par.ls)))) {
       sdd <- sdd_set_probs(ncell, lc.df, g.p)
     }
     if(any(names(par.ls)=="m")) {

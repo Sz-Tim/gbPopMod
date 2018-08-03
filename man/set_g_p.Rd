@@ -7,8 +7,8 @@
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
   p.f = c(0.45, 0.45, 0.29, 0.15, 0.15, 0.17), mu = c(1948, 14, 14, 41, 41,
-  21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149, 0.149, 0.273,
-  0.233, 0.233, 0.273), sdd.rate = 0.133, sdd.max = 77, bird.hab = c(0.32,
+  21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.165, 0.165, 0.296,
+  0.252, 0.252, 0.296), sdd.rate = 0.133, sdd.max = 25, bird.hab = c(0.32,
   0.36, 0.05, 0.09, 0.09, 0.09), n.ldd = 1, s.c = 0.585, s.B = 0.72,
   s.M = c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1),
   K = c(47009, 10, 6937, 6937, 6937, 6937), g.D = 0, g.B = 0.2,
@@ -45,13 +45,13 @@ mean fruit per adult}
 \item{m}{\code{c(3, 3, 7, 7, 7, 7)} Vector \code{length=n.lc} or scalar of
 age at first fruiting. Individuals at this age are considered adults}
 
-\item{p.c}{\code{c(0.3, 0.1, 0.2, 0.2, 0.2, 0.1)} Vector \code{length=n.lc}
-of proportion of fruits eaten by birds, with \code{1-p.c} assumed to drop
-directly below buckthorn individuals}
+\item{p.c}{\code{c(0.165, 0.165, 0.296, 0.252, 0.252, 0.296)} Vector
+\code{length=n.lc} of proportion of fruits eaten by birds, with
+\code{1-p.c} assumed to drop directly below buckthorn individuals}
 
 \item{sdd.rate}{\code{0.133} 1/mn for exponential dispersal kernel}
 
-\item{sdd.max}{\code{77} Maximum dispersal distance in cells}
+\item{sdd.max}{\code{25} Maximum dispersal distance in cells}
 
 \item{bird.hab}{\code{c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09)} Vector
 \code{length=n.lc} of bird habitat preferences}
