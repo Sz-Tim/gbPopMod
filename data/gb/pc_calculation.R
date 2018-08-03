@@ -68,9 +68,6 @@ fec_allen <- fec_allen %>%
 rates.df <- fec_allen %>%
   filter(Treatment=="closed") %>%
   mutate(n_t1=T_t1-T_t0+b_t1-b_t0) 
-# n_neg <- which(rates.df$n_t1 < 0)
-# rates.df$b_t1[n_neg] <- rates.df$b_t1[n_neg] - rates.df$n_t1[n_neg]
-# rates.df$n_t1[n_neg] <- 0
 rates.df <- rates.df %>%
   mutate(delta_b=b_t1-b_t0) %>%
   group_by(Plot_abbrev, Plant) %>%
