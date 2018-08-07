@@ -1,15 +1,14 @@
 # Example of management treatments
 # load libraries
-Packages <- c("gbPopMod", "tidyverse", "magrittr", "stringr", "here", "doSNOW",
-              "fastmatch", "scales", "gganimate", "compiler")
+Packages <- c("dismo", "here", "doSNOW", "fastmatch", "scales", "gganimate",
+              "gbPopMod", "tidyverse", "magrittr")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 theme_set(theme_bw())
-data(lc.rct)
 
 # set parameters
-n.sim <- 3
-g.p <- set_g_p(tmax=50, lc.r=50, lc.c=50, n.cores=1, sdd.max=10)
-control.p <- set_control_p(null_ctrl=FALSE, 
+n.sim <- 4
+g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=4, sdd.max=5, sdd.rate=1.3)
+control.p <- set_control_p(null_ctrl=TRUE, 
                            t.trt=80,
                            man.i=1300:1800,  # cells with manual controls
                            pTrt.man=NA,  # for random cell assignment
@@ -17,18 +16,16 @@ control.p <- set_control_p(null_ctrl=FALSE,
                            grd.i=1300:1500, # cells with ground cover controls
                            pTrt.grd=NA,  # for random cell assignment
                            grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
-                           lc.chg=TRUE,
+                           lc.chg=FALSE,
                            pChg=.1,
                            chg.i=NULL  # cells with timber harvest
                            )
 
 # land cover
-lc.df <- lc.rct %>% 
-  filter(y >= (max(lc.rct$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
-  mutate(id=row_number(), 
-         id.in=min_rank(na_if(inbd*id, 0)))
+lc.df <- read_csv("data/USDA_9km2.csv") # USDA_9km2.csv or USDA_20ac.csv
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
+id.i <- lc.df %>% select(id, id.in)
 
 # short distance dispersal neighborhoods
 sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
@@ -36,10 +33,10 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
 
-out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), 
-                          sdd.pr$i, N.init, TRUE)
-out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
-                        N=out.lam[,g.p$tmax+1])
+# out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), 
+#                           sdd.pr$i, N.init, TRUE)
+# out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
+#                         N=out.lam[,g.p$tmax+1])
 
 # run simulation
 if(g.p$n.cores > 1) {

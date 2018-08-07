@@ -49,10 +49,10 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
     )
   } else if(span=="gb"){
     par.ls <- list(list(param="p.f", type="prob", LC=1, 
-                        min=c(0.4875, 0.4875, 0.075, 0.1125, 0.1125, 0.075), 
+                        min=c(0.4875, 0, 0.075, 0.1125, 0.1125, 0.075), 
                         max=c(0.8125, 0.8125, 0.125, 0.1875, 0.1875, 0.125)),
                    list(param="mu", type="cont", LC=1, 
-                        min=c(1461, 65, 65, 128, 128, 65), 
+                        min=c(1461, 0, 65, 128, 128, 65), 
                         max=c(2435, 109, 109, 215, 215, 109)),
                    list(param="gamma", type="cont", LC=0, min=2.378, max=2.595),
                    list(param="m", type="int", LC=1, 

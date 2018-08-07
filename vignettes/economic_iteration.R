@@ -11,7 +11,7 @@
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
 # install the package along with all other required packages with:
-devtools::install_github("Sz-Tim/gbPopMod", dependencies=TRUE,
+devtools::install_github("Sz-Tim/gbPopMod", dependencies=F,
                          auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
 # The following packages are called by various gbPopMod functions:
 # - here: easier file directory navigation
@@ -41,7 +41,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-lc.df <- read_csv("data/USDA_20ac.csv") # USDA_9km2.csv or USDA_20ac.csv
+lc.df <- read_csv("data/USDA_9km2.csv") # USDA_9km2.csv or USDA_20ac.csv
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)
@@ -51,12 +51,16 @@ id.i <- lc.df %>% select(id, id.in)
 # This is to allow simpler spatial calculations (e.g., SDD neighborhoods)
 
 #--- set parameters as default; ?set_control_p; ?set_g_p
-tmax <- 20
-g.p <- set_g_p(tmax=tmax, n.cores=4, sdd.max=20)
+tmax <- 100
+g.p <- set_g_p(tmax=tmax, n.cores=4, N.p.t0=1,
+               p.f=par.best$p.f, mu=par.best$mu, gamma=par.best$gamma,
+               p.c=par.best$p.c, bird.hab=par.best$bird.hab,
+               K=par.best$K, p=par.best$p,
+               sdd.max=par.best$sdd.max, sdd.rate=par.best$sdd.rate)
 c.p <- set_control_p(null_ctrl=FALSE, 
                      pTrt.man=0.01,  # 1% of cells cut and/or spray
                      pTrt.grd=0.01,  # 1% of cells use ground cover
-                     lc.chg=TRUE,
+                     lc.chg=FALSE,
                      pChg=.01  # 1% of cells harvest forest
 )
 
@@ -68,7 +72,7 @@ N <- array(0, dim=c(ngrid, tmax+1, 6, max(g.p$m))) # [cell, year, LC, age]
 N[,1,,] <- N.init
 for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
 
-
+system.time({
 for(t in 1:tmax) {
   ##---
   ## 2. Management plans are decided
@@ -77,31 +81,40 @@ for(t in 1:tmax) {
   # - which cells perform which management actions?
   # - here, management is randomized for illustration
   # Instead of using trt_assign(), the economic model can generate a two-column
-  # dataframe where id (= id.i$id) and Trt (= treatment method).
+  # dataframe where id (=id.i$id) and Trt (=treatment method).
   # Forest harvest is slightly more complicated, requiring a dataframe with the
   # id and id.in for the cells harvesting, and a dataframe with the change in 
   # each forest type
   
   #--- harvest timber
-  # identify which cells will harvest, and how much of each forst type
-  f_cut.i <- cut_assign(pChg=c.p$pChg, ncell=ncell, lc.df=lc.df, forest.col=6:9)
-  # update lc.df with new forest proportions
-  lc.df[f_cut.i$id.chg$id,] <- cut_forest(f_cut.i$id.chg, f_cut.i$mx, 
-                                          forest.col=6:9, lc.df)
-  # update SDD probabilities based on bird preferences for new LC composition
-  sdd.i <- tibble(id.in=unique(
-    arrayInd(which(sdd$i %in% f_cut.i$id.chg$id.in), dim(sdd$i))[,4]), 
-    id=id.i$id[match(id.in, id.i$id.in)])
-  sdd_new <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
-  sdd$i[,,,sdd.i$id.in] <- sdd_new$i
-  sdd$sp[sdd.i$id.in] <- sdd_new$sp
+  if(c.p$lc.chg) {
+    # identify which cells will harvest, and how much of each forst type
+    f_cut.i <- cut_assign(pChg=c.p$pChg, ncell=ncell, 
+                          lc.df=lc.df, forest.col=6:9)
+    # update lc.df with new forest proportions
+    lc.df[f_cut.i$id.chg$id,] <- cut_forest(f_cut.i$id.chg, f_cut.i$mx, 
+                                            forest.col=6:9, lc.df)
+    # update SDD probabilities based on bird preferences for new LC composition
+    sdd.i <- tibble(id.in=unique(
+      arrayInd(which(sdd$i %in% f_cut.i$id.chg$id.in), dim(sdd$i))[,4]), 
+      id=id.i$id[match(id.in, id.i$id.in)])
+    sdd_new <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
+    sdd$i[,,,sdd.i$id.in] <- sdd_new$i
+    sdd$sp[sdd.i$id.in] <- sdd_new$sp
+  }
   
   #--- identify cells for groundcover treatments
-  grd_cover.i <- trt_assign(id.i=id.i, ncell=ncell, 
+  # grd_cover.i <- trt_assign(id.i=id.i, ncell=ncell, 
+  #                           pTrt=c.p$pTrt.grd, trt.eff=c.p$grd.trt)
+  grd.id <- filter(lc.df, x>20 & x<30 & y>20 & y<30)$id.in
+  grd_cover.i <- trt_assign(id.i, assign_i=grd.id, 
                             pTrt=c.p$pTrt.grd, trt.eff=c.p$grd.trt)
   
   #--- identify cells for cut/spray treatments
-  cut_spray.i <- trt_assign(id.i=id.i, ncell=ncell, 
+  # cut_spray.i <- trt_assign(id.i=id.i, ncell=ncell, 
+  #                           pTrt=c.p$pTrt.man, trt.eff=c.p$man.trt)
+  c_s.id <- filter(lc.df, x>30 & x<40 & y>30 & y<40)$id.in
+  cut_spray.i <- trt_assign(id.i, assign_i=c_s.id, 
                             pTrt=c.p$pTrt.man, trt.eff=c.p$man.trt)
   
   
@@ -121,6 +134,7 @@ for(t in 1:tmax) {
   B[,t+1] <- out$B
   if(t %% 10 == 0) cat("Finished time", t, "\n")
 }
+})
 
 # visualize output
 N.tot <- apply(N[,,,max(g.p$m)], 1:2, sum) # sum adults across LC categories

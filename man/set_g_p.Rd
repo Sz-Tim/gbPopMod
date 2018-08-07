@@ -6,14 +6,13 @@
 \usage{
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
-  p.f = c(0.45, 0.45, 0.29, 0.15, 0.15, 0.17), mu = c(1948, 14, 14, 41, 41,
-  21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.165, 0.165, 0.296,
-  0.252, 0.252, 0.296), sdd.rate = 0.133, sdd.max = 25, bird.hab = c(0.32,
+  p.f = c(0.45, 0, 0.29, 0.15, 0.15, 0.17), mu = c(1948, 0, 14, 41, 41, 21),
+  gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149, 0.149, 0.273,
+  0.233, 0.233, 0.273), sdd.rate = 0.133, sdd.max = 25, bird.hab = c(0.32,
   0.36, 0.05, 0.09, 0.09, 0.09), n.ldd = 1, s.c = 0.585, s.B = 0.72,
-  s.M = c(0.9, 0.1, 0.6, 0.6, 0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1),
-  K = c(47009, 10, 6937, 6937, 6937, 6937), g.D = 0, g.B = 0.2,
-  p = c(0.35, 0.05, 0.4, 0.1, 0.1, 0.15), edges = "wall",
-  method = "wt.mn")
+  s.M = c(0.9, 0, 0.6, 0.6, 0.6, 0.6), s.N = c(1, 1, 1, 1, 1, 1),
+  K = c(47009, 0, 6937, 6937, 6937, 6937), g.D = 0, g.B = 0.2,
+  p = c(0.35, 0, 0.4, 0.1, 0.1, 0.15), edges = "wall", method = "wt.mn")
 }
 \arguments{
 \item{tmax}{\code{100} Number of time steps per simulation}
@@ -34,10 +33,10 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
 
 \item{N.p.t0}{\code{10} Number of cells with buckthorn at t=1}
 
-\item{p.f}{\code{c(0.45, 0.45, 0.29, 0.15, 0.15, 0.17)} Vector
+\item{p.f}{\code{c(0.45, 0, 0.29, 0.15, 0.15, 0.17)} Vector
 \code{length=n.lc} of fruiting probabilities}
 
-\item{mu}{\code{c(1948, 14, 14, 41, 41, 21)} Vector \code{length=n.lc} of
+\item{mu}{\code{c(1948, 0, 14, 41, 41, 21)} Vector \code{length=n.lc} of
 mean fruit per adult}
 
 \item{gamma}{\code{2.48} Scalar: mean number of seeds per fruit}
@@ -45,7 +44,7 @@ mean fruit per adult}
 \item{m}{\code{c(3, 3, 7, 7, 7, 7)} Vector \code{length=n.lc} or scalar of
 age at first fruiting. Individuals at this age are considered adults}
 
-\item{p.c}{\code{c(0.165, 0.165, 0.296, 0.252, 0.252, 0.296)} Vector
+\item{p.c}{\code{c(0.149, 0.149, 0.273, 0.233, 0.233, 0.273)} Vector
 \code{length=n.lc} of proportion of fruits eaten by birds, with
 \code{1-p.c} assumed to drop directly below buckthorn individuals}
 
@@ -62,13 +61,13 @@ age at first fruiting. Individuals at this age are considered adults}
 
 \item{s.B}{\code{0.72} Probability of annual survival in seed bank}
 
-\item{s.M}{\code{c(0.9, 0.1. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
+\item{s.M}{\code{c(0.9, 0. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc}
 of annual juvenile survival rates}
 
 \item{s.N}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
 adult survival rates}
 
-\item{K}{\code{c(47009, 10, 6937, 6937, 6937, 6937)} Vector (length=n.lc) of
+\item{K}{\code{c(47009, 0, 6937, 6937, 6937, 6937)} Vector (length=n.lc) of
 carrying capacities for adults}
 
 \item{g.D}{\code{0} Probability of direct germination (i.e., a seed
@@ -76,7 +75,7 @@ germinates in the same year it is produced)}
 
 \item{g.B}{\code{0.2} Probability of germinating from the seed bank}
 
-\item{p}{\code{c(0.35, 0.05, 0.4, 0.1, 0.1, 0.15)} Vector \code{length=n.lc}
+\item{p}{\code{c(0.35, 0, 0.4, 0.1, 0.1, 0.15)} Vector \code{length=n.lc}
 of seedling establishment probabilities}
 
 \item{edges}{\code{"wall"} Boundary behavior, taking values of \code{"wall"},

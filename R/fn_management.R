@@ -30,12 +30,11 @@ trt_assign <- function(id.i, ncell=NULL, assign_i=NULL, pTrt, trt.eff,
   
   if(is.null(assign_i)) {
     assign_i <- sample(1:ncell, ceiling(pTrt*ncell))
-  } else {
-    nTrt <- length(assign_i)
-  }
+  } 
+  nTrt <- length(assign_i)
   
   trt.t <- tibble(id=id.i$id[which(id.i$id.in %in% assign_i)],
-                  Trt=sample(names(trt.eff), ceiling(pTrt*ncell), replace=TRUE))
+                  Trt=sample(names(trt.eff), nTrt, replace=TRUE))
   
   if(addOwners) {
     return(trt.m1 %<>% add_row(id=trt.t$id, Trt=trt.t$Trt))

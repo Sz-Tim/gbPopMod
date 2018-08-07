@@ -150,34 +150,50 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP", "ad_L5")
   f.full <- paste0(p.wd, f.nm, ".gif")
   
-  p.gif <- ggplot(N.out, aes(x=x, y=-y, frame=year, colour=inbd)) + 
+  p.gif <- ggplot(N.out, aes(x=lon, y=lat, colour=inbd)) + 
     scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA))
+    scale_colour_manual(values=c("gray", NA)) +
+    theme(panel.background=element_rect(fill="gray30")) +
+    transition_time(as.numeric(year))
   
-  # Adult abundance
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[1])) + 
-              ggtitle(paste(txt, "Adult mean(abundance). Year")), 
-            filename=f.full[1], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[2])) + 
-              ggtitle(paste(txt, "Seed mean(log abundance). Year")), 
-            filename=f.full[2], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[3])) + 
-              ggtitle(paste(txt, "Adult sd(abundance). Year")), 
-            filename=f.full[3], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[4])) + 
-              ggtitle(paste(txt, "Seed sd(log abundance). Year")), 
-            filename=f.full[4], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[5])) + 
-              ggtitle(paste(txt, "Adult mean(presence). Year")), 
-            filename=f.full[5], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[6])) + 
-              ggtitle(paste(txt, "Seed mean(presence). Year")), 
-            filename=f.full[6], interval=i, ani.width=w, ani.height=h)
-  gganimate(p=p.gif + geom_tile(aes_string(fill=f.nm[7])) %+% 
-              scale_fill_gradient2(low="white", mid="blue", 
-                                   high="pink", midpoint=1) +
-              ggtitle(paste(txt, "Adult mean(0 < abundance ≤ 5). Year")), 
-            filename=f.full[7], interval=i, ani.width=w, ani.height=h)
+  # gifs
+  anim_save(f.full[1],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[1])) + 
+              ggtitle(paste(txt, "Adult mean(abundance). Year {frame_time}")),
+              nframes=n_distinct(N.out$year), 
+              width=8, height=6, units="in", res=100))
+  anim_save(f.full[2],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[2])) + 
+                ggtitle(paste(txt, "Seed mean(log abundance). Year {frame_time}")),
+                nframes=n_distinct(N.out$year), 
+                width=8, height=6, units="in", res=100))
+  anim_save(f.full[3],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[3])) + 
+                ggtitle(paste(txt, "Adult sd(abundance). Year {frame_time}")),
+                nframes=n_distinct(N.out$year), 
+                width=8, height=6, units="in", res=100))
+  anim_save(f.full[4],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[4])) + 
+                ggtitle(paste(txt, "Seed sd(log abundance). Year {frame_time}")),
+                nframes=n_distinct(N.out$year), 
+                width=8, height=6, units="in", res=100))
+  anim_save(f.full[5],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[5])) + 
+                ggtitle(paste(txt, "Adult pr(presence). Year {frame_time}")),
+                nframes=n_distinct(N.out$year), 
+                width=8, height=6, units="in", res=100))
+  anim_save(f.full[6],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[6])) + 
+                ggtitle(paste(txt, "Seed pr(presence). Year {frame_time}")),
+                nframes=n_distinct(N.out$year), 
+                width=8, height=6, units="in", res=100))
+  anim_save(f.full[7],
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[7]))  %+% 
+                scale_fill_gradient2(low="white", mid="blue", 
+                                      high="pink", midpoint=1) + 
+                ggtitle(paste(txt, "Adult mean(0 < N < 5). Year {frame_time}")),
+                nframes=n_distinct(N.out$year), 
+                width=8, height=6, units="in", res=100))
   
   # Check for success
   for(f in 1:length(f.full)) {

@@ -20,7 +20,7 @@
 ## set up
 ########
 library(tidyverse); library(magrittr); library(gbPopMod)
-res <- c("20ac", "9km2")[1]
+res <- c("20ac", "9km2")[2]
 # Data sets
 fec_allen <- read_csv("data/gb/Allen_fecundity.csv") %>%
   mutate(Date=as.Date(Date, format="%m/%d/%Y"))
@@ -45,8 +45,7 @@ par.rng <- set_sensitivity_pars(names(par.best))
 #--- Source: Allen Lab field + Aiello-Lammens field
 p.f_allen <- flwr_allen %>% group_by(Plot_type) %>% summarise(p.f=mean(Fruit))
 p.f_aiello <- ann_aiello %>% group_by(nhlc) %>% summarise(p.f=mean(fruit>0))
-par.best$p.f <- c(mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])),
-                  mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])),
+par.best$p.f <- c(mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])), 0,
                   p.f_aiello$p.f[2], p.f_allen$p.f[3], p.f_allen$p.f[3],
                   mean(c(p.f_allen$p.f[2], p.f_aiello$p.f[3])))
 par.rng$p.f$min <- par.best$p.f * 0.75
@@ -75,7 +74,7 @@ mu_allen <- mu_allen %>%
   mutate(est_fruit=case_when(canopy == "open" ~ tot_fruit/prop[1],
                              canopy == "closed" ~ tot_fruit/prop[2])) %>% 
   group_by(Plot_type) %>% summarise(mn=mean(est_fruit))
-par.best$mu <- c(mean(mu_lee), min(mu_allen$mn), mu_aiello$mu[2], 
+par.best$mu <- c(mean(mu_lee), 0, mu_aiello$mu[2], 
                  mu_allen$mn[3], mu_allen$mn[3], mu_allen$mn[2])
 par.rng$mu$min <- par.best$mu * 0.75
 par.rng$mu$max <- par.best$mu * 1.25
@@ -165,6 +164,8 @@ par.rng$s.B$max <- exp(-1/(3*1.25))
 
 ## s.M: Annual survival rate for juveniles
 #--- Source: Literature (Ranges from similar species)
+par.rng$s.N$min <- par.best$s.M * 0.75
+par.rng$s.N$max <- pmin(par.best$s.M * 1.25, 1)
 
 
 ## s.N: Annual survival rate for adults
@@ -180,7 +181,7 @@ dens_data <- dens_lee %>% summarise(mn=mean(n_g1m_ha),
                                     q25=quantile(n_g1m_ha, 0.25),
                                     q75=quantile(n_g1m_ha, 0.75))
 dens_data[,2:4] <- dens_data[,2:4] * ifelse(res=="20ac", 8.1, 900)
-par.best$K <- with(dens_data, c(mn[2], 10, mn[1], mn[1], mn[1], mn[1]))
+par.best$K <- with(dens_data, c(mn[2], 0, mn[1], mn[1], mn[1], mn[1]))
 par.rng$K$min <- with(dens_data, c(q25[2], 0, q25[1], q25[1], q25[1], q25[1]))
 par.rng$K$max <- with(dens_data, c(q75[2], 100, q75[1], q75[1], q75[1], q75[1]))
 
@@ -207,7 +208,7 @@ par.rng$g.B$max <- quantile(germ_data, 0.75)
 
 ## p: Proportion of germinants that establish
 #--- Source: Tom Lee field + Allen Lab field
-par.best$p <- c(0.07, 0.01, 0.08, 0.02, 0.02, 0.03)/par.best$g.B
+par.best$p <- c(0.07, 0, 0.08, 0.02, 0.02, 0.03)/par.best$g.B
 par.rng$p$min <- par.best$p * 0.75
 par.rng$p$max <- pmin(1, par.best$p * 1.25)
 
