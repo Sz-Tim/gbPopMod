@@ -89,6 +89,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
   
   p.fin <- ggplot(N.final, aes(x=x, y=-y, colour=inbd)) +
     scale_fill_gradient(low="white", high="red") +
+    theme(panel.background=element_rect(fill="gray30")) +
     scale_colour_manual(values=c("gray", NA))
   
   # Adult abundance
@@ -106,10 +107,10 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
            ggtitle(paste(txt, "Seed sd(log abundance). Year", g.p$tmax+1)))
   ggsave(f.full[5], width=w, height=h, 
          plot=p.fin + geom_tile(aes_string(fill=f.nm[5])) +
-           ggtitle(paste(txt, "Adult mean(presence). Year", g.p$tmax+1)))
+           ggtitle(paste(txt, "Adult pr(presence). Year", g.p$tmax+1)))
   ggsave(f.full[6], width=w, height=h, 
          plot=p.fin + geom_tile(aes_string(fill=f.nm[6])) +
-           ggtitle(paste(txt, "Seed mean(presence). Year", g.p$tmax+1)))
+           ggtitle(paste(txt, "Seed pr(presence). Year", g.p$tmax+1)))
   
   # Check for success
   for(f in 1:length(f.full)) {
@@ -137,12 +138,11 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 #' @param txt Text to append to start of plot title
 #' @param w Figure output width (pixels)
 #' @param h Figure output height (pixels)
-#' @param i Gif framerate
 #' @return None
 #' @keywords plots, gif, store, save, output
 #' @export
 
-make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
+make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600) {
   library(gganimate); options(bitmapType='cairo')
   theme_set(theme_bw() + theme(panel.grid=element_blank()))
   
@@ -160,40 +160,33 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600, i=0.2) {
   anim_save(f.full[1],
             animate(p.gif + geom_tile(aes_string(fill=f.nm[1])) + 
               ggtitle(paste(txt, "Adult mean(abundance). Year {frame_time}")),
-              nframes=n_distinct(N.out$year), 
-              width=8, height=6, units="in", res=100))
+              nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   anim_save(f.full[2],
             animate(p.gif + geom_tile(aes_string(fill=f.nm[2])) + 
                 ggtitle(paste(txt, "Seed mean(log abundance). Year {frame_time}")),
-                nframes=n_distinct(N.out$year), 
-                width=8, height=6, units="in", res=100))
+                nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   anim_save(f.full[3],
             animate(p.gif + geom_tile(aes_string(fill=f.nm[3])) + 
                 ggtitle(paste(txt, "Adult sd(abundance). Year {frame_time}")),
-                nframes=n_distinct(N.out$year), 
-                width=8, height=6, units="in", res=100))
+                nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   anim_save(f.full[4],
             animate(p.gif + geom_tile(aes_string(fill=f.nm[4])) + 
                 ggtitle(paste(txt, "Seed sd(log abundance). Year {frame_time}")),
-                nframes=n_distinct(N.out$year), 
-                width=8, height=6, units="in", res=100))
+                nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   anim_save(f.full[5],
             animate(p.gif + geom_tile(aes_string(fill=f.nm[5])) + 
                 ggtitle(paste(txt, "Adult pr(presence). Year {frame_time}")),
-                nframes=n_distinct(N.out$year), 
-                width=8, height=6, units="in", res=100))
+                nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   anim_save(f.full[6],
             animate(p.gif + geom_tile(aes_string(fill=f.nm[6])) + 
                 ggtitle(paste(txt, "Seed pr(presence). Year {frame_time}")),
-                nframes=n_distinct(N.out$year), 
-                width=8, height=6, units="in", res=100))
+                nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   anim_save(f.full[7],
-            animate(p.gif + geom_tile(aes_string(fill=f.nm[7]))  %+% 
+            animate(p.gif + geom_tile(aes_string(fill=f.nm[7])) + 
                 scale_fill_gradient2(low="white", mid="blue", 
                                       high="pink", midpoint=1) + 
                 ggtitle(paste(txt, "Adult mean(0 < N < 5). Year {frame_time}")),
-                nframes=n_distinct(N.out$year), 
-                width=8, height=6, units="in", res=100))
+                nframes=n_distinct(N.out$year), width=w, height=h, units="px"))
   
   # Check for success
   for(f in 1:length(f.full)) {
@@ -228,6 +221,7 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
                            "LC_WP.jpg", "LC_Evg.jpg", "LC_Mxd.jpg"))
   
   p.lc <- ggplot(lc.df, aes(x=x, y=-y, colour=inbd)) + 
+    theme(panel.background=element_rect(fill="gray30")) +
     scale_colour_manual(values=c("gray", NA))
   
   ggsave(f.full[1], width=w, height=h,

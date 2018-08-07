@@ -4,7 +4,7 @@
 \alias{make_plots_gifs}
 \title{Save gifs of buckthorn distribution through time}
 \usage{
-make_plots_gifs(p.wd, g.p, N.out, txt = NULL, w = 800, h = 600, i = 0.2)
+make_plots_gifs(p.wd, g.p, N.out, txt = NULL, w = 800, h = 600)
 }
 \arguments{
 \item{p.wd}{Directory to store file in}
@@ -20,8 +20,6 @@ to \code{year}, \code{N.adult}, \code{N.sb}, and \code{N.L5}}
 \item{w}{Figure output width (pixels)}
 
 \item{h}{Figure output height (pixels)}
-
-\item{i}{Gif framerate}
 }
 \value{
 None

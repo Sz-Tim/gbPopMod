@@ -77,7 +77,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       }
       
       # 2B. Adjust p
-      if(nTrt.grd > 0 || !is.null(grd.i)) {  if(verbose) cat("Cover...")
+      if(pTrt.grd*ncell > 0.5 || !is.null(grd.i)) {  if(verbose) cat("Cover...")
         est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
                               pTrt=pTrt.grd, trt.eff=grd.trt, 
                               addOwners=add.owners, trt.m1=est.trt)
@@ -85,7 +85,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       }
       
       # 2C. Adjust N
-      if(nTrt.man > 0 || !is.null(man.i)) {  if(verbose) cat("Cut & spray...")
+      if(pTrt.man*ncell > 0.5 || !is.null(man.i)) {  if(verbose) cat("Cut|spray...")
         N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
                             pTrt=pTrt.man, trt.eff=man.trt, 
                             addOwners=add.owners, trt.m1=N.trt)
