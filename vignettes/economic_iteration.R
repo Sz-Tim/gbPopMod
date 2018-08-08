@@ -41,7 +41,9 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-lc.df <- read_csv("data/USDA_9km2.csv") # USDA_9km2.csv or USDA_20ac.csv
+gifs <- TRUE
+res <- "9km2"  # 9km2 or 20ac
+lc.df <- read_csv(paste0("data/USDA_", res, ".csv"))
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)
@@ -51,13 +53,16 @@ id.i <- lc.df %>% select(id, id.in)
 # This is to allow simpler spatial calculations (e.g., SDD neighborhoods)
 
 #--- set parameters as default; ?set_control_p; ?set_g_p
-tmax <- 100
+tmax <- 150
 g.p <- set_g_p(tmax=tmax, n.cores=4, N.p.t0=1,
-               p.f=par.best$p.f, mu=par.best$mu, gamma=par.best$gamma,
-               p.c=par.best$p.c, bird.hab=par.best$bird.hab,
-               K=par.best$K, p=par.best$p,
-               sdd.max=par.best$sdd.max, sdd.rate=par.best$sdd.rate)
+               K=c(5223180, 0, 770790, 770790, 770790, 770790), 
+               sdd.max=7, sdd.rate=1.401869)
 c.p <- set_control_p(null_ctrl=FALSE, 
+                     t.trt=20,
+                     grd.i=c(filter(lc.df, x>23 & x<30 & y>23 & y<30)$id.in, 
+                             filter(lc.df, x>13 & x<20 & y>43 & y<50)$id.in),
+                     man.i=c(filter(lc.df, x>33 & x<40 & y>33 & y<40)$id.in,
+                             filter(lc.df, x>13 & x<20 & y>43 & y<50)$id.in),
                      pTrt.man=0.01,  # 1% of cells cut and/or spray
                      pTrt.grd=0.01,  # 1% of cells use ground cover
                      lc.chg=FALSE,
@@ -66,14 +71,16 @@ c.p <- set_control_p(null_ctrl=FALSE,
 
 #--- calculate SDD neighborhoods & initialize buckthorn
 sdd <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
-N.init <- pop_init(ngrid, g.p, lc.df)  # eventually will be stored & loaded
+N.init <- pop_init(ngrid, g.p, lc.df, p.0=2700)  
 B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
 N <- array(0, dim=c(ngrid, tmax+1, 6, max(g.p$m))) # [cell, year, LC, age]
 N[,1,,] <- N.init
 for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
+grd_cover.i <- cut_spray.i <- NULL
+
 
 system.time({
-for(t in 1:tmax) {
+for(t in 1:g.p$tmax) {
   ##---
   ## 2. Management plans are decided
   ##---
@@ -103,19 +110,13 @@ for(t in 1:tmax) {
     sdd$sp[sdd.i$id.in] <- sdd_new$sp
   }
   
+  if(t >= c.p$t.trt) {
   #--- identify cells for groundcover treatments
-  # grd_cover.i <- trt_assign(id.i=id.i, ncell=ncell, 
-  #                           pTrt=c.p$pTrt.grd, trt.eff=c.p$grd.trt)
-  grd.id <- filter(lc.df, x>20 & x<30 & y>20 & y<30)$id.in
-  grd_cover.i <- trt_assign(id.i, assign_i=grd.id, 
-                            pTrt=c.p$pTrt.grd, trt.eff=c.p$grd.trt)
+  grd_cover.i <- trt_assign(id.i, assign_i=c.p$grd.i, trt.eff=c.p$grd.trt)
   
   #--- identify cells for cut/spray treatments
-  # cut_spray.i <- trt_assign(id.i=id.i, ncell=ncell, 
-  #                           pTrt=c.p$pTrt.man, trt.eff=c.p$man.trt)
-  c_s.id <- filter(lc.df, x>30 & x<40 & y>30 & y<40)$id.in
-  cut_spray.i <- trt_assign(id.i, assign_i=c_s.id, 
-                            pTrt=c.p$pTrt.man, trt.eff=c.p$man.trt)
+  cut_spray.i <- trt_assign(id.i, assign_i=c.p$man.i, trt.eff=c.p$man.trt)
+  }
   
   
   ##---
@@ -128,6 +129,7 @@ for(t in 1:tmax) {
   # 2. Adults produce fruit
   # 3. Fruit is consumed and dispersed, or dropped
   # 4. Seeds germinate and establish
+  g.p$n.ldd <- ifelse(t %% 10 == 0, 1, 0)
   out <- iterate_pop(ngrid, ncell, N[,t,,], B[,t], g.p, lc.df, sdd, control.p, 
                      grd_cover.i, cut_spray.i, read_write=FALSE, path=NULL)
   N[,t+1,,] <- out$N
@@ -137,19 +139,38 @@ for(t in 1:tmax) {
 })
 
 # visualize output
+plot.dir <- paste0("out/", res, "/econ/", g.p$tmax, "/trt_", c.p$t.trt)
+if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
 N.tot <- apply(N[,,,max(g.p$m)], 1:2, sum) # sum adults across LC categories
+N.df <- as.data.frame(N.tot); names(N.df) <- 1:ncol(N.df)
+out.all <- cbind(lc.df, N.df) %>%
+  gather(year, N, 15:ncol(.)) %>% mutate(year=as.numeric(year))
 out.df <- lc.df %>%
   mutate(N.0=N.tot[,1],
          B.0=B[,1],
          N.final=N.tot[,tmax+1],
          B.final=B[,tmax+1])
 # cell abundances through time
-matplot(t(N.tot), type="l", lty=1, col=rgb(0,0,0,0.3))
-matplot(t(B), type="l", lty=1, col=rgb(0,0,0,0.3))
+theme_set(theme_bw() + theme(panel.background=element_rect(fill="gray30"),
+                             panel.grid=element_blank()))
+if(gifs) {
+  library(gganimate)
+  anim_save(here(plot.dir, "N.gif"),
+            animate(ggplot(out.all, aes(x=lon, y=lat)) + 
+                      geom_tile(aes(fill=N)) +
+                      geom_tile(data=filter(lc.df, id.in %in% c.p$grd.i),
+                                fill=NA, colour="blue", size=1) +
+                      geom_tile(data=filter(lc.df, id.in %in% c.p$man.i),
+                                fill=NA, colour="black", size=1) +
+                      scale_fill_gradient(low="white", high="red") + 
+                      transition_time(year) +  
+                      ggtitle("Adult abundance. Year {frame_time}"),
+                    nframes=n_distinct(out.all$year), 
+                    width=800, height=600, units="px"))
+}
 # final maps
-theme_set(theme_bw())
 ggplot(out.df, aes(x=lon, y=lat)) + 
-  geom_tile(aes(fill=log(N.final))) + geom_point(aes(colour=N.0>0)) +
+  geom_tile(aes(fill=N.final)) + geom_point(aes(colour=N.0>0)) +
   scale_fill_gradient(low="white", high="red") +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue"))
 ggplot(out.df, aes(x=lon, y=lat)) + 

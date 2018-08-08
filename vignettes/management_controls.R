@@ -1,6 +1,6 @@
 # Example of management treatments
 # load libraries
-Packages <- c("dismo", "here", "doSNOW", "fastmatch", "scales", "gganimate",
+Packages <- c("here", "doSNOW", "fastmatch", "scales", "gganimate",
               "gbPopMod", "tidyverse", "magrittr")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 theme_set(theme_bw())
@@ -40,16 +40,16 @@ N.init <- pop_init(ngrid, g.p, lc.df)
 
 # run simulation
 if(g.p$n.cores > 1) {
-  require(doParallel)
+  require(doSNOW)
   p.c <- makeCluster(g.p$n.cores)
-  registerDoParallel(p.c)
+  registerDoSNOW(p.c)
   out.p <- foreach(i=1:n.sim, .packages="gbPopMod") %dopar% {
     run_sim(ngrid, ncell, g.p, lc.df, sdd.pr, N.init, control.p, verbose=F)
   }
   stopCluster(p.c)
-  out.ad <- map(out.p, ~.$N[,,max(g.p$age.f)]) %>% unlist %>% 
+  out.ad <- map(out.p, ~.$N[,,max(g.p$m)]) %>% unlist %>% 
     array(., dim=c(ngrid, g.p$tmax+1, n.sim))
-  out.sb <- map(out.p, ~.$N.sb) %>% unlist %>% 
+  out.sb <- map(out.p, ~.$B) %>% unlist %>% 
     array(., dim=c(ngrid, g.p$tmax+1, n.sim))
 } else {
   out.ad <- out.sb <- array(dim=c(ngrid, g.p$tmax+1, n.sim))
@@ -76,7 +76,7 @@ N.out$ad_L5 <- N.out$ad_L5 + c(ad.mn > 5)
 N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
 # prepare plot paths & filenames
-p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "_", g.p$edges, "/")
+p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
 if(!dir.exists(here::here("out"))) dir.create(here::here("out"))
 if(!dir.exists(here::here(p.wd))) dir.create(here::here(p.wd))
 
