@@ -72,8 +72,7 @@ N.out$year <- str_pad(N.out$year, 3, "left", "0")
 
 # prepare plot paths & filenames
 p.wd <- paste0("out/", ncell, "_t", g.p$tmax, "/")
-if(!dir.exists(here::here("out"))) dir.create(here::here("out"))
-if(!dir.exists(here::here(p.wd))) dir.create(here::here(p.wd))
+if(!dir.exists(here::here(p.wd))) dir.create(here::here(p.wd), recursive=T)
 
 # save plots
 save_pars(p.wd, g.p, control.p)
