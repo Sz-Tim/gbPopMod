@@ -288,14 +288,15 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
 #' @param g.p Named list of global parameters
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
+#' @param p.0 \code{NULL} Cell IDs with populations at t=0
 #' @return Matrix or array of initial abundances with \code{dim=c(ngrid, (n.lc),
 #'   m.max)}
 #' @keywords initialize, set up
 #' @export
 
-pop_init <- function(ngrid, g.p, lc.df) {
+pop_init <- function(ngrid, g.p, lc.df, p.0=NULL) {
   
-  p.0 <- sample(lc.df$id[lc.df$inbd], g.p$N.p.t0)
+  if(is.null(p.0)) p.0 <- sample(lc.df$id[lc.df$inbd], g.p$N.p.t0)
   m.max <- max(g.p$m)  # adult age bin
   
   if(length(unique(g.p$m)) == 1) {

@@ -278,8 +278,14 @@ iterate_pop <- function(ngrid, ncell, N.0, B.0, g.p, lc.df, sdd, control.p,
   N <- array(0, dim=dim(N.0))
   
   #--- update parameters
-  p.trt <- trt_ground(grd_cover.i, c.p$grd.trt)
-  N.0 <- trt_manual(N.0, m.max, cut_spray.i, c.p$man.trt)
+  if(!is.null(grd_cover.i)) {
+    p.trt <- trt_ground(grd_cover.i, c.p$grd.trt)
+  } else {
+    p.trt <- NULL
+  }
+  if(!is.null(cut_spray.i)) {
+    N.0 <- trt_manual(N.0, m.max, cut_spray.i, c.p$man.trt)
+  }
   # pre-multiply compositional parameters for cell expectations
   pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
   
