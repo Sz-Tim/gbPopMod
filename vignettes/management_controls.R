@@ -7,7 +7,7 @@ theme_set(theme_bw())
 
 # set parameters
 n.sim <- 4
-g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=4, sdd.max=5, sdd.rate=1.3)
+g.p <- set_g_p(tmax=50, n.cores=4, sdd.max=5, sdd.rate=1.3, N.p.t0=1)
 control.p <- set_control_p(null_ctrl=FALSE, 
                            t.trt=20,
                            man.i=1300:1800,  # cells with manual controls
