@@ -8,8 +8,8 @@ theme_set(theme_bw())
 # set parameters
 n.sim <- 4
 g.p <- set_g_p(tmax=50, lc.r=100, lc.c=100, n.cores=4, sdd.max=5, sdd.rate=1.3)
-control.p <- set_control_p(null_ctrl=TRUE, 
-                           t.trt=80,
+control.p <- set_control_p(null_ctrl=FALSE, 
+                           t.trt=20,
                            man.i=1300:1800,  # cells with manual controls
                            pTrt.man=NA,  # for random cell assignment
                            man.trt=c(M=0.05, C=0.3, MC=0.95),
@@ -32,11 +32,6 @@ sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
 
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
-
-# out.lam <- run_sim_lambda(ngrid, ncell, g.p, c(3,.2,.8,.8,1.7,.8), 
-#                           sdd.pr$i, N.init, TRUE)
-# out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% c(3,.2,.8,.8,1.7,.8)),
-#                         N=out.lam[,g.p$tmax+1])
 
 # run simulation
 if(g.p$n.cores > 1) {
