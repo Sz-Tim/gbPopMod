@@ -87,10 +87,9 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP")
   f.full <- paste0(p.wd, "Final_", f.nm, ".jpg") 
   
-  p.fin <- ggplot(N.final, aes(x=x, y=-y, colour=inbd)) +
+  p.fin <- ggplot(N.final, aes(x=lon, y=lat)) +
     scale_fill_gradient(low="white", high="red") +
-    theme(panel.background=element_rect(fill="gray30")) +
-    scale_colour_manual(values=c("gray", NA))
+    theme(panel.background=element_rect(fill="gray30"))
   
   # Adult abundance
   ggsave(f.full[1], width=w, height=h, 
@@ -150,9 +149,8 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600) {
   f.nm <- c("ad_Ab", "sb_Ab", "ad_sd", "sb_sd", "ad_pP", "sb_pP", "ad_L5")
   f.full <- paste0(p.wd, f.nm, ".gif")
   
-  p.gif <- ggplot(N.out, aes(x=lon, y=lat, colour=inbd)) + 
+  p.gif <- ggplot(N.out, aes(x=lon, y=lat)) + 
     scale_fill_gradient(low="white", high="red") + 
-    scale_colour_manual(values=c("gray", NA)) +
     theme(panel.background=element_rect(fill="gray30")) +
     transition_time(as.numeric(year))
   
@@ -220,7 +218,7 @@ make_plots_lc <- function(p.wd, lc.df, w=10, h=7) {
   f.full <- paste0(p.wd, c("LC_Opn.jpg", "LC_Oth.jpg", "LC_Dec.jpg", 
                            "LC_WP.jpg", "LC_Evg.jpg", "LC_Mxd.jpg"))
   
-  p.lc <- ggplot(lc.df, aes(x=x, y=-y, colour=inbd)) + 
+  p.lc <- ggplot(lc.df, aes(x=lon, y=lat, colour=inbd)) + 
     theme(panel.background=element_rect(fill="gray30")) +
     scale_colour_manual(values=c("gray", NA))
   
