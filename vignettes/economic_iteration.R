@@ -11,8 +11,9 @@
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
 # install the package along with all other required packages with:
-devtools::install_github("Sz-Tim/gbPopMod", dependencies=F,
-                         auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
+#devtools::install_github("Sz-Tim/gbPopMod", dependencies=T,
+#                        auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
+help(package="gbPopMod")
 # The following packages are called by various gbPopMod functions:
 # - here: easier file directory navigation
 # - doSNOW: running in parallel
@@ -41,7 +42,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-gifs <- TRUE
+gifs <- FALSE
 res <- "9km2"  # 9km2 or 20ac
 lc.df <- read_csv(paste0("data/USDA_", res, ".csv"))
 ngrid <- nrow(lc.df)
@@ -54,15 +55,22 @@ id.i <- lc.df %>% select(id, id.in)
 
 #--- set parameters as default; ?set_control_p; ?set_g_p
 tmax <- 150
-g.p <- set_g_p(tmax=tmax, n.cores=4, N.p.t0=1,
-               K=c(5223180, 0, 770790, 770790, 770790, 770790), 
-               sdd.max=7, sdd.rate=1.401869)
+m.i <- filter(lc.df, x>38 & x<45 & y>33 & y<40) %>% mutate(trt="m")
+g.i <- filter(lc.df, x>18 & x<25 & y>38 & y<45) %>% mutate(trt="g")
+b.i <- filter(lc.df, x>28 & x<35 & y>28 & y<35) %>% mutate(trt="b")
+mgmt.df <- rbind(m.i, g.i, b.i) %>% group_by(trt) %>%
+  summarise(lon.mx=max(lon), lon.mn=min(lon),
+            lat.mx=max(lat), lat.mn=min(lat))
+mgmt.df <- with(mgmt.df, data.frame(trt=rep(trt, 4), 
+                      lon=c(lon.mx, lon.mx, lon.mn, lon.mn),
+                      lat=c(lat.mx, lat.mn, lat.mn, lat.mx)))
+g.p <- set_g_p(tmax=tmax, n.cores=1,  
+               K=c(5223180, 0, 770790, 770790, 770790, 770790),
+               sdd.max=7, sdd.rate=1.4)
 c.p <- set_control_p(null_ctrl=FALSE, 
-                     t.trt=20,
-                     grd.i=c(filter(lc.df, x>23 & x<30 & y>23 & y<30)$id.in, 
-                             filter(lc.df, x>13 & x<20 & y>43 & y<50)$id.in),
-                     man.i=c(filter(lc.df, x>33 & x<40 & y>33 & y<40)$id.in,
-                             filter(lc.df, x>13 & x<20 & y>43 & y<50)$id.in),
+                     t.trt=100,
+                     grd.i=c(g.i$id.in, b.i$id.in),
+                     man.i=c(m.i$id.in, b.i$id.in),
                      pTrt.man=0.01,  # 1% of cells cut and/or spray
                      pTrt.grd=0.01,  # 1% of cells use ground cover
                      lc.chg=FALSE,
@@ -71,7 +79,8 @@ c.p <- set_control_p(null_ctrl=FALSE,
 
 #--- calculate SDD neighborhoods & initialize buckthorn
 sdd <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
-N.init <- pop_init(ngrid, g.p, lc.df, p.0=2700)  
+set.seed(1)
+N.init <- pop_init(ngrid, g.p, lc.df, p.0=2000)
 B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
 N <- array(0, dim=c(ngrid, tmax+1, 6, max(g.p$m))) # [cell, year, LC, age]
 N[,1,,] <- N.init
@@ -129,7 +138,7 @@ for(t in 1:g.p$tmax) {
   # 2. Adults produce fruit
   # 3. Fruit is consumed and dispersed, or dropped
   # 4. Seeds germinate and establish
-  g.p$n.ldd <- ifelse(t %% 10 == 0, 1, 0)
+  g.p$n.ldd <- ifelse(t %% 5 == 0, 1, 0)
   out <- iterate_pop(ngrid, ncell, N[,t,,], B[,t], g.p, lc.df, sdd, control.p, 
                      grd_cover.i, cut_spray.i, read_write=FALSE, path=NULL)
   N[,t+1,,] <- out$N
@@ -139,7 +148,7 @@ for(t in 1:g.p$tmax) {
 })
 
 # visualize output
-plot.dir <- paste0("out/", res, "/econ/", g.p$tmax, "/trt_", c.p$t.trt)
+plot.dir <- paste0("out/", res, "/econ/t_", g.p$tmax, "/trt_", c.p$t.trt)
 if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
 N.tot <- apply(N[,,,max(g.p$m)], 1:2, sum) # sum adults across LC categories
 N.df <- as.data.frame(N.tot); names(N.df) <- 1:ncol(N.df)
@@ -150,6 +159,8 @@ out.df <- lc.df %>%
          B.0=B[,1],
          N.final=N.tot[,tmax+1],
          B.final=B[,tmax+1])
+out.all <- filter(out.all, !is.na(lon))
+write_csv(out.all, here(plot.dir, "out_all.csv"))
 # cell abundances through time
 theme_set(theme_bw() + theme(panel.background=element_rect(fill="gray30"),
                              panel.grid=element_blank()))
@@ -158,11 +169,9 @@ if(gifs) {
   anim_save(here(plot.dir, "N.gif"),
             animate(ggplot(out.all, aes(x=lon, y=lat)) + 
                       geom_tile(aes(fill=N)) +
-                      geom_tile(data=filter(lc.df, id.in %in% c.p$grd.i),
-                                fill=NA, colour="blue", size=1) +
-                      geom_tile(data=filter(lc.df, id.in %in% c.p$man.i),
-                                fill=NA, colour="black", size=1) +
+                      geom_polygon(data=mgmt.df, aes(colour=trt), fill=NA, size=1) +
                       scale_fill_gradient(low="white", high="red") + 
+                      scale_colour_manual(values=c("black", "blue", "purple")) +
                       transition_time(year) +  
                       ggtitle("Adult abundance. Year {frame_time}"),
                     nframes=n_distinct(out.all$year), 
