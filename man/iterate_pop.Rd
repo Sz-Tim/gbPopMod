@@ -4,8 +4,8 @@
 \alias{iterate_pop}
 \title{Implement management and iterate buckthorn populations for one time step}
 \usage{
-iterate_pop(ngrid, ncell, N.0, B.0, g.p, lc.df, sdd, control.p, grd_cover.i,
-  cut_spray.i, read_write = FALSE, path = NULL)
+iterate_pop(ngrid, ncell, N.0 = NULL, B.0 = NULL, g.p, lc.df, sdd,
+  control.p, grd_cover.i, mech_chem.i, read_write = FALSE, path = NULL)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -34,7 +34,7 @@ cover management, and columns \code{id} and \code{Trt} detailing the cell
 ID and ground cover treatment (\code{"Cov", "Com", "Lit"} for ground cover
 crop, compaction, or litter, respectively).}
 
-\item{cut_spray.i}{Dataframe with a row for each cell implementing manual
+\item{mech_chem.i}{Dataframe with a row for each cell implementing manual
 management of adults, and columns \code{id} and \code{Trt} detailing the
 cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
 chemical, or mechanical and chemical, respectively).}

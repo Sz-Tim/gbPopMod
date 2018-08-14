@@ -71,7 +71,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
         sdd.i <- tibble(id.in=unique(
           arrayInd(which(sdd$i %in% chg.asn$id.chg$id.in), dim(sdd$i))[,4]), 
           id=id.i$id[match(id.in, id.i$id.in)])
-        sdd_new <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
+        sdd_new <- sdd_update_probs(lc.df, g.p, sdd.i, sdd$i)
         sdd$i[,,,sdd.i$id.in] <- sdd_new$i
         sdd$sp[sdd.i$id.in] <- sdd_new$sp
       }
@@ -254,7 +254,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #'   cover management, and columns \code{id} and \code{Trt} detailing the cell
 #'   ID and ground cover treatment (\code{"Cov", "Com", "Lit"} for ground cover
 #'   crop, compaction, or litter, respectively).
-#' @param cut_spray.i Dataframe with a row for each cell implementing manual
+#' @param mech_chem.i Dataframe with a row for each cell implementing manual
 #'   management of adults, and columns \code{id} and \code{Trt} detailing the
 #'   cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
 #'   chemical, or mechanical and chemical, respectively).
@@ -266,25 +266,26 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #' @keywords run, simulate
 #' @export
 
-iterate_pop <- function(ngrid, ncell, N.0, B.0, g.p, lc.df, sdd, control.p, 
-                        grd_cover.i, cut_spray.i, read_write=FALSE, path=NULL) {
+iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
+                        control.p, grd_cover.i, mech_chem.i, 
+                        read_write=FALSE, path=NULL) {
   library(gbPopMod); library(tidyverse); library(magrittr)
   if(read_write) {
-    N.0 <- readRDS(paste0(dir, "/N.rds"))
-    B.0 <- readRDS(paste0(dir, "/B.rds"))
+    N.0 <- readRDS(paste0(path, "/N.rds"))
+    B.0 <- readRDS(paste0(path, "/B.rds"))
   }
   list2env(g.p, environment())
   m.max <- max(m)
-  N <- array(0, dim=dim(N.0))
+  N.1 <- array(0, dim=dim(N.0))
   
   #--- update parameters
   if(!is.null(grd_cover.i)) {
-    p.trt <- trt_ground(grd_cover.i, c.p$grd.trt)
+    p.trt <- trt_ground(grd_cover.i, control.p$grd.trt)
   } else {
     p.trt <- NULL
   }
-  if(!is.null(cut_spray.i)) {
-    N.0 <- trt_manual(N.0, m.max, cut_spray.i, c.p$man.trt)
+  if(!is.null(mech_chem.i)) {
+    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt)
   }
   # pre-multiply compositional parameters for cell expectations
   pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
@@ -300,16 +301,16 @@ iterate_pop <- function(ngrid, ncell, N.0, B.0, g.p, lc.df, sdd, control.p,
   estab.out$M.0 <- ldd_disperse(ncell, id.i, estab.out$M.0, n.ldd)
   
   #--- update abundances
-  B <- estab.out$B
+  B.1 <- estab.out$B
   for(l in 1:6) {
-    N[,l,1] <- round(estab.out$M.0 * pm$s.M.E)
-    N[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
-    N[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N[,l,m[l]-1]*s.M[l]),
-                        pm$K.lc[,l])
+    N.1[,l,1] <- round(estab.out$M.0 * pm$s.M.E)
+    N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
+    N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
+                          pm$K.lc[,l])
   }
   if(read_write) {
-    saveRDS(N, paste0(dir, "/N.rds"))
-    saveRDS(B, paste0(dir, "/B.rds"))
+    saveRDS(N.1, paste0(path, "/N.rds"))
+    saveRDS(B.1, paste0(path, "/B.rds"))
   }
-  return(list(N=N, B=B))
+  return(list(N=N.1, B=B.1))
 }
