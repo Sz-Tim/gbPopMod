@@ -4,15 +4,13 @@
 # This is an example of how the buckthorn model could be called in the economic
 # model. Part I assumes the model is written in R (or can directly call an R
 # function) and iterates the buckthorn population one time step, alternating
-# with landowner interactions and decisions. Part II assumes the model is
-# written in another language and the R script is called, with inputs and
-# outputs written to external files in each iteration.
+# with landowner interactions and decisions. 
 
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
 # install the package along with all other required packages with:
-#devtools::install_github("Sz-Tim/gbPopMod", dependencies=T,
-#                        auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
+devtools::install_github("Sz-Tim/gbPopMod", dependencies=T,
+                       auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
 help(package="gbPopMod")
 # The following packages are called by various gbPopMod functions:
 # - here: easier file directory navigation
@@ -44,7 +42,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 #--- load libraries & landscape
 gifs <- FALSE
 res <- "9km2"  # 9km2 or 20ac
-lc.df <- read_csv(paste0("data/USDA_", res, ".csv"))
+load(paste0("data/USDA_", res, ".rda"))  # loads dataframe as lc.df
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)
@@ -53,12 +51,12 @@ id.i <- lc.df %>% select(id, id.in)
 # - id.in: inbound ID; identified for inbound cells, NA if out of bounds
 # This is to allow simpler spatial calculations (e.g., SDD neighborhoods)
 
-#--- set parameters as default; ?set_control_p; ?set_g_p
+#--- set parameters; ?set_control_p; ?set_g_p
 tmax <- 150
-m.i <- filter(lc.df, x>38 & x<45 & y>33 & y<40) %>% mutate(trt="m")
-g.i <- filter(lc.df, x>18 & x<25 & y>38 & y<45) %>% mutate(trt="g")
-b.i <- filter(lc.df, x>28 & x<35 & y>28 & y<35) %>% mutate(trt="b")
-mgmt.df <- rbind(m.i, g.i, b.i) %>% group_by(trt) %>%
+manual.i <- filter(lc.df, x>38 & x<45 & y>33 & y<40) %>% mutate(trt="m")
+ground.i <- filter(lc.df, x>18 & x<25 & y>38 & y<45) %>% mutate(trt="g")
+both.i <- filter(lc.df, x>28 & x<35 & y>28 & y<35) %>% mutate(trt="b")
+mgmt.df <- rbind(manual.i, ground.i, both.i) %>% group_by(trt) %>%
   summarise(lon.mx=max(lon), lon.mn=min(lon),
             lat.mx=max(lat), lat.mn=min(lat))
 mgmt.df <- with(mgmt.df, data.frame(trt=rep(trt, 4), 
@@ -69,8 +67,8 @@ g.p <- set_g_p(tmax=tmax, n.cores=1,
                sdd.max=7, sdd.rate=1.4)
 c.p <- set_control_p(null_ctrl=FALSE, 
                      t.trt=100,
-                     grd.i=c(g.i$id.in, b.i$id.in),
-                     man.i=c(m.i$id.in, b.i$id.in),
+                     grd.i=c(ground.i$id.in, both.i$id.in),
+                     man.i=c(manual.i$id.in, both.i$id.in),
                      pTrt.man=0.01,  # 1% of cells cut and/or spray
                      pTrt.grd=0.01,  # 1% of cells use ground cover
                      lc.chg=FALSE,
@@ -85,7 +83,7 @@ B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
 N <- array(0, dim=c(ngrid, tmax+1, 6, max(g.p$m))) # [cell, year, LC, age]
 N[,1,,] <- N.init
 for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
-grd_cover.i <- cut_spray.i <- NULL
+grd_cover.i <- mech_chem.i <- NULL
 
 
 system.time({
@@ -99,7 +97,7 @@ for(t in 1:g.p$tmax) {
   # Instead of using trt_assign(), the economic model can generate a two-column
   # dataframe where id (=id.i$id) and Trt (=treatment method).
   # Forest harvest is slightly more complicated, requiring a dataframe with the
-  # id and id.in for the cells harvesting, and a dataframe with the change in 
+  # id and id.in for the harvesting cells, and a dataframe with the change in 
   # each forest type
   
   #--- harvest timber
@@ -111,12 +109,12 @@ for(t in 1:g.p$tmax) {
     lc.df[f_cut.i$id.chg$id,] <- cut_forest(f_cut.i$id.chg, f_cut.i$mx, 
                                             forest.col=6:9, lc.df)
     # update SDD probabilities based on bird preferences for new LC composition
-    sdd.i <- tibble(id.in=unique(
+    sdd.alter <- tibble(id.in=unique(
       arrayInd(which(sdd$i %in% f_cut.i$id.chg$id.in), dim(sdd$i))[,4]), 
       id=id.i$id[match(id.in, id.i$id.in)])
-    sdd_new <- sdd_set_probs(nrow(sdd.i), lc.df, g.p, sdd.i)
-    sdd$i[,,,sdd.i$id.in] <- sdd_new$i
-    sdd$sp[sdd.i$id.in] <- sdd_new$sp
+    sdd_new <- sdd_update_probs(lc.df, g.p, sdd.alter, sdd$i)
+    sdd$i[,,1,sdd.alter$id.in] <- sdd_new$i
+    sdd$sp[sdd.alter$id.in] <- sdd_new$sp
   }
   
   if(t >= c.p$t.trt) {
@@ -124,7 +122,7 @@ for(t in 1:g.p$tmax) {
   grd_cover.i <- trt_assign(id.i, assign_i=c.p$grd.i, trt.eff=c.p$grd.trt)
   
   #--- identify cells for cut/spray treatments
-  cut_spray.i <- trt_assign(id.i, assign_i=c.p$man.i, trt.eff=c.p$man.trt)
+  mech_chem.i <- trt_assign(id.i, assign_i=c.p$man.i, trt.eff=c.p$man.trt)
   }
   
   
@@ -139,8 +137,8 @@ for(t in 1:g.p$tmax) {
   # 3. Fruit is consumed and dispersed, or dropped
   # 4. Seeds germinate and establish
   g.p$n.ldd <- ifelse(t %% 5 == 0, 1, 0)
-  out <- iterate_pop(ngrid, ncell, N[,t,,], B[,t], g.p, lc.df, sdd, control.p, 
-                     grd_cover.i, cut_spray.i, read_write=FALSE, path=NULL)
+  out <- iterate_pop(ngrid, ncell, N[,t,,], B[,t], g.p, lc.df, sdd, c.p, 
+                     grd_cover.i, mech_chem.i, read_write=FALSE, path=NULL)
   N[,t+1,,] <- out$N
   B[,t+1] <- out$B
   if(t %% 10 == 0) cat("Finished time", t, "\n")
@@ -171,7 +169,9 @@ if(gifs) {
                       geom_tile(aes(fill=N)) +
                       geom_polygon(data=mgmt.df, aes(colour=trt), fill=NA, size=1) +
                       scale_fill_gradient(low="white", high="red") + 
-                      scale_colour_manual(values=c("black", "blue", "purple")) +
+                      scale_colour_manual(paste("Treatment from\nyear", c.p$t.trt), 
+                                          values=c("black", "blue", "purple"), 
+                                          labels=c("both", "ground", "manual")) +
                       transition_time(year) +  
                       ggtitle("Adult abundance. Year {frame_time}"),
                     nframes=n_distinct(out.all$year), 
