@@ -22,7 +22,8 @@ par.ls <- set_sensitivity_pars(names(g.p)[10:26][-(6:7)], par_span, res)
 nSamp <- 400
 
 # load landscape
-lc.df <- read_csv(paste0("data/USDA_", res, ".csv")) %>% 
+load(paste0("data/USDA_", res, ".rda"))
+lc.df <- lc.df %>% 
   filter(y >= (max(.$y) - g.p$lc.r) & x <= g.p$lc.c) %>%
   mutate(id=row_number(), 
          id.in=min_rank(na_if(inbd*id, 0)))
