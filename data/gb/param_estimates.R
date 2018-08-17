@@ -32,6 +32,11 @@ germ_lee <- read_csv("data/gb/Lee_germ.csv")
 ann_aiello <- read_csv("data/gb/Aiello_fral-df-ann.csv") %>%
   mutate(nhlc=factor(nhlc, labels=c("Opn", "Dec", "Mxd", "WP"))) %>%
   filter(!is.na(nhlc))
+edd_maps <- read.csv("data/gb/eddmaps_gb.csv", 
+                     na.strings=c("NA", "NULL", "")) %>%
+  filter(grossAreaInAcres > infestedAreaInAcres &
+           grossAreaInAcres > 15 & grossAreaInAcres < 500) %>%
+  mutate(prop_infested=infestedAreaInAcres/grossAreaInAcres)
 # Storage
 par.best <- set_g_p()
 par.rng <- set_sensitivity_pars(names(par.best))
@@ -130,8 +135,8 @@ par.rng$sdd.max$max <- ceiling(par.best$sdd.max * 1.25)
 #--- Source: Merow et al 2011 (Dev=.39, Ag=.44, Dec=.06, Evg=.11)
 par.best$bird.hab <- c(.39, .44, .06, .11, .11, .11)
 par.best$bird.hab <- par.best$bird.hab/sum(par.best$bird.hab)
-par.rng$bird.hab$min <- (par.best$bird.hab*0.75)/sum(par.best$bird.hab*0.75)
-par.rng$bird.hab$max <- (par.best$bird.hab*1.25)/sum(par.best$bird.hab*1.25)
+par.rng$bird.hab$min <- (par.best$bird.hab*0.75)
+par.rng$bird.hab$max <- (par.best$bird.hab*1.25)
 
 
 ## n.ldd: Annual number of long distance dispersal events
@@ -176,11 +181,12 @@ par.rng$s.N$max <- rep(1, 6)
 
 
 ## K: Carrying capacity for adults
-#--- Source: Tom Lee field (but mainly for WP)
+#--- Source: Tom Lee field, EDDMapS
+em <- max(edd_maps$prop_infested)
 dens_data <- dens_lee %>% summarise(mn=mean(n_g1m_ha),
                                     q25=quantile(n_g1m_ha, 0.25),
                                     q75=quantile(n_g1m_ha, 0.75))
-dens_data[,2:4] <- dens_data[,2:4] * ifelse(res=="20ac", 8.1, 900)
+dens_data[,2:4] <- dens_data[,2:4] * ifelse(res=="20ac", 8.1, 900) * em
 par.best$K <- with(dens_data, c(mn[2], 0, mn[1], mn[1], mn[1], mn[1]))
 par.rng$K$min <- with(dens_data, c(q25[2], 0, q25[1], q25[1], q25[1], q25[1]))
 par.rng$K$max <- with(dens_data, c(q75[2], 100, q75[1], q75[1], q75[1], q75[1]))

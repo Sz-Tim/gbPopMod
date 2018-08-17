@@ -30,18 +30,22 @@ the \link{trt_assign} function}
 \link{trt_assign} function}
 
 \item{pTrt.grd}{\code{0.05} Proportion of cells with ground treatments in
-each time step}
+each time step; only used if \code{grd.i=NULL}}
 
 \item{pTrt.man}{\code{0.05} Proportion of cells with manual treatments in
-each time step}
+each time step; only used if \code{grd.i=NULL}}
 
-\item{grd.trt}{\code{Lit=0.005, Cov=0.01, Com=0.00001} Named vector with
-ground treatments and associated seedling establishment probabilities}
+\item{grd.trt}{\code{c(Lit=0.005, Cov=0.01, Com=0.00001)} Named vector with
+ground treatments and associated seedling establishment probabilities;
+treatments include litter (Lit), cover crops (Cov), and soil compaction
+(Com)}
 
 \item{man.trt}{\code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
-treatments and associated mortality (=success) rates}
+treatments and associated mortality (=success) rates; treatments include
+mechanical (M), chemical (C), or both (MC)}
 
-\item{lc.chg}{\code{TRUE} Does land cover change across years?}
+\item{lc.chg}{\code{TRUE} Does land cover change (i.e., timber harvest)
+across years?}
 
 \item{pChg}{\code{0.0001} Proportion of cells with land cover change each
 year}
@@ -53,7 +57,17 @@ Named list of control parameters including all arguments as elements
 }
 \description{
 Set the buckthorn control treatment parameters for the simulation, allowing
-for individual elements to be reassigned.
+for individual elements to be reassigned. Treatments fall into two broad
+categories: ground cover and manual. Ground cover treatments reduce seedling
+recruitment (i.e., establishment probabilities, \code{set_g_p()$p}) by
+covering the ground with litter or cover crops, or by compacting the soil.
+When these treatments are enacted in a cell, the establishment probability is
+replaced by the corresponding probability assigned in
+\code{set_control_p()$grd.trt}. Manual treatments reduce juvenile and adult
+abundances by mechanical and/or chemical methods. The success rates (i.e.,
+mortality rates) are assigned in \code{set_control_p()$man.trt}, and when a
+manual treatment is enacted in a cell, the adult and juvenile abundances in
+that cell are reduced by the corresponding rate.
 }
 \keyword{control,}
 \keyword{initialize,}

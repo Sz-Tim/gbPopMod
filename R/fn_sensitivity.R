@@ -41,7 +41,7 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                    list(param="s.N", type="prob", LC=1,
                         min=rep(0,6), max=rep(1,6)),
                    list(param="K", type="cont", LC=1, 
-                        min=rep(0,6), max=rep(2000,6)),
+                        min=rep(0,6), max=rep(40000,6)),
                    list(param="g.D", type="prob", LC=0, min=0, max=1),
                    list(param="g.B", type="prob", LC=0, min=0, max=1),
                    list(param="p", type="prob", LC=1,
@@ -49,18 +49,18 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
     )
   } else if(span=="gb"){
     par.ls <- list(list(param="p.f", type="prob", LC=1, 
-                        min=c(0.4875, 0, 0.075, 0.1125, 0.1125, 0.075), 
-                        max=c(0.8125, 0.8125, 0.125, 0.1875, 0.1875, 0.125)),
+                        min=c(0.338, 0, 0.218, 0.1125, 0.1125, 0.126), 
+                        max=c(0.563, 0.563, 0.364, 0.1875, 0.1875, 0.210)),
                    list(param="mu", type="cont", LC=1, 
-                        min=c(1461, 0, 65, 128, 128, 65), 
-                        max=c(2435, 109, 109, 215, 215, 109)),
+                        min=c(1461, 0, 10, 31, 31, 15), 
+                        max=c(2435, 0, 17, 52, 52, 26)),
                    list(param="gamma", type="cont", LC=0, min=2.378, max=2.595),
                    list(param="m", type="int", LC=1, 
                         min=c(2, 2, 4, 4, 4, 4), 
-                        max=c(3, 2, 4, 4, 4, 4)),
+                        max=c(4, 4, 8, 8, 8, 8)),
                    list(param="p.c", type="prob", LC=1,
-                        min=c(0.122, 0.122, 0.25, 0.219, 0.219, 0.25), 
-                        max=c(0.252, 0.252, 0.333, 0.262, 0.262, 0.333)),
+                        min=c(0.113, 0.113, 0.222, 0.205, 0.205, 0.222), 
+                        max=c(0.206, 0.206, 0.314, 0.250, 0.250, 0.314)),
                    list(param="sdd.rate", type="cont", LC=0, 
                         min=ifelse(res=="20ac", 0.107, 1.12), 
                         max=ifelse(res=="20ac", 0.178, 1.87)),
@@ -68,8 +68,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                         min=ifelse(res=="20ac", 7, 3), 
                         max=ifelse(res=="20ac", 36, 9)),
                    list(param="bird.hab", type="cont", LC=1, 
-                        min=c(0, 0, 0, 0, 0, 0), 
-                        max=c(1, 1, 1, 1, 1, 1)),
+                        min=c(0.240, 0.270, 0.037, 0.068, 0.068, 0.068), 
+                        max=c(0.400, 0.451, 0.06, 0.113, 0.113, 0.113)),
                    list(param="n.ldd", type="int", LC=0, min=1, max=5),
                    list(param="s.c", type="prob", LC=0, min=0.4875, max=0.605),
                    list(param="s.B", type="prob", LC=0, min=0.641, max=0.766),
@@ -80,17 +80,26 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                         min=c(0.9, 0.9, 0.9, 0.9, 0.9, 0.9), 
                         max=c(1, 1, 1, 1, 1, 1)),
                    list(param="K", type="cont", LC=1, 
-                        min=c(32554, 0, 2305, 2305, 2305, 2305), 
-                        max=c(64523, 100, 8964, 8964, 8964, 8964)),
+                        min=c(19533, 0, 1383, 1383, 1383, 1383), 
+                        max=c(38713, 100, 5378, 5378, 5378, 5378)),
                    list(param="g.D", type="prob", LC=0, min=0, max=0),
                    list(param="g.B", type="prob", LC=0, min=0.18, max=0.28),
                    list(param="p", type="prob", LC=1,
-                        min=c(0, 0, 0, 0, 0, 0), 
-                        max=c(0.5, 0.5, 0.5, 0.5, 0.5, 0.5))
+                        min=c(0.263, 0, 0.3, 0.075, 0.075, 0.113), 
+                        max=c(0.438, 0.438, 0.5, 0.125, 0.125, 0.188))
     )
   }
   
   names(par.ls) <- map_chr(par.ls, ~.$param)
+  if(res=="9km2") {
+    if(span=="total") {
+      par.ls$K$min <- rep(0, 6)
+      par.ls$K$max <- rep(5000000, 6)
+    } else {
+      par.ls$K$min <- c(2170287, 0, 153644, 153644, 153644, 153644)
+      par.ls$K$max <- c(4301532, 1000, 597578, 597578, 597578, 597578)
+    }
+  }
   return(par.ls[pars])
 }
 
