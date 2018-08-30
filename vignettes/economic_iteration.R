@@ -75,7 +75,7 @@ c.p <- set_control_p(null_ctrl=FALSE,
                      t.trt=100,
                      grd.i=c(ground.i$id.in, both.i$id.in),
                      man.i=c(manual.i$id.in, both.i$id.in),
-                     lc.chg=FALSE,
+                     lc.chg=FALSE
 )
 
 #--- calculate SDD neighborhoods & initialize buckthorn
