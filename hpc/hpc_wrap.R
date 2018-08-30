@@ -17,7 +17,7 @@ res <- c("20ac", "9km2")[2]
 par_span <- c("total", "gb")[2]
 
 # set parameters
-g.p <- set_g_p(tmax=20, lc.r=Inf, lc.c=Inf, n.cores=4, N.p.t0=4)
+g.p <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, n.cores=4, N.p.t0=4)
 par.ls <- set_sensitivity_pars(names(g.p)[10:26], par_span, res)
 nSamp <- 400  # number of parameter sets; one iteration per parameter set
 
