@@ -4,7 +4,8 @@
 \alias{run_sim}
 \title{Run demographic simulation}
 \usage{
-run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, verbose = TRUE)
+run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, verbose = TRUE,
+  save_yrs = NULL)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -26,6 +27,9 @@ cell id info}
 set with \code{\link{set_control_p}}}
 
 \item{verbose}{\code{TRUE} Give updates for each year & process?}
+
+\item{save_yrs}{\code{NULL} Vector of years to save; if \code{NULL}, all
+years are returned}
 }
 \value{
 Array N of abundances for each cell and age group, matrix B of seed
