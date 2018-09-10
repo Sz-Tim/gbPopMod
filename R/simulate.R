@@ -15,6 +15,8 @@
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
 #' @param verbose \code{TRUE} Give updates for each year & process?
+#' @param save_yrs \code{NULL} Vector of years to save; if \code{NULL}, all
+#'   years are returned
 #' @return Array N of abundances for each cell and age group, matrix B of seed
 #'   bank abundances, matrix nFl with number of flowering individuals, matrix
 #'   nSd of total seeds produced in each cell, matrix nSdStay of total seeds
@@ -23,7 +25,7 @@
 #' @export
 
 run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, 
-                    control.p, verbose=TRUE) {
+                    control.p, verbose=TRUE, save_yrs=NULL) {
   
   library(tidyverse); library(magrittr)
   
@@ -147,6 +149,14 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     }
   }
   if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
+  if(!is.null(save_yrs)) {
+    N <- N[,save_yrs,]
+    B <- B[,save_yrs]
+    nFl <- nFl[,save_yrs]
+    nSd <- nSd[,save_yrs]
+    nSdStay <- nSdStay[,save_yrs]
+    D <- D[,save_yrs]
+  }
   return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
 
