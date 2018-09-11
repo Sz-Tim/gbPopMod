@@ -17,9 +17,15 @@ res <- c("20ac", "9km2")[2]
 par_span <- c("total", "gb")[2]
 
 # set parameters
+<<<<<<< HEAD
 g.p <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, n.cores=8, N.p.t0=4)
 par.ls <- set_sensitivity_pars(names(g.p)[10:26][-9], par_span, res)
 nSamp <- 10000
+=======
+g.p <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, n.cores=4, N.p.t0=4)
+par.ls <- set_sensitivity_pars(names(g.p)[10:26], par_span, res)
+nSamp <- 400  # number of parameter sets; one iteration per parameter set
+>>>>>>> 5b989d3070d4a8586a16a9d252e3fa1d533babb2
 
 # load landscape
 load(paste0("data/USDA_", res, ".rda"))

@@ -9,9 +9,9 @@
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
 # install the package along with all other required packages with:
-devtools::install_github("Sz-Tim/gbPopMod", dependencies=T,
-                       auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
-help(package="gbPopMod")
+# devtools::install_github("Sz-Tim/gbPopMod", dependencies=T,
+#                        auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
+# help(package="gbPopMod")
 # The following packages are called by various gbPopMod functions:
 # - here: easier file directory navigation
 # - doSNOW: running in parallel
@@ -21,8 +21,9 @@ help(package="gbPopMod")
 # - magrittr: additional pipe (%>%) functions
 # - *scales: generating color scales in some plotting functions (PLOTS ONLY)
 # - *gganimate: generating gifs (PLOTS ONLY)
+# - *viridis: for pretty colors (PLOTS ONLY)
 # - *dismo: boosted regression trees for sensitivity analysis (SENSITIVITY ONLY)
-Packages <- c("here", "gbPopMod", "tidyverse", "magrittr")
+Packages <- c("here", "gbPopMod", "tidyverse", "magrittr", "viridis")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 
@@ -49,12 +50,15 @@ id.i <- lc.df %>% select(id, id.in)
 # Note that lc.df and id.i contain two id columns:
 # - id: rectangular grid ID; identified for all cells
 # - id.in: inbound ID; identified for inbound cells, NA if out of bounds
-# This is to allow simpler spatial calculations (e.g., SDD neighborhoods)
+# This is to allow simpler spatial calculations (i.e., for SDD neighborhoods)
 
-#--- set parameters; ?set_control_p; ?set_g_p
+#--- set parameters
 tmax <- 150
+# cells that implement manual treatments
 manual.i <- filter(lc.df, x>38 & x<45 & y>33 & y<40) %>% mutate(trt="m")
+# cells that implement ground cover treatments
 ground.i <- filter(lc.df, x>18 & x<25 & y>38 & y<45) %>% mutate(trt="g")
+# cells that implement both
 both.i <- filter(lc.df, x>28 & x<35 & y>28 & y<35) %>% mutate(trt="b")
 mgmt.df <- rbind(manual.i, ground.i, both.i) %>% group_by(trt) %>%
   summarise(lon.mx=max(lon), lon.mn=min(lon),
@@ -62,17 +66,16 @@ mgmt.df <- rbind(manual.i, ground.i, both.i) %>% group_by(trt) %>%
 mgmt.df <- with(mgmt.df, data.frame(trt=rep(trt, 4), 
                       lon=c(lon.mx, lon.mx, lon.mn, lon.mn),
                       lat=c(lat.mx, lat.mn, lat.mn, lat.mx)))
+# global parameters: ?set_g_p
 g.p <- set_g_p(tmax=tmax, n.cores=1,  
                K=c(5223180, 0, 770790, 770790, 770790, 770790),
                sdd.max=7, sdd.rate=1.4)
+# control parameters: ?set_control_p
 c.p <- set_control_p(null_ctrl=FALSE, 
                      t.trt=100,
                      grd.i=c(ground.i$id.in, both.i$id.in),
                      man.i=c(manual.i$id.in, both.i$id.in),
-                     pTrt.man=0.01,  # 1% of cells cut and/or spray
-                     pTrt.grd=0.01,  # 1% of cells use ground cover
-                     lc.chg=FALSE,
-                     pChg=.01  # 1% of cells harvest forest
+                     lc.chg=FALSE
 )
 
 #--- calculate SDD neighborhoods & initialize buckthorn
@@ -168,7 +171,7 @@ if(gifs) {
             animate(ggplot(out.all, aes(x=lon, y=lat)) + 
                       geom_tile(aes(fill=N)) +
                       geom_polygon(data=mgmt.df, aes(colour=trt), fill=NA, size=1) +
-                      scale_fill_gradient(low="white", high="red") + 
+                      scale_fill_viridis(option="B") + 
                       scale_colour_manual(paste("Treatment from\nyear", c.p$t.trt), 
                                           values=c("black", "blue", "purple"), 
                                           labels=c("both", "ground", "manual")) +
@@ -180,18 +183,18 @@ if(gifs) {
 # final maps
 ggplot(out.df, aes(x=lon, y=lat)) + 
   geom_tile(aes(fill=N.final)) + geom_point(aes(colour=N.0>0)) +
-  scale_fill_gradient(low="white", high="red") +
+  scale_fill_viridis(option="B") +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue"))
 ggplot(out.df, aes(x=lon, y=lat)) + 
   geom_tile(aes(fill=log(B.final))) + geom_point(aes(colour=N.0>0)) +
-  scale_fill_gradient(low="white", high="red") +
+  scale_fill_viridis(option="B") +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue"))
 ggplot(out.df, aes(x=lon, y=lat)) + 
   geom_tile(aes(fill=N.final>0)) + geom_point(aes(colour=N.0>0)) +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue")) +
-  scale_fill_manual(values=c("FALSE"="gray80", "TRUE"="red"))
+  scale_fill_viridis(option="B", discrete=TRUE) 
 ggplot(out.df, aes(x=lon, y=lat)) + 
   geom_tile(aes(fill=B.final>0)) + geom_point(aes(colour=N.0>0)) +
   scale_colour_manual(values=c("FALSE"=NA, "TRUE"="blue")) +
-  scale_fill_manual(values=c("FALSE"="gray80", "TRUE"="red"))
+  scale_fill_viridis(option="B", discrete=TRUE)
 
