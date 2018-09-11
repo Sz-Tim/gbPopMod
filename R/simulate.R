@@ -57,14 +57,15 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     N[,1,] <- N.init
   }
   
-  for(t in 1:tmax) {  if(verbose) cat("Year", t, "")
+  if(verbose) pb <- txtProgressBar(min=0, max=tmax, style=3)
+  for(t in 1:tmax) {  
     if(m.d) { N.t <- N[,t,,] 
     } else { N.t <- N[,t,] }
     
     # 2. Implement management
     if(!is.null(control.p) && t >= t.trt) {
       # 2A. Adjust LC %
-      if(lc.chg && nChg >= 1) {  if(verbose) cat("Change LC...")
+      if(lc.chg && nChg >= 1) { 
         # i. decide which cells change and how much of each kind of forest
         chg.asn <- cut_assign(pChg, ncell, chg.i, lc.df, forest.col=6:9)
         # ii. cut forest & update SDD neighborhoods
@@ -79,7 +80,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       }
       
       # 2B. Adjust p
-      if(pTrt.grd*ncell > 0.5 || !is.null(grd.i)) {  if(verbose) cat("Cover...")
+      if(pTrt.grd*ncell > 0.5 || !is.null(grd.i)) { 
         est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
                               pTrt=pTrt.grd, trt.eff=grd.trt, 
                               addOwners=add.owners, trt.m1=est.trt)
@@ -87,7 +88,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       }
       
       # 2C. Adjust N
-      if(pTrt.man*ncell > 0.5 || !is.null(man.i)) {  if(verbose) cat("Cut|spray...")
+      if(pTrt.man*ncell > 0.5 || !is.null(man.i)) { 
         N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
                             pTrt=pTrt.man, trt.eff=man.trt, 
                             addOwners=add.owners, trt.m1=N.trt)
@@ -100,13 +101,11 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
     
     # 4. Local fruit production
-    if(verbose) cat("Fruits...")
     N.f <- make_fruits(N.t, pm$lc.mx, pm$mu.E, pm$p.f.E,
                                   m.max, m.d, dem.st)
     nFl[N.f$id,t] <- N.f$N.rpr
     
     # 5. Short distance dispersal
-    if(verbose) cat("SDD...")
     N.Sd <- sdd_disperse(id.i, N.f, gamma, pm$p.c.E, s.c, 
                          sdd$sp, sdd.rate, sdd.st, edges)
     nSd[N.Sd$N.source$id,t] <- N.Sd$N.source$N.produced
@@ -115,17 +114,14 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     D[,t] <- D[,t] - nSdStay[,t]
     
     # 6. Seedling establishment
-    if(verbose) cat("Establishment...")
     estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B[,t], pm$p.E, g.D, g.B,
                                s.B, dem.st, bank)
     B[,t+1] <- estab.out$B
     
     # 7. Long distance dispersal
-    if(verbose) cat("LDD...")
     estab.out$M.0 <- ldd_disperse(ncell, id.i, estab.out$M.0, n.ldd)
     
     # 8. Update abundances
-    if(verbose) cat("Update N...\n")
     if(m.d) {
         for(l in 1:n.lc) {
           N[,t+1,l,1] <- round(estab.out$M.0 * pm$s.M.E)
@@ -147,7 +143,9 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       N[,t+1,1] <- pmin(round(N[,t,1]*pm$s.N.E + estab.out$N.rcrt*pm$s.M.E), 
                         pm$K.E)
     }
+    if(verbose) setTxtProgressBar(pb, t)
   }
+  if(verbose) close(pb)
   if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
   if(!is.null(save_yrs)) {
     N <- N[,save_yrs,]
