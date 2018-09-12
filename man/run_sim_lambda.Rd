@@ -35,7 +35,7 @@ a regression with the slopes contained in each parameter vector.
 Individuals cannot be assigned to specific land cover categories with
 \code{"lm"}, so \code{"m"} must be scalar.}
 
-\item{verbose}{\code{TRUE} Give updates for each year & process?}
+\item{verbose}{\code{TRUE} Show progress bar?}
 
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}

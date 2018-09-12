@@ -14,7 +14,7 @@
 #'   \code{\link{pop_init}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
-#' @param verbose \code{TRUE} Give updates for each year & process?
+#' @param verbose \code{TRUE} Show progress bar?
 #' @param save_yrs \code{NULL} Vector of years to save; if \code{NULL}, all
 #'   years are returned
 #' @return Array N of abundances for each cell and age group, matrix B of seed
@@ -189,7 +189,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
 #'   a regression with the slopes contained in each parameter vector.
 #'   Individuals cannot be assigned to specific land cover categories with
 #'   \code{"lm"}, so \code{"m"} must be scalar.
-#' @param verbose \code{TRUE} Give updates for each year & process?
+#' @param verbose \code{TRUE} Show progress bar?
 #' @return Matrix N of abundances for each cell and time step and vector
 #'   lambda.E of predicted lambda value for each cell
 #' @keywords run, simulate, lambda
@@ -207,6 +207,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
   N <- matrix(0, ngrid, tmax+1)  
   N[,1] <- apply(N.init, 1, sum)
   
+  if(verbose) pb <- txtProgressBar(min=0, max=tmax, style=3)
   for(t in 1:tmax){
     # 2. Pre-multiply compositional parameters
     if(method=="wt.mn") {
@@ -220,21 +221,19 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
     } 
     
     # 3. Local growth
-    if(verbose) cat("Year", t, "- Grow...")
     N.new <- grow_lambda(N[,t], lambda.E, sdd.rate)
     
     # 4. Short distance dispersal
-    if(verbose) cat("SDD...")
     N.emig <- sdd_lambda(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st)
     
     # 5. Long distance dispersal
-    if(verbose) cat("LDD...")
     N.emig$N <- ldd_disperse(ncell, id.i, N.emig$N, n.ldd)
     
     # 6. Update population sizes
-    if(verbose) cat("Update N\n")
     N[,t+1] <- N.emig$N
+    if(verbose) setTxtProgressBar(pb, t)
   }
+  if(verbose) close(pb)
   return(list(N=N, lam.E=lambda.E))
 }
 

@@ -26,7 +26,7 @@ cell id info}
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
 
-\item{verbose}{\code{TRUE} Give updates for each year & process?}
+\item{verbose}{\code{TRUE} Show progress bar?}
 
 \item{save_yrs}{\code{NULL} Vector of years to save; if \code{NULL}, all
 years are returned}
