@@ -24,8 +24,9 @@ value in \code{p.seq}.}
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
 cell id info}
 
-\item{sdd}{\code{NULL} Output with short distance dispersal neighborhoods created by
-\code{\link{sdd_set_probs}}}
+\item{sdd}{\code{NULL} Output with short distance dispersal neighborhoods
+created by \code{\link{sdd_set_probs}}. If \code{NULL}, sdd neighborhoods
+are calculated}
 
 \item{N.init}{Matrix or array with initial population sizes created by
 \code{\link{pop_init}}}

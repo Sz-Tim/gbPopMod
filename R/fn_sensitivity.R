@@ -120,8 +120,9 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 #'   value in \code{p.seq}.
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
-#' @param sdd \code{NULL} Output with short distance dispersal neighborhoods created by
-#'   \code{\link{sdd_set_probs}}
+#' @param sdd \code{NULL} Output with short distance dispersal neighborhoods
+#'   created by \code{\link{sdd_set_probs}}. If \code{NULL}, sdd neighborhoods
+#'   are calculated
 #' @param N.init Matrix or array with initial population sizes created by
 #'   \code{\link{pop_init}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters
