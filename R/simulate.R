@@ -57,7 +57,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     N[,1,] <- N.init
   }
   
-  if(verbose) pb <- txtProgressBar(min=0, max=tmax, style=3)
+  if(verbose) pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
   for(t in 1:tmax) {  
     if(m.d) { N.t <- N[,t,,] 
     } else { N.t <- N[,t,] }
@@ -207,7 +207,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
   N <- matrix(0, ngrid, tmax+1)  
   N[,1] <- apply(N.init, 1, sum)
   
-  if(verbose) pb <- txtProgressBar(min=0, max=tmax, style=3)
+  if(verbose) pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
   for(t in 1:tmax){
     # 2. Pre-multiply compositional parameters
     if(method=="wt.mn") {
