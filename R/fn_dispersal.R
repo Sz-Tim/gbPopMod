@@ -10,12 +10,14 @@
 #' @param g.p Named list of global parameters
 #' @param edges \code{"wall"} Boundary behavior
 #' @param lc.col \code{4:9} Column indexes for land cover proportions
-#' @return List with full neighborhoods,i, and sparse representation, sp. The
-#'   full array has dim(disp.rows, disp.cols, 2, ncell) where the third
-#'   dimension contains grid id's for the neighborhood or probabilities to each
-#'   target cell. The sparse representation is a list with an element for each
-#'   cell, where each element is a vector of non-zero probabilities named with
-#'   the target cells.
+#' @return List with full neighborhoods,i, sparse representation, sp, and sparse
+#'   dataframe sp.df. The full array has dim(disp.rows, disp.cols, 2, ncell)
+#'   where the third dimension contains grid id's for the neighborhood or
+#'   probabilities to each target cell. The sparse representation contains a
+#'   list with containing the cells dispersing into each cell and a list with
+#'   the associated probabilities. The sparse dataframe is a dataframe with a
+#'   row for each non-zero i-j pair with columns for i, j, and dispersal
+#'   probability
 #' @param verbose \code{FALSE} Give updates for number of cells completed?
 #' @keywords sdd, dispersal, probability, probabilities
 #' @export
@@ -76,6 +78,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p,
   c.i <- map(n.i, ~fmatch(., lc.df$x_y))
 
   if(verbose) cat("  calculating probabilities...\n")
+  if(verbose) pb <- txtProgressBar(min=1, max=ncell, style=3)
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
     sdd.i[n.y[[n]][1]:n.y[[n]][2],
@@ -87,20 +90,22 @@ sdd_set_probs <- function(ncell, lc.df, g.p,
     sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.E[sdd.i[,,2,n][ib]]
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
     
-    # progress update
-    if(n %% 5000 == 0) {
-      if(verbose) cat("  finished cell", n, "\n")
-    }
+    if(verbose) setTxtProgressBar(pb, n)
   }
-  if(verbose) cat("  finished:", n, "cells\n")
+  if(verbose) {cat("  finished:", n, "cells\n"); close(pb)}
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
-  sdd.sparse <- vector("list", ncell)
+  sdd.sparse.ls <- vector("list", ncell)
   for(n in 1:ncell) {
-    sdd.sparse[[n]] <- c(sdd.i[,,1,n])
-    names(sdd.sparse[[n]]) <- c(sdd.i[,,2,n])
-    sdd.sparse[[n]] <- sdd.sparse[[n]][sdd.sparse[[n]]>0]
+    sdd.sparse.ls[[n]] <- c(sdd.i[,,1,n])
+    names(sdd.sparse.ls[[n]]) <- c(sdd.i[,,2,n])
+    sdd.sparse.ls[[n]] <- sdd.sparse.ls[[n]][sdd.sparse.ls[[n]]>0]
   }
-  return(list(i=sdd.i, sp=sdd.sparse))
+  sdd.sparse <- data.frame(i.idin=rep(1:n.cell, 
+                                 times=map_int(sdd.sparse.ls, length)),
+                           j.id=unlist(map(sdd.sparse.ls, ~as.numeric(names(.)))),
+                           pr=unlist(sdd.sparse.ls))
+  sdd.sparse$j.idin <- lc.df$id.inbd[match(sdd.sparse$j.id, lc.df$id)]
+  return(list(i=sdd.i, sp=sdd.sparse.ls, sp.df=sdd.sparse))
 }
 
 
@@ -124,18 +129,17 @@ sdd_set_probs <- function(ncell, lc.df, g.p,
 #'   \link{sdd_set_probs}; i.e., sdd_set_probs()$i
 #' @param edges \code{"wall"} Boundary behavior
 #' @param lc.col \code{4:9} Column indexes for land cover proportions
-#' @return List with full neighborhoods,i, and sparse representation, sp. The
-#'   full array has dim(disp.rows, disp.cols, 2, ncell) where the third
-#'   dimension contains grid id's for the neighborhood or probabilities to each
-#'   target cell. The sparse representation is a list with an element for each
-#'   cell, where each element is a vector of non-zero probabilities named with
-#'   the target cells.
-#' @param verbose \code{FALSE} Give updates for number of cells completed?
-#' @keywords sdd, dispersal, probability, probabilities
+#' @return List with full neighborhoods,i, sparse representation, sp, and sparse
+#'   dataframe sp.df. The full array has dim(disp.rows, disp.cols, 2, ncell)
+#'   where the third dimension contains grid id's for the neighborhood or
+#'   probabilities to each target cell. The sparse representation contains a
+#'   list with containing the cells dispersing into each cell and a list with
+#'   the associated probabilities. The sparse dataframe is a dataframe with a
+#'   row for each non-zero i-j pair with columns for i, j, and dispersal
+#'   probability
 #' @export
 
-sdd_update_probs <- function(lc.df, g.p, sdd.alter, sdd.0, 
-                             lc.col=4:9, verbose=F) {
+sdd_update_probs <- function(lc.df, g.p, sdd.alter, sdd.0, lc.col=4:9) {
   
   library(tidyverse); library(magrittr)
   
@@ -169,13 +173,17 @@ sdd_update_probs <- function(lc.df, g.p, sdd.alter, sdd.0,
     sdd.new[,,n][ib] <- d.pr[ib] * bird.hab.E[sdd.0[,,2,sdd.alter$id.in[n]][ib]]
   }
   sdd.new[,,] <- apply(sdd.new[,,], 3, function(x) x/sum(x))
-  sdd.sparse <- vector("list", ncell)
+  sdd.sparse.ls <- vector("list", ncell)
   for(n in 1:ncell) {
-    sdd.sparse[[n]] <- c(sdd.new[,,n])
-    names(sdd.sparse[[n]]) <- c(sdd.0[,,2,sdd.alter$id.in[n]])
-    sdd.sparse[[n]] <- sdd.sparse[[n]][sdd.sparse[[n]]>0]
+    sdd.sparse.ls[[n]] <- c(sdd.new[,,n])
+    names(sdd.sparse.ls[[n]]) <- c(sdd.0[,,2,sdd.alter$id.in[n]])
+    sdd.sparse.ls[[n]] <- sdd.sparse.ls[[n]][sdd.sparse.ls[[n]]>0]
   }
-  return(list(i=sdd.new, sp=sdd.sparse))
+  sdd.sparse <- data.frame(i=rep(1:n.cell, times=map_int(sdd.sparse.ls, length)),
+                           j=unlist(map(sdd.sparse.ls, ~as.numeric(names(.)))),
+                           pr=unlist(sdd.sparse.ls))
+  sdd.sparse$j.idin <- lc.df$id.inbd[match(sdd.sparse$j.id, lc.df$id)]
+  return(list(i=sdd.new, sp=sdd.sparse.ls, sp.df=sdd.sparse))
 }
 
 

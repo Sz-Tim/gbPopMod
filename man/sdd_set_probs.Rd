@@ -22,12 +22,14 @@ cell id info}
 \item{verbose}{\code{FALSE} Give updates for number of cells completed?}
 }
 \value{
-List with full neighborhoods,i, and sparse representation, sp. The
-  full array has dim(disp.rows, disp.cols, 2, ncell) where the third
-  dimension contains grid id's for the neighborhood or probabilities to each
-  target cell. The sparse representation is a list with an element for each
-  cell, where each element is a vector of non-zero probabilities named with
-  the target cells.
+List with full neighborhoods,i, sparse representation, sp, and sparse
+  dataframe sp.df. The full array has dim(disp.rows, disp.cols, 2, ncell)
+  where the third dimension contains grid id's for the neighborhood or
+  probabilities to each target cell. The sparse representation contains a
+  list with containing the cells dispersing into each cell and a list with
+  the associated probabilities. The sparse dataframe is a dataframe with a
+  row for each non-zero i-j pair with columns for i, j, and dispersal
+  probability
 }
 \description{
 Assign base dispersal probabilities from each cell. Each layer \code{k} in

@@ -4,7 +4,7 @@
 \alias{sdd_update_probs}
 \title{Update short distance dispersal probabilities}
 \usage{
-sdd_update_probs(lc.df, g.p, sdd.alter, sdd.0, lc.col = 4:9, verbose = F)
+sdd_update_probs(lc.df, g.p, sdd.alter, sdd.0, lc.col = 4:9)
 }
 \arguments{
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions, and
@@ -20,17 +20,17 @@ neighborhood recalculated}
 
 \item{lc.col}{\code{4:9} Column indexes for land cover proportions}
 
-\item{verbose}{\code{FALSE} Give updates for number of cells completed?}
-
 \item{edges}{\code{"wall"} Boundary behavior}
 }
 \value{
-List with full neighborhoods,i, and sparse representation, sp. The
-  full array has dim(disp.rows, disp.cols, 2, ncell) where the third
-  dimension contains grid id's for the neighborhood or probabilities to each
-  target cell. The sparse representation is a list with an element for each
-  cell, where each element is a vector of non-zero probabilities named with
-  the target cells.
+List with full neighborhoods,i, sparse representation, sp, and sparse
+  dataframe sp.df. The full array has dim(disp.rows, disp.cols, 2, ncell)
+  where the third dimension contains grid id's for the neighborhood or
+  probabilities to each target cell. The sparse representation contains a
+  list with containing the cells dispersing into each cell and a list with
+  the associated probabilities. The sparse dataframe is a dataframe with a
+  row for each non-zero i-j pair with columns for i, j, and dispersal
+  probability
 }
 \description{
 Update dispersal probabilities for each affected cell following land cover
@@ -41,7 +41,3 @@ that contains an affected cell as its target. Each layer \code{k} in
 contains pr(SDD | source.id,i,j); k=2 contains the grid id for each cell in
 the neighborhood.
 }
-\keyword{dispersal,}
-\keyword{probabilities}
-\keyword{probability,}
-\keyword{sdd,}
