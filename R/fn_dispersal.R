@@ -104,7 +104,7 @@ sdd_set_probs <- function(ncell, lc.df, g.p,
                                  times=map_int(sdd.sparse.ls, length)),
                            j.id=unlist(map(sdd.sparse.ls, ~as.numeric(names(.)))),
                            pr=unlist(sdd.sparse.ls))
-  sdd.sparse$j.idin <- lc.df$id.inbd[match(sdd.sparse$j.id, lc.df$id)]
+  sdd.sparse$j.idin <- lc.df$id.in[match(sdd.sparse$j.id, lc.df$id)]
   return(list(i=sdd.i, sp=sdd.sparse.ls, sp.df=sdd.sparse))
 }
 
@@ -182,7 +182,7 @@ sdd_update_probs <- function(lc.df, g.p, sdd.alter, sdd.0, lc.col=4:9) {
   sdd.sparse <- data.frame(i=rep(1:ncell, times=map_int(sdd.sparse.ls, length)),
                            j=unlist(map(sdd.sparse.ls, ~as.numeric(names(.)))),
                            pr=unlist(sdd.sparse.ls))
-  sdd.sparse$j.idin <- lc.df$id.inbd[match(sdd.sparse$j.id, lc.df$id)]
+  sdd.sparse$j.idin <- lc.df$id.in[match(sdd.sparse$j.id, lc.df$id)]
   return(list(i=sdd.new, sp=sdd.sparse.ls, sp.df=sdd.sparse))
 }
 
