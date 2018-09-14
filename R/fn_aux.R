@@ -51,7 +51,7 @@ expand_v <- function(x, y, sep="_") {
 
 
 
-#' Expand land cover-based parameter ranges
+#' Expand land cover-based parameter ranges (deprecated)
 #'
 #' Similar to \code{\link[base]{expand.grid}} but inputs a vector of minimum
 #' values and a vector of maximum values in addition to a length.out parameter.
@@ -101,7 +101,7 @@ expand_LCs <- function(gp=g.p, param=NULL, LC="all", all.combo=FALSE,
 
 
 
-#' Expand to all combinations of canopy parameter ranges
+#' Expand to all combinations of canopy parameter ranges (deprecated)
 #'
 #' Similar to \code{\link[base]{expand.grid}} but inputs two vectors with min
 #' and max parameter values (one set for open canopy and one set for closed
@@ -441,7 +441,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #' @param pTrt.grd \code{0.05} Proportion of cells with ground treatments in
 #'   each time step; only used if \code{grd.i=NULL}
 #' @param pTrt.man \code{0.05} Proportion of cells with manual treatments in
-#'   each time step; only used if \code{grd.i=NULL}
+#'   each time step; only used if \code{man.i=NULL}
 #' @param grd.trt \code{c(Lit=0.005, Cov=0.01, Com=0.00001)} Named vector with
 #'   ground treatments and associated seedling establishment probabilities;
 #'   treatments include litter (Lit), cover crops (Cov), and soil compaction

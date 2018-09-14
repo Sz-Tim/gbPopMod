@@ -2,7 +2,7 @@
 % Please edit documentation in R/fn_aux.R
 \name{expand_cnpy}
 \alias{expand_cnpy}
-\title{Expand to all combinations of canopy parameter ranges}
+\title{Expand to all combinations of canopy parameter ranges (deprecated)}
 \usage{
 expand_cnpy(Op = c(3, 7), Cl = c(3, 7), length_out = 2)
 }

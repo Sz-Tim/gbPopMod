@@ -2,7 +2,7 @@
 % Please edit documentation in R/fn_aux.R
 \name{expand_LCs}
 \alias{expand_LCs}
-\title{Expand land cover-based parameter ranges}
+\title{Expand land cover-based parameter ranges (deprecated)}
 \usage{
 expand_LCs(gp = g.p, param = NULL, LC = "all", all.combo = FALSE,
   len_out = 6, lc.min = rep(0.1, 6), lc.max = rep(0.9, 6))
