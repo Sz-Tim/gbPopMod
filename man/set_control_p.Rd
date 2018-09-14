@@ -33,7 +33,7 @@ the \link{trt_assign} function}
 each time step; only used if \code{grd.i=NULL}}
 
 \item{pTrt.man}{\code{0.05} Proportion of cells with manual treatments in
-each time step; only used if \code{grd.i=NULL}}
+each time step; only used if \code{man.i=NULL}}
 
 \item{grd.trt}{\code{c(Lit=0.005, Cov=0.01, Com=0.00001)} Named vector with
 ground treatments and associated seedling establishment probabilities;

@@ -5,7 +5,8 @@
 \title{Implement management and iterate buckthorn populations for one time step}
 \usage{
 iterate_pop(ngrid, ncell, N.0 = NULL, B.0 = NULL, g.p, lc.df, sdd,
-  control.p, grd_cover.i, mech_chem.i, read_write = FALSE, path = NULL)
+  control.p, grd_cover.i, mech_chem.i, parcel.df = NULL, read_write = FALSE,
+  path = NULL)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -38,6 +39,10 @@ crop, compaction, or litter, respectively).}
 management of adults, and columns \code{id} and \code{Trt} detailing the
 cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
 chemical, or mechanical and chemical, respectively).}
+
+\item{parcel.df}{\code{NULL} Dataframe with sub-pixel parcels for
+implementing treatments in the economic decision model. If \code{NULL},
+then any management actions occur at the pixel (i.e., grid cell) level.}
 
 \item{read_write}{\code{FALSE} Read and write \code{N} and \code{B}}
 

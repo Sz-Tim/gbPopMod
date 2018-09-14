@@ -36,9 +36,6 @@ Individuals cannot be assigned to specific land cover categories with
 \code{"lm"}, so \code{"m"} must be scalar.}
 
 \item{verbose}{\code{TRUE} Show progress bar?}
-
-\item{control.p}{NULL or named list of buckthorn control treatment parameters
-set with \code{\link{set_control_p}}}
 }
 \value{
 Matrix N of abundances for each cell and time step and vector

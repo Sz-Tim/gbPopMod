@@ -179,8 +179,6 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
 #'   \code{\link{sdd_set_probs}}
 #' @param N.init Matrix or array with initial population sizes created by
 #'   \code{\link{pop_init}}
-#' @param control.p NULL or named list of buckthorn control treatment parameters
-#'   set with \code{\link{set_control_p}}
 #' @param method \code{"wt.mn"} Method for calculating cell expectations, taking
 #'   values of \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
 #'   for each parameter is the weighted mean across land cover types
@@ -265,6 +263,9 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #'   management of adults, and columns \code{id} and \code{Trt} detailing the
 #'   cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
 #'   chemical, or mechanical and chemical, respectively).
+#' @param parcel.df \code{NULL} Dataframe with sub-pixel parcels for
+#'   implementing treatments in the economic decision model. If \code{NULL},
+#'   then any management actions occur at the pixel (i.e., grid cell) level.
 #' @param read_write \code{FALSE} Read and write \code{N} and \code{B}
 #' @param path \code{NULL} Directory for stored output. Overwrites files
 #'   (path/N.rds, path/B.rds) each iteration.
@@ -274,7 +275,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #' @export
 
 iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
-                        control.p, grd_cover.i, mech_chem.i, 
+                        control.p, grd_cover.i, mech_chem.i, parcel.df=NULL,
                         read_write=FALSE, path=NULL) {
   library(gbPopMod); library(tidyverse); library(magrittr)
   if(read_write) {
@@ -282,6 +283,7 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
     B.0 <- readRDS(paste0(path, "/B.rds"))
   }
   list2env(g.p, environment())
+  id.i <- lc.df %>% dplyr::select(id, id.in)
   m.max <- max(m)
   N.1 <- array(0, dim=dim(N.0))
   
