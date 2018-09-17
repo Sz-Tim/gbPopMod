@@ -5,8 +5,8 @@
 \title{Implement management and iterate buckthorn populations for one time step}
 \usage{
 iterate_pop(ngrid, ncell, N.0 = NULL, B.0 = NULL, g.p, lc.df, sdd,
-  control.p, grd_cover.i, mech_chem.i, parcel.df = NULL, read_write = FALSE,
-  path = NULL)
+  control.p, grd_cover.i = NULL, mech_chem.i = NULL,
+  read_write = FALSE, path = NULL)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -30,19 +30,15 @@ cell id info}
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
 
-\item{grd_cover.i}{Dataframe with a row for each cell implementing ground
-cover management, and columns \code{id} and \code{Trt} detailing the cell
-ID and ground cover treatment (\code{"Cov", "Com", "Lit"} for ground cover
-crop, compaction, or litter, respectively).}
+\item{grd_cover.i}{\code{NULL} Dataframe with a row for each cell
+implementing ground cover management, and columns \code{id} and \code{Trt}
+detailing the cell ID and ground cover treatment (\code{"Cov", "Com",
+"Lit"} for ground cover crop, compaction, or litter, respectively).}
 
-\item{mech_chem.i}{Dataframe with a row for each cell implementing manual
-management of adults, and columns \code{id} and \code{Trt} detailing the
-cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
-chemical, or mechanical and chemical, respectively).}
-
-\item{parcel.df}{\code{NULL} Dataframe with sub-pixel parcels for
-implementing treatments in the economic decision model. If \code{NULL},
-then any management actions occur at the pixel (i.e., grid cell) level.}
+\item{mech_chem.i}{\code{NULL} Dataframe with a row for each cell
+implementing manual management of adults, and columns \code{id} and
+\code{Trt} detailing the cell ID and manual treatment (\code{"M", "C",
+"MC"} for mechanical, chemical, or mechanical and chemical, respectively).}
 
 \item{read_write}{\code{FALSE} Read and write \code{N} and \code{B}}
 
@@ -54,8 +50,7 @@ Array N of abundances for each cell and age group, and vector B of
   seed bank abundances.
 }
 \description{
-Run one time step of the simulation. Designed for the USDA-NIFA economic
-model using buckthorn-specific defaults.
+Run one time step of the simulation, possibly implementing management actions
 }
 \keyword{run,}
 \keyword{simulate}

@@ -4,8 +4,8 @@
 \alias{emulate_sensitivity}
 \title{Emulate global sensitivity analysis output}
 \usage{
-emulate_sensitivity(sens.out, par.ls, n.cores = 1, n.sub = 10, td = c(1,
-  3, 5), resp, brt.dir = "out/brt/")
+emulate_sensitivity(sens.out, par.ls, n.cores = 1, n.sub = 10,
+  td = c(1, 3, 5), resp, brt.dir = "out/brt/")
 }
 \arguments{
 \item{sens.out}{Dataframe of the parameter sets and simulation summaries;

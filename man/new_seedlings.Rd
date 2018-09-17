@@ -4,7 +4,8 @@
 \alias{new_seedlings}
 \title{Seed germination & establishment}
 \usage{
-new_seedlings(ngrid, N.seed, B, p.E, g.D, g.B, s.B, dem.st = F, bank = T)
+new_seedlings(ngrid, N.seed, B, p.E, g.D, g.B, s.B, dem.st = F,
+  bank = T)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}

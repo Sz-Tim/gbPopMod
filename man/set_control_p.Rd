@@ -7,7 +7,8 @@
 set_control_p(null_ctrl = TRUE, t.trt = 30, add.owners = FALSE,
   grd.i = NULL, man.i = NULL, chg.i = NULL, pTrt.grd = 0.05,
   pTrt.man = 0.05, grd.trt = c(Lit = 0.005, Cov = 0.01, Com = 1e-05),
-  man.trt = c(M = 0.1, C = 0.3, MC = 0.8), lc.chg = TRUE, pChg = 1e-04)
+  man.trt = c(M = 0.1, C = 0.3, MC = 0.8), lc.chg = TRUE,
+  pChg = 1e-04)
 }
 \arguments{
 \item{null_ctrl}{\code{TRUE} Set control parameters to \code{NULL}?}

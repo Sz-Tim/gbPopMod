@@ -240,8 +240,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 
 #' Implement management and iterate buckthorn populations for one time step
 #'
-#' Run one time step of the simulation. Designed for the USDA-NIFA economic
-#' model using buckthorn-specific defaults.
+#' Run one time step of the simulation, possibly implementing management actions
 #' @param ngrid Number of grid cells in entire map
 #' @param ncell Number of inbound grid cells
 #' @param N.0 Array with initial population sizes, either returned from a
@@ -255,17 +254,14 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #'   \code{\link{sdd_set_probs}}
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
-#' @param grd_cover.i Dataframe with a row for each cell implementing ground
-#'   cover management, and columns \code{id} and \code{Trt} detailing the cell
-#'   ID and ground cover treatment (\code{"Cov", "Com", "Lit"} for ground cover
-#'   crop, compaction, or litter, respectively).
-#' @param mech_chem.i Dataframe with a row for each cell implementing manual
-#'   management of adults, and columns \code{id} and \code{Trt} detailing the
-#'   cell ID and manual treatment (\code{"M", "C", "MC"} for mechanical,
-#'   chemical, or mechanical and chemical, respectively).
-#' @param parcel.df \code{NULL} Dataframe with sub-pixel parcels for
-#'   implementing treatments in the economic decision model. If \code{NULL},
-#'   then any management actions occur at the pixel (i.e., grid cell) level.
+#' @param grd_cover.i \code{NULL} Dataframe with a row for each cell
+#'   implementing ground cover management, and columns \code{id} and \code{Trt}
+#'   detailing the cell ID and ground cover treatment (\code{"Cov", "Com",
+#'   "Lit"} for ground cover crop, compaction, or litter, respectively).
+#' @param mech_chem.i \code{NULL} Dataframe with a row for each cell
+#'   implementing manual management of adults, and columns \code{id} and
+#'   \code{Trt} detailing the cell ID and manual treatment (\code{"M", "C",
+#'   "MC"} for mechanical, chemical, or mechanical and chemical, respectively).
 #' @param read_write \code{FALSE} Read and write \code{N} and \code{B}
 #' @param path \code{NULL} Directory for stored output. Overwrites files
 #'   (path/N.rds, path/B.rds) each iteration.
@@ -275,7 +271,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #' @export
 
 iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
-                        control.p, grd_cover.i, mech_chem.i, parcel.df=NULL,
+                        control.p, grd_cover.i=NULL, mech_chem.i=NULL, 
                         read_write=FALSE, path=NULL) {
   library(gbPopMod); library(tidyverse); library(magrittr)
   if(read_write) {

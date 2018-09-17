@@ -4,8 +4,8 @@
 \alias{cell_E}
 \title{Aggregate compositional data within each cell}
 \usage{
-cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt = NULL, edges = "wall",
-  method = "wt.mn")
+cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt = NULL,
+  edges = "wall", method = "wt.mn")
 }
 \arguments{
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions,
