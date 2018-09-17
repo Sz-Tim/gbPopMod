@@ -383,6 +383,8 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, s
   #--- implement management
   if(!is.null(grd_cover.i)) {
     p.trt <- trt_ground(grd_cover.i, control.p$grd.trt)
+  } else {
+    p.trt <- NULL
   }
   if(!is.null(mech_chem.i)) {
     N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt)
@@ -393,7 +395,8 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, s
                        N.0[1,,]), c(3,1,2))
   
   #--- fruit production
-  N.f <- make_fruits(N.px, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, T)
+  N.f <- make_fruits(N.px, pm$lc.mx[lc.df$inbd,], pm$mu.E[lc.df$inbd,,drop=F], 
+                     pm$p.f.E[lc.df$inbd,,drop=F], m.max, T)
   N.f$id <- parcel.df$id[match(N.f$id, parcel.df$id.in)]
   
   #--- short distance dispersal
@@ -407,14 +410,18 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, s
   #--- allocate seedlings among parcels
   B.1 <- estab.out$B
   for(l in 1:6) {
-    N.1[,l,1] <- round(estab.out$M.0[parcel.df$id.in]*parcel.df$Grid_Proportion)
+    N.1[,l,1] <- ceiling(estab.out$M.0[parcel.df$id.in] * 
+                           pm$lc.mx[parcel.df$id,l] * parcel.df$Grid_Proportion)
     N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
                           parcel.df$K*parcel.df[,LCs[l]])
   }
   
   #--- retroactively apply ground cover treatment by recalculating establishment
-  N.1[p.trt$id,,1] <- round(N.1[p.trt$id,,1]/pm$p.E[parcel.df$id[p.trt$id]]*p.trt$p)
+  if(!is.null(p.trt)) {
+    N.1[p.trt$id,,1] <- round(N.1[p.trt$id,,1] / 
+                                pm$p.E[parcel.df$id[p.trt$id]] * p.trt$p)
+  }
   
   #--- long distance dispersal
   if(n.ldd > 0) {
