@@ -308,7 +308,7 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
   #--- update abundances
   B.1 <- estab.out$B
   for(l in 1:6) {
-    N.1[,l,1] <- round(estab.out$M.0 * pm$lc.mx[,l])
+    N.1[,l,1] <- ceiling(estab.out$M.0 * pm$lc.mx[,l])
     N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
                           pm$K.lc[,l])
