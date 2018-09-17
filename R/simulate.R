@@ -410,7 +410,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, s
   #--- allocate seedlings among parcels
   B.1 <- estab.out$B
   for(l in 1:6) {
-    N.1[,l,1] <- ceiling(estab.out$M.0[parcel.df$id.in] * 
+    N.1[,l,1] <- round(estab.out$M.0[parcel.df$id.in] * 
                            pm$lc.mx[parcel.df$id,l] * parcel.df$Grid_Proportion)
     N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
@@ -426,8 +426,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, s
   #--- long distance dispersal
   if(n.ldd > 0) {
     ldd_id.pp <- sample.int(npp, n.ldd)
-    ldd_id.lc <- sample(c(1,3,4,5,6), n.ldd)
-    N.1[ldd_id.pp, ldd_id.lc, 1] <- N.1[ldd_id.pp, ldd_id.lc, 1] + 1
+    N.1[ldd_id.pp,, 1] <- N.1[ldd_id.pp,, 1] + 1
   }
   
   if(read_write) {
