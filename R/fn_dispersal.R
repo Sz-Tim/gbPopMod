@@ -377,3 +377,6 @@ sdd_lambda <- function(N.new, id.i, sdd.pr, sdd.rate, K.E, sdd.st=T) {
   return(N.emig)
 }
 
+
+
+

@@ -319,3 +319,114 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
   }
   return(list(N=N.1, B=B.1))
 }
+
+
+
+
+
+#' Implement management and iterate buckthorn for one time step for parcels
+#'
+#' Run one time step of the simulation, implementing management actions at the
+#' sub-pixel parcel level. This is specifically designed for integration with
+#' the USDA-NIFA economic decision model, where management actions are taken by
+#' individual parcels which may be smaller than the land cover map pixels. The
+#' indexing is consequently different than for the other iteration functions.
+#' @param parcel.df Dataframe with index columns ("id", "id.in", "id.pp"), and
+#'   columns detailing land cover proportions and grid proportions.
+#' @param pp.ls List of length ncell where each element i identifies which
+#'   id.i$id.pp are within pixel i
+#' @param N.0 Array with initial population sizes, either returned from a
+#'   previous iteration or read from a stored .rds file in \code{path}
+#' @param B.0 Vector of initial seed bank abundances, either returned from a
+#'   previous iteration or read from a stored .rds file in \code{path}
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
+#' @param sdd Output with short distance dispersal neighborhoods created by
+#'   \code{\link{sdd_set_probs}}
+#' @param control.p NULL or named list of buckthorn control treatment parameters
+#'   set with \code{\link{set_control_p}}
+#' @param grd_cover.i \code{NULL} Dataframe with a row for each cell
+#'   implementing ground cover management, and columns \code{id} and \code{Trt}
+#'   detailing the cell ID and ground cover treatment (\code{"Cov", "Com",
+#'   "Lit"} for ground cover crop, compaction, or litter, respectively).
+#' @param mech_chem.i \code{NULL} Dataframe with a row for each cell
+#'   implementing manual management of adults, and columns \code{id} and
+#'   \code{Trt} detailing the cell ID and manual treatment (\code{"M", "C",
+#'   "MC"} for mechanical, chemical, or mechanical and chemical, respectively).
+#' @param read_write \code{FALSE} Read and write \code{N} and \code{B}
+#' @param path \code{NULL} Directory for stored output. Overwrites files
+#'   (path/N.rds, path/B.rds) each iteration.
+#' @return Array N of abundances for each cell and age group, and vector B of
+#'   seed bank abundances.
+#' @keywords run, simulate
+#' @export
+
+iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
+                        control.p, grd_cover.i=NULL, mech_chem.i=NULL, 
+                        read_write=FALSE, path=NULL) {
+  library(gbPopMod); library(tidyverse); library(magrittr)
+  if(read_write) {
+    N.0 <- readRDS(paste0(path, "/N.rds"))
+    B.0 <- readRDS(paste0(path, "/B.rds"))
+  }
+  LCs <- names(lc.df)[(1:dim(N.0)[2])+3]
+  ncell <- n_distinct(parcel.df$id.in)
+  npp <- nrow(parcel.df)
+  list2env(g.p, environment())
+  m.max <- max(m)
+  N.1 <- array(0, dim=dim(N.0))
+  
+  #--- pre-multiply compositional parameters for cell expectations
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt=NULL)
+  
+  #--- implement management
+  if(!is.null(grd_cover.i)) {
+    p.trt <- trt_ground(grd_cover.i, control.p$grd.trt)
+  }
+  if(!is.null(mech_chem.i)) {
+    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt)
+  }
+  
+  #--- sum abundance within pixels
+  N.px <- aperm(vapply(1:ncell, function(x) apply(N.0[pp.ls[[x]],,], 2:3, sum),
+                       N.0[1,,]), c(3,1,2))
+  
+  #--- fruit production
+  N.f <- make_fruits(N.px, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, T)
+  N.f$id <- parcel.df$id[match(N.f$id, parcel.df$id.in)]
+  
+  #--- short distance dispersal
+  N.Sd <- sdd_disperse(lc.df[,c("id", "id.in")], N.f, gamma, pm$p.c.E, 
+                       s.c, sdd$sp, sdd.rate)
+  
+  #--- seedling establishment
+  estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B, s.B)
+  estab.out$M.0 <- estab.out$M.0[lc.df$inbd]
+  
+  #--- allocate seedlings among parcels
+  B.1 <- estab.out$B
+  for(l in 1:6) {
+    N.1[,l,1] <- round(estab.out$M.0[parcel.df$id.in]*parcel.df$Grid_Proportion)
+    N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
+    N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
+                          parcel.df$K*parcel.df[,LCs[l]])
+  }
+  
+  #--- retroactively apply ground cover treatment by recalculating establishment
+  N.1[p.trt$id,,1] <- round(N.1[p.trt$id,,1]/pm$p.E[parcel.df$id[p.trt$id]]*p.trt$p)
+  
+  #--- long distance dispersal
+  if(n.ldd > 0) {
+    ldd_id.pp <- sample.int(npp, n.ldd)
+    ldd_id.lc <- sample(c(1,3,4,5,6), n.ldd)
+    N.1[ldd_id.pp, ldd_id.lc, 1] <- N.1[ldd_id.pp, ldd_id.lc, 1] + 1
+  }
+  
+  if(read_write) {
+    saveRDS(N.1, paste0(path, "/N.rds"))
+    saveRDS(B.1, paste0(path, "/B.rds"))
+  }
+  return(list(N=N.1, B=B.1))
+}
+
