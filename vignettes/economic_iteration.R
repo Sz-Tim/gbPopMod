@@ -41,7 +41,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
-gifs <- FALSE
+gifs <- TRUE
 res <- "9km2"  # 9km2 or 20ac
 load(paste0("data/USDA_", res, ".rda"))  # loads dataframe as lc.df
 ngrid <- nrow(lc.df)
@@ -53,7 +53,7 @@ id.i <- lc.df %>% select(id, id.in)
 # This is to allow simpler spatial calculations (i.e., for SDD neighborhoods)
 
 #--- set parameters
-tmax <- 150
+tmax <- 100
 # cells that implement manual treatments
 manual.i <- filter(lc.df, x>38 & x<45 & y>33 & y<40) %>% mutate(trt="m")
 # cells that implement ground cover treatments
@@ -154,7 +154,7 @@ if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
 N.tot <- apply(N[,,,max(g.p$m)], 1:2, sum) # sum adults across LC categories
 N.df <- as.data.frame(N.tot); names(N.df) <- 1:ncol(N.df)
 out.all <- cbind(lc.df, N.df) %>%
-  gather(year, N, 15:ncol(.)) %>% mutate(year=as.numeric(year))
+  gather(year, N, 15:ncol(.)) %>% mutate(year=as.numeric(year), B=c(B))
 out.df <- lc.df %>%
   mutate(N.0=N.tot[,1],
          B.0=B[,1],
@@ -169,7 +169,7 @@ if(gifs) {
   library(gganimate)
   anim_save(here(plot.dir, "N.gif"),
             animate(ggplot(out.all, aes(x=lon, y=lat)) + 
-                      geom_tile(aes(fill=N)) +
+                      geom_tile(aes(fill=log(N))) +
                       geom_polygon(data=mgmt.df, aes(colour=trt), fill=NA, size=1) +
                       scale_fill_viridis(option="B") + 
                       scale_colour_manual(paste("Treatment from\nyear", c.p$t.trt), 
@@ -177,6 +177,18 @@ if(gifs) {
                                           labels=c("both", "ground", "manual")) +
                       transition_time(year) +  
                       ggtitle("Adult abundance. Year {frame_time}"),
+                    nframes=n_distinct(out.all$year), 
+                    width=800, height=600, units="px"))
+  anim_save(here(plot.dir, "B.gif"),
+            animate(ggplot(out.all, aes(x=lon, y=lat)) + 
+                      geom_tile(aes(fill=log(B))) +
+                      geom_polygon(data=mgmt.df, aes(colour=trt), fill=NA, size=1) +
+                      scale_fill_viridis(option="B") + 
+                      scale_colour_manual(paste("Treatment from\nyear", c.p$t.trt), 
+                                          values=c("black", "blue", "purple"), 
+                                          labels=c("both", "ground", "manual")) +
+                      transition_time(year) +  
+                      ggtitle("Seed abundance. Year {frame_time}"),
                     nframes=n_distinct(out.all$year), 
                     width=800, height=600, units="px"))
 }
