@@ -194,7 +194,9 @@ N.tot <- t(sapply(1:ncell, function(x) apply(N.tot[pp.ls[[x]],], 2, sum)))
 N.df <- setNames(as.data.frame(N.tot), 1:ncol(N.tot))
 N.df$id.in <- 1:nrow(N.df)
 out.all <- left_join(lc.df, N.df, by="id.in") %>%
-  gather(year, N, (ncol(lc.df)+1):ncol(.)) %>% mutate(year=as.numeric(year))
+  gather(year, N, (ncol(lc.df)+1):ncol(.)) %>% 
+  mutate(year=as.numeric(year),
+         B=c(B))
 out.df <- lc.df %>%
   mutate(N.0=out.all$N[out.all$year==1],
          B.0=B[,1],
@@ -203,8 +205,9 @@ out.df <- lc.df %>%
 
 # final maps
 final.p <- ggplot(out.df, aes(lon, lat))
-final.p + geom_tile(aes(fill=N.final)) + scale_fill_viridis(option="B")
+final.p + geom_tile(aes(fill=log(N.final))) + scale_fill_viridis(option="B")
 final.p + geom_tile(aes(fill=log(B.final))) + scale_fill_viridis(option="B") 
+final.p + geom_tile(aes(fill=N.final > 0))
 
 # abundance through time
 ggplot(out.all, aes(year, N, group=id)) + geom_line(alpha=0.5)
@@ -212,14 +215,22 @@ ggplot(out.all, aes(year, N, group=id)) + geom_line(alpha=0.5)
 # gifs
 if(gifs) {
   library(gganimate)
-  anim_save(paste0(plot.dir, "N.gif"),
+  anim_save(paste0(plot.dir, "Adult_abundance.gif"),
             animate(ggplot(out.all, aes(lon, lat)) + 
-                      geom_tile(aes(fill=N)) +
+                      geom_tile(aes(fill=log(N))) +
                       scale_fill_viridis(option="B") + 
                       transition_time(year) +  
                       ggtitle("Adult abundance. Year {frame_time}"),
                     nframes=n_distinct(out.all$year), 
-                    width=800, height=600, units="px"))
+                    width=800, height=600, units="px", fps=5))
+  anim_save(paste0(plot.dir, "Seed_abundance.gif"),
+            animate(ggplot(out.all, aes(lon, lat)) + 
+                      geom_tile(aes(fill=log(B))) +
+                      scale_fill_viridis(option="B") + 
+                      transition_time(year) +  
+                      ggtitle("Seed abundance. Year {frame_time}"),
+                    nframes=n_distinct(out.all$year), 
+                    width=800, height=600, units="px", fps=5))
 }
 
 
