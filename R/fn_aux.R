@@ -242,7 +242,8 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
     if(length(p.c)==1) p.c <- rep(p.c, 6)
     if(length(p)==1) p <- rep(p, 6)
     # take weighted mean
-    lc.mx <- as.matrix(lc.df[,4:9])
+    lc.mx <- as.matrix(select(lc.df, 
+                              one_of("Opn", "Oth", "Dec", "Evg", "WP", "Mxd")))
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))
     rel.dens <- t(apply(lc.mx, 1, function(x) K*x/c(x%*%K)))
@@ -478,3 +479,10 @@ set_control_p <- function(null_ctrl=TRUE, t.trt=30, add.owners=FALSE,
   
   return(control.p)
 }
+
+
+
+
+
+
+
