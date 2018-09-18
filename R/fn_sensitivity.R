@@ -123,8 +123,7 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 #' @param sdd \code{NULL} Output with short distance dispersal neighborhoods
 #'   created by \code{\link{sdd_set_probs}}. If \code{NULL}, sdd neighborhoods
 #'   are calculated
-#' @param N.init Matrix or array with initial population sizes created by
-#'   \code{\link{pop_init}}
+#' @param cell.init Vector with grid id of cells populated at t=0
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
 #' @param verbose \code{FALSE} Give updates?
@@ -136,7 +135,7 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 #' @export
 
 global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
-                               sdd=NULL, N.init, control.p=NULL, 
+                               sdd=NULL, cell.init, control.p=NULL, 
                                verbose=FALSE, sim.dir="out/sims/") {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   if(!dir.exists(sim.dir)) dir.create(sim.dir, recursive=TRUE)
@@ -169,13 +168,11 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     if(any(grepl("sdd", names(par.ls)))) {
       sdd <- sdd_set_probs(ncell, lc.df, g.p)
     }
-    if(any(names(par.ls)=="m")) {
-      N.init <- pop_init(ngrid, g.p, lc.df)
-    }
-    sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, F)
-    saveRDS(sim_i$N[,g.p$tmax+1, dim(sim_i$N)[3]], 
+    N.init <- pop_init(ngrid, g.p, lc.df, p.0=cell.init, N.0=g.p$N.0)
+    sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, NULL, F, g.p$tmax)
+    saveRDS(sim_i$N[,dim(sim_i$N)[2]], 
             paste0(sim.dir, "N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(sim_i$B[,g.p$tmax+1], 
+    saveRDS(sim_i$B, 
             paste0(sim.dir, "B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
