@@ -83,7 +83,7 @@ pp.ls <- map(1:ncell, ~which(parcel.df$id.in==.))
 
 
 #--- set parameters
-tmax <- 100
+tmax <- 150
 # global parameters: ?set_g_p
 g.p <- set_g_p(tmax=tmax, n.cores=1,  
                K=c(5223180, 0, 770790, 770790, 770790, 770790),
@@ -93,9 +93,9 @@ g.p <- set_g_p(tmax=tmax, n.cores=1,
 
 #--- FAKE ECONOMIC DECISION REGRESSIONS
 # pr(treat) = antilogit(b1 + b2*log(N_buckthorn_adults))
-mech_chem_b <- c(-5, 0.5)
-grd_cover_b <- c(-10, 0.8)
-N_seq <- exp(seq(log(1), log(max(g.p$K)*mean(parcel.df$Grid_Proportion)), length.out=100))
+mech_chem_b <- c(-2, 0.5)
+grd_cover_b <- c(-4, 0.6)
+N_seq <- exp(seq(log(1), log(max(g.p$K)), length.out=100))
 plot(log(N_seq), antilogit(cbind(1,log(N_seq)) %*% mech_chem_b), 
      ylim=c(0,1), type="l", ylab="Pr(manual treatment)", xlab="log(buckthorn)")
 plot(log(N_seq), antilogit(cbind(1,log(N_seq)) %*% grd_cover_b), 
@@ -106,13 +106,13 @@ plot(log(N_seq), antilogit(cbind(1,log(N_seq)) %*% grd_cover_b),
 #--- load or initialize SDD neighborhoods & buckthorn populations
 # if(!file.exists("data/inits_sdd.rds")) {
   sdd <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
-  saveRDS(sdd, "data/inits_sdd.rds")
+  # saveRDS(sdd, "data/inits_sdd.rds")
 # } else {
 #   sdd <- readRDS("data/inits_sdd.rds")
 # }
 # if(!file.exists("data/inits_B.rds")) {
   B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
-  saveRDS(sdd, "data/inits_B.rds")
+  # saveRDS(B, "data/inits_B.rds")
 # } else {
 #   B <- readRDS("data/inits_B.rds")
 # }
@@ -121,7 +121,7 @@ plot(log(N_seq), antilogit(cbind(1,log(N_seq)) %*% grd_cover_b),
   N.0.px <- pop_init(ncell, g.p, lc.df, p.0=2000) # [cell, LC, age]
   N[,1,,] <- N.0.px[parcel.df$id.in,,]*parcel.df$Grid_Proportion
   for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
-  saveRDS(sdd, "data/inits_N.rds")
+  # saveRDS(N, "data/inits_N.rds")
 # } else {
 #   N <- readRDS("data/inits_N.rds")
 # }
@@ -131,7 +131,7 @@ parcel.df$K_pp <- (as.matrix(parcel.df[,LCs]) %*% g.p$K) %>%
 
 
 
-
+system.time({
 pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
 for(k in 1:g.p$tmax) {
   ##---
@@ -151,18 +151,21 @@ for(k in 1:g.p$tmax) {
   #   ground treatment (cover crop = turf). Any additional treatments listed
   #   used in mech_chem.i or grd_cover.i just need to be established first via
   #   set_control_p(man.trt=c(MC=0.8, ...), grd.trt=c(Cov=0.005, ...))
-  control_par <- set_control_p(null_ctrl=F, 
+  control_par <- set_control_p(null_ctrl=F,
                                man.i=mech_chem_id.pp, # mech/chem parcels
-                               man.trt=c(MC=0.8, M=0.2), # mech/chem effectiveness
+                               man.trt=c(MC=0.9, M=0.3), # mech/chem effectiveness
                                grd.i=grd_cover_id.pp, # ground cover parcels
                                grd.trt=c(Cov=0.005)) # ground cover effectiveness
   # Specify which parcels use which treatments
-  mech_chem.i <- data.frame(id=mech_chem_id.pp, 
-                            Trt=sample(c("MC", "M"), length(mech_chem_id.pp), 
-                                       replace=T)) # randomize mech vs mech+chem
-  grd_cover.i <- data.frame(id=grd_cover_id.pp, 
-                            Trt="Cov") # sets Trt="Cov" for all rows
-  
+  if(length(mech_chem_id.pp)>0) {
+    mech_chem.i <- data.frame(id=mech_chem_id.pp,
+                              Trt=sample(c("MC", "M"), length(mech_chem_id.pp),
+                                         replace=T)) # random mech vs mech+chem
+  } else {mech_chem.i <- NULL}
+  if(length(grd_cover_id.pp)>0) {
+    grd_cover.i <- data.frame(id=grd_cover_id.pp,
+                              Trt="Cov") # sets Trt="Cov" for all rows
+  } else {grd_cover.i <- NULL}
   
   
   ##---
@@ -175,14 +178,15 @@ for(k in 1:g.p$tmax) {
   # 2. Adults produce fruit
   # 3. Fruit is consumed and dispersed, or dropped
   # 4. Seeds germinate and establish
-  # g.p$n.ldd <- ifelse(k %% 5 == 0, 1, 0)
-  out <- iterate_pop_econ(parcel.df, pp.ls, N[,k,,], B[,k], g.p, lc.df, sdd, 
-                          control_par, grd_cover.i, mech_chem.i)
+  g.p$n.ldd <- ifelse(k %% 2 == 0, 1, 0)
+  out <- iterate_pop_econ(parcel.df, pp.ls, N[,k,,], B[,k], g.p, lc.df, 
+                          sdd, control_par, grd_cover.i, mech_chem.i)
   N[,k+1,,] <- out$N
   B[,k+1] <- out$B
   setTxtProgressBar(pb, k)
 }
 close(pb)
+})
 
 # plots
 plot.dir <- "out/econ/"

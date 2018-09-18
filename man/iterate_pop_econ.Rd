@@ -4,8 +4,8 @@
 \alias{iterate_pop_econ}
 \title{Implement management and iterate buckthorn for one time step for parcels}
 \usage{
-iterate_pop_econ(parcel.df, pp.ls, N.0 = NULL, B.0 = NULL, g.p, lc.df,
-  sdd, control.p, grd_cover.i = NULL, mech_chem.i = NULL,
+iterate_pop_econ(parcel.df, pp.ls, N.0.px, N.0, B.0, g.p, lc.df, sdd,
+  control.p, grd_cover.i = NULL, mech_chem.i = NULL,
   read_write = FALSE, path = NULL)
 }
 \arguments{
@@ -14,6 +14,8 @@ columns detailing land cover proportions and grid proportions.}
 
 \item{pp.ls}{List of length ncell where each element i identifies which
 id.i$id.pp are within pixel i}
+
+\item{N.0.px}{Vector of inbound indexes for cells with buckthorn}
 
 \item{N.0}{Array with initial population sizes, either returned from a
 previous iteration or read from a stored .rds file in \code{path}}

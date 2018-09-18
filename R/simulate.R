@@ -362,9 +362,9 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
 #' @keywords run, simulate
 #' @export
 
-iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
-                        control.p, grd_cover.i=NULL, mech_chem.i=NULL, 
-                        read_write=FALSE, path=NULL) {
+iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd, 
+                             control.p, grd_cover.i=NULL, mech_chem.i=NULL, 
+                             read_write=FALSE, path=NULL) {
   library(gbPopMod); library(tidyverse); library(magrittr)
   if(read_write) {
     N.0 <- readRDS(paste0(path, "/N.rds"))
@@ -391,8 +391,11 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0=NULL, B.0=NULL, g.p, lc.df, s
   }
   
   #--- sum abundance within pixels
-  N.px <- aperm(vapply(1:ncell, function(x) apply(N.0[pp.ls[[x]],,], 2:3, sum),
-                       N.0[1,,]), c(3,1,2))
+  N.0.px <- unique(parcel.df$id.in[N.0[,1,7]>0])
+  N.px <- array(0, dim=c(ncell, length(LCs), m.max))
+  N.px[N.0.px,,] <- aperm(vapply(N.0.px, 
+                                 function(x) apply(N.0[pp.ls[[x]],,], 2:3, sum),
+                                 N.0[1,,]), c(3,1,2))
   
   #--- fruit production
   N.f <- make_fruits(N.px, pm$lc.mx[lc.df$inbd,], pm$mu.E[lc.df$inbd,,drop=F], 
