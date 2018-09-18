@@ -5,7 +5,8 @@
 \title{Run global sensitivity analysis}
 \usage{
 global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd = NULL,
-  N.init, control.p = NULL, verbose = FALSE, sim.dir = "out/sims/")
+  cell.init, control.p = NULL, verbose = FALSE,
+  sim.dir = "out/sims/")
 }
 \arguments{
 \item{par.ls}{List output from \code{\link{set_par_ranges}} with parameter to
@@ -28,8 +29,7 @@ cell id info}
 created by \code{\link{sdd_set_probs}}. If \code{NULL}, sdd neighborhoods
 are calculated}
 
-\item{N.init}{Matrix or array with initial population sizes created by
-\code{\link{pop_init}}}
+\item{cell.init}{Vector with grid id of cells populated at t=0}
 
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
