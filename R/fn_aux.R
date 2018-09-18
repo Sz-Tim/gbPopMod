@@ -290,26 +290,28 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
 #' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
 #'   cell id info
 #' @param p.0 \code{NULL} Cell IDs with populations at t=0
+#' @param N.0 \code{NULL} Initial adult abundance in cell
 #' @return Matrix or array of initial abundances with \code{dim=c(ngrid, (n.lc),
 #'   m.max)}
 #' @keywords initialize, set up
 #' @export
 
-pop_init <- function(ngrid, g.p, lc.df, p.0=NULL) {
+pop_init <- function(ngrid, g.p, lc.df, p.0=NULL, N.0=NULL) {
   
   if(is.null(p.0)) p.0 <- sample(lc.df$id[lc.df$inbd], g.p$N.p.t0)
+  if(is.null(N.0)) N.0 <- g.p$K/2
   m.max <- max(g.p$m)  # adult age bin
   
   if(length(unique(g.p$m)) == 1) {
     N.init <- matrix(0, ngrid, m.max)  # column for each age class
     N.init[p.0,m.max] <- round(as.matrix(lc.df[lc.df$id %in% p.0, 4:9]) %*% 
-                                (g.p$K/2))
+                                N.0)
     N.init[p.0,-m.max] <- round(N.init[p.0,m.max]/5)
     
   } else {
     N.init <- array(0, dim=c(ngrid, g.p$n.lc, m.max))
     N.init[p.0,,m.max] <- round(t(t(as.matrix(lc.df[lc.df$id %in% p.0, 4:9])) * 
-                                   g.p$K/2))
+                                   N.0))
     N.init[p.0,,-m.max] <- round(N.init[p.0,,m.max]/5)
   }
   
