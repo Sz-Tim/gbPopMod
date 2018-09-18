@@ -103,35 +103,21 @@ plot(log(N_seq), antilogit(cbind(1,log(N_seq)) %*% grd_cover_b),
 
 
 
-#--- load or initialize SDD neighborhoods & buckthorn populations
-# if(!file.exists("data/inits_sdd.rds")) {
-  sdd <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
-  # saveRDS(sdd, "data/inits_sdd.rds")
-# } else {
-#   sdd <- readRDS("data/inits_sdd.rds")
-# }
-# if(!file.exists("data/inits_B.rds")) {
-  B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
-  # saveRDS(B, "data/inits_B.rds")
-# } else {
-#   B <- readRDS("data/inits_B.rds")
-# }
-# if(!file.exists("data/inits_N.rds")) {
-  N <- array(0, dim=c(npp, tmax+1, 6, max(g.p$m))) # [px-parcel, year, LC, age]
-  N.0.px <- pop_init(ncell, g.p, lc.df, p.0=2000) # [cell, LC, age]
-  N[,1,,] <- N.0.px[parcel.df$id.in,,]*parcel.df$Grid_Proportion
-  for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
-  # saveRDS(N, "data/inits_N.rds")
-# } else {
-#   N <- readRDS("data/inits_N.rds")
-# }
+#--- initialize SDD neighborhoods & buckthorn populations (just load eventually)
+sdd <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
+B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
+N <- array(0, dim=c(npp, tmax+1, 6, max(g.p$m))) # [px-parcel, year, LC, age]
+N.0.px <- pop_init(ncell, g.p, lc.df, p.0=2000) # [cell, LC, age]
+N[,1,,] <- round(N.0.px[parcel.df$id.in,,]*parcel.df$Grid_Proportion)
+for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
+  
 parcel.df$K_pp <- (as.matrix(parcel.df[,LCs]) %*% g.p$K) %>%
   multiply_by(parcel.df$Grid_Proportion) %>% round
 
 
 
 
-system.time({
+system.time({  # just to get a sense
 pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
 for(k in 1:g.p$tmax) {
   ##---
@@ -147,10 +133,10 @@ for(k in 1:g.p$tmax) {
   grd_cover_id.pp <- which(rbinom(npp, 1, antilogit(N.mx %*% grd_cover_b))==1)
   
   # Set control parameters, identify treated pixel-parcels
-  #   Here, there is one manual treatment (mechanical + chemical) and one
-  #   ground treatment (cover crop = turf). Any additional treatments listed
-  #   used in mech_chem.i or grd_cover.i just need to be established first via
-  #   set_control_p(man.trt=c(MC=0.8, ...), grd.trt=c(Cov=0.005, ...))
+  #   Here, there are two manual treatments (mechanical, mechanical+chemical) 
+  #   and one ground treatment (cover crop = turf). Any additional treatments 
+  #   listed used in mech_chem.i or grd_cover.i just need to be established 
+  #   first via set_control_p(man.trt=c(MC=0.8, ...), grd.trt=c(Cov=0.005, ...))
   control_par <- set_control_p(null_ctrl=F,
                                man.i=mech_chem_id.pp, # mech/chem parcels
                                man.trt=c(MC=0.9, M=0.3), # mech/chem effectiveness
@@ -181,20 +167,23 @@ for(k in 1:g.p$tmax) {
   g.p$n.ldd <- ifelse(k %% 2 == 0, 1, 0)
   out <- iterate_pop_econ(parcel.df, pp.ls, N[,k,,], B[,k], g.p, lc.df, 
                           sdd, control_par, grd_cover.i, mech_chem.i)
-  N[,k+1,,] <- out$N
+  N.1g0 <- which(rowSums(out$N[,1,])>0)
+  N[N.1g0,k+1,,] <- out$N[N.1g0,,]
   B[,k+1] <- out$B
   setTxtProgressBar(pb, k)
 }
 close(pb)
 })
 
+
+
+
 # plots
 plot.dir <- "out/econ/"
 gifs <- T
 theme_set(theme_bw())
 if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
-N.tot <- apply(N[,,,max(g.p$m)], 1:2, sum) # sum adults across LCs
-N.tot <- t(sapply(1:ncell, function(x) apply(N.tot[pp.ls[[x]],], 2, sum)))
+N.tot <- t(sapply(1:ncell, function(x) apply(N[pp.ls[[x]],,,max(g.p$m)], 2, sum)))
 N.df <- setNames(as.data.frame(N.tot), 1:ncol(N.tot))
 N.df$id.in <- 1:nrow(N.df)
 out.all <- left_join(lc.df, N.df, by="id.in") %>%
@@ -211,7 +200,6 @@ out.df <- lc.df %>%
 final.p <- ggplot(out.df, aes(lon, lat))
 final.p + geom_tile(aes(fill=log(N.final))) + scale_fill_viridis(option="B")
 final.p + geom_tile(aes(fill=log(B.final))) + scale_fill_viridis(option="B") 
-final.p + geom_tile(aes(fill=N.final > 0))
 
 # abundance through time
 ggplot(out.all, aes(year, N, group=id)) + geom_line(alpha=0.5)

@@ -378,13 +378,12 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   N.1 <- array(0, dim=dim(N.0))
   
   #--- pre-multiply compositional parameters for cell expectations
-  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt=NULL)
+  p.trt <- NULL
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
   
   #--- implement management
   if(!is.null(grd_cover.i)) {
     p.trt <- trt_ground(grd_cover.i, control.p$grd.trt)
-  } else {
-    p.trt <- NULL
   }
   if(!is.null(mech_chem.i)) {
     N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt)
@@ -400,7 +399,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   #--- fruit production
   N.f <- make_fruits(N.px, pm$lc.mx[lc.df$inbd,], pm$mu.E[lc.df$inbd,,drop=F], 
                      pm$p.f.E[lc.df$inbd,,drop=F], m.max, T)
-  N.f$id <- parcel.df$id[match(N.f$id, parcel.df$id.in)]
+  N.f$id <- lc.df$id[match(N.f$id, lc.df$id.in)]  # convert from id.in to id
   
   #--- short distance dispersal
   N.Sd <- sdd_disperse(lc.df[,c("id", "id.in")], N.f, gamma, pm$p.c.E, 
@@ -414,7 +413,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   B.1 <- estab.out$B
   for(l in 1:6) {
     N.1[,l,1] <- round(estab.out$M.0[parcel.df$id.in] * 
-                           pm$lc.mx[parcel.df$id,l] * parcel.df$Grid_Proportion)
+                         pm$lc.mx[parcel.df$id,l] * parcel.df$Grid_Proportion)
     N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
                           parcel.df$K*parcel.df[,LCs[l]])
