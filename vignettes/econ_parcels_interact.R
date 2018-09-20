@@ -90,14 +90,14 @@ cell.init <- lc.df$id[which(abs(lc.df$lon-coord.init[1]) < cell_side/2 &
 tmax <- 100
 # global parameters: ?set_g_p
 g.p <- set_g_p(tmax=tmax, n.cores=1,  
-               K=c(5223180, 0, 770790, 770790, 770790, 770790),
+               K=c(3133908, 0, 462474, 462474, 462474, 462474),
                sdd.max=7, sdd.rate=1.4)
 
 
 
 #--- FAKE ECONOMIC DECISION REGRESSIONS
 get.actions2 <- function(N_i, K_i, PP_R, PP_T, TRT, N_EFF, T_EFF, 
-                         W, CHEM, B, COST){ 
+                         W, CHEM, B, COST) { 
   
   WTP <- B[1] * W * PP_R + 
     B[2] * ((1-N_i*N_EFF/K_i)/(1-N_i/K_i)-1) * PP_R + 
@@ -114,7 +114,7 @@ trt.i <- list(trt=c("N", "M", "C", "B"), # treatment name
               chem=c(0, 0, 1, 1), # chemical used?
               wild_eff=c(0, 1, 1, 1)) # effect on wildlife
 WTP_b <- c(10, 40, -20, 60) # willingness-to-pay slopes
-actions <- array(NA, dim=c(npp, tmax+1)) # store actions in each time step
+act.mx <- array(0, dim=c(npp, tmax+1)) # store actions in each time step
 
 
 
@@ -154,7 +154,7 @@ for(k in 1:g.p$tmax) {
                                                CHEM=trt.i$chem,
                                                B=WTP_b,
                                                COST=trt.i$cost))
-  actions[presence_pp,k] <- action_pp # store pixel-parcel decisions
+  act.mx[presence_pp,k] <- action_pp # store pixel-parcel decisions
   mech_chem_id.pp <- presence_pp[action_pp != "N"] # id.pp that are treating
   
   # Set control parameters, identify treated pixel-parcels
@@ -206,17 +206,17 @@ out.all <- left_join(lc.df, N.df, by="id.in") %>%
   gather(year, N, (ncol(lc.df)+1):ncol(.)) %>% 
   mutate(year=as.numeric(year),
          B=c(B))
-actions.ls <- setNames(vector("list", 4), trt.i$trt)
+act.ls <- setNames(vector("list", 4), trt.i$trt)
 for(i in 1:length(trt.i$trt)) {
-  actions.ls[[i]] <- map_dfr(setNames(1:ncell, 1:ncell), 
-                          ~colSums(actions[pp.ls[[.]],]==trt.i$trt[i], na.rm=T)/length(pp.ls[[.]])) %>%
+  act.ls[[i]] <- map_dfr(setNames(1:ncell, 1:ncell), 
+                          ~colSums(act.mx[pp.ls[[.]],]==trt.i$trt[i])/length(pp.ls[[.]])) %>%
     mutate(year=1:(g.p$tmax+1),
            action=trt.i$trt[i]) %>%
     gather(id.in, prop, 1:ncell) %>%
     mutate(id.in=as.numeric(id.in))
 }
 out.actions <- full_join(filter(lc.df, inbd), 
-                         do.call("rbind", actions.ls), by="id.in")
+                         do.call("rbind", act.ls), by="id.in")
 out.df <- lc.df %>%
   mutate(N.0=out.all$N[out.all$year==1],
          B.0=B[,1],
