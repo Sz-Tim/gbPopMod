@@ -17,11 +17,11 @@ res <- c("20ac", "9km2")[2]
 par_span <- c("total", "gb")[2]
 
 # set parameters
-g.p <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, n.cores=8, N.p.t0=1)
-par.ls <- set_sensitivity_pars(names(g.p)[10:26][-9], par_span, res)
-par.ls$N.0 <- list(param="N.0", type="int", LC=1, min=rep(1,6), max=par.ls$K$max)
-g.p$N.0 <- round(g.p$K/2)
-nSamp <- 100
+g.p <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, n.cores=4, N.p.t0=1)
+par.ls <- set_sensitivity_pars(names(g.p)[10:26][-15], par_span, res)
+par.ls$N.0 <- list(param="N.0", type="int", LC=0, min=1, max=100)
+g.p$N.0 <- 10
+nSamp <- 10000
 
 # load landscape
 load(paste0("data/USDA_", res, ".rda"))
@@ -39,10 +39,11 @@ cell.init <- lc.df$id[which(abs(lc.df$lon-coord.init[1]) < cell_side/2 &
                               abs(lc.df$lat-coord.init[2]) < cell_side/2)]
 
 # run sensitivity analysis
+out.dir <- paste0("out/", res, "/N0_", par.ls$N.0$max)
 out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
                           sdd=NULL, cell.init, control.p=NULL, verbose=T, 
-                          sim.dir=paste0("out/", res, "/", par_span, "/sims/"))
-write_csv(out, paste0("out/", res, "/", par_span, "/gsa_results.csv"))
+                          sim.dir=paste0(out.dir, "/sims/"))
+write_csv(out, paste0(out.dir, "/gsa_results.csv"))
 
 nMetric <- 8
 nPar <- ncol(out)-nMetric
@@ -50,17 +51,17 @@ brt.sum <- vector("list", nMetric)
 for(i in 1:nMetric) {
   metric <- names(out)[nPar+i]
   emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric, 
-                      brt.dir=paste0("out/", res, "/", par_span, "/brt/"))
+                      brt.dir=paste0(out.dir, "/brt/"))
   brt.sum[[i]] <- emulation_summary(metric, 
-                                    paste0("out/", res, "/", par_span, "/brt/"))
+                                    paste0(out.dir, "/brt/"))
 }
 
 write_csv(map_dfr(brt.sum, ~.$ri.df), 
-          paste0("out/", res, "/", par_span, "/BRT_RI.csv"))
+          paste0(out.dir, "/BRT_RI.csv"))
 write_csv(map_dfr(brt.sum, ~.$cvDev.df), 
-          paste0("out/", res, "/", par_span, "/BRT_cvDev.csv"))
+          paste0(out.dir, "/BRT_cvDev.csv"))
 write_csv(map_dfr(brt.sum, ~.$betaDiv.df), 
-          paste0("out/", res, "/", par_span, "/BRT_betaDiv.csv"))
+          paste0(out.dir, "/BRT_betaDiv.csv"))
 
 
 
