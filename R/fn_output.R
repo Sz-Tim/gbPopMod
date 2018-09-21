@@ -80,7 +80,7 @@ save_abundances <- function(p.wd, ad.N, sb.N, verbose=TRUE) {
 #' @export
 
 make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
-  library(ggplot2); options(bitmapType='cairo')
+  library(ggplot2); library(viridis); options(bitmapType='cairo')
   theme_set(theme_bw() + theme(panel.grid=element_blank()))
   
   # filenames
@@ -88,7 +88,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
   f.full <- paste0(p.wd, "Final_", f.nm, ".jpg") 
   
   p.fin <- ggplot(N.final, aes(x=lon, y=lat)) +
-    scale_fill_gradient(low="white", high="red") +
+    scale_fill_viridis(option="B") +
     theme(panel.background=element_rect(fill="gray30"))
   
   # Adult abundance
@@ -142,7 +142,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 #' @export
 
 make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600) {
-  library(gganimate); options(bitmapType='cairo')
+  library(gganimate); library(viridis); options(bitmapType='cairo')
   theme_set(theme_bw() + theme(panel.grid=element_blank()))
   
   # filenames
@@ -150,7 +150,7 @@ make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600) {
   f.full <- paste0(p.wd, f.nm, ".gif")
   
   p.gif <- ggplot(N.out, aes(x=lon, y=lat)) + 
-    scale_fill_gradient(low="white", high="red") + 
+    scale_fill_viridis(option="B") + 
     theme(panel.background=element_rect(fill="gray30")) +
     transition_time(as.numeric(year))
   
