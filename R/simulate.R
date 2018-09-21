@@ -36,6 +36,15 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   m.d <- n_distinct(m) > 1  # does m vary across cells?
   if(method=="lm" && m.d) stop("m must be uniform if method==\"lm\"")
   
+  # identify which years to store data
+  if(is.null(save_yrs)) {
+    n_yrs <- tmax
+    yrs <- setNames(1:tmax, 1:tmax)
+  } else {
+    n_yrs <- length(save_yrs)
+    yrs <- setNames(1:n_yrs, save_yrs)
+  }
+  
   # If buckthorn is being actively managed...
   p.trt <- NULL
   if(!is.null(control.p)) {
@@ -44,26 +53,30 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   }
   
   # 1. Initialize populations
-  B <- matrix(0, nrow=ngrid, ncol=tmax+1)
-  nFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=tmax)
+  ## storage objects to return: x
+  ## annual temp objects: x.0 = start of year, x.1 = end of year
+  N.0 <- N.1 <- N.init
+  B.0 <- rep(0, ngrid)
+  B <- nFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=n_yrs)
   if(m.d) {
-    N <- array(0, dim=c(ngrid, tmax+1, n.lc, m.max))  
-    N[,1,,] <- N.init
+    N <- array(0, dim=c(ngrid, n_yrs, n.lc, m.max))  
     for(l in 1:n.lc) {
-      if(m[l] < m.max) { N[,,l,m[l]:(m.max-1)] <- NA }
+      if(m[l] < m.max) { 
+        N[,,l,m[l]:(m.max-1)] <- NA 
+        N.0[,l,m[l]:(m.max-1)] <- NA 
+      }
     }
   } else {
-    N <- array(0, dim=c(ngrid, tmax+1, m.max))
-    N[,1,] <- N.init
+    N <- array(0, dim=c(ngrid, n_yrs, m.max))
   }
   
   if(verbose) pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
-  for(t in 1:tmax) {  
-    if(m.d) { N.t <- N[,t,,] 
-    } else { N.t <- N[,t,] }
+  for(k in 1:tmax) {  
+    
+    nFl.1 <- nSd.1 <- nSdStay.1 <- D.1 <- rep(0, ngrid)
     
     # 2. Implement management
-    if(!is.null(control.p) && t >= t.trt) {
+    if(!is.null(control.p) && k >= t.trt) {
       # 2A. Adjust LC %
       if(lc.chg && nChg >= 1) { 
         # i. decide which cells change and how much of each kind of forest
@@ -92,8 +105,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
         N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
                             pTrt=pTrt.man, trt.eff=man.trt, 
                             addOwners=add.owners, trt.m1=N.trt)
-        if(m.d) { N[,t,,] <- trt_manual(N.t, m.max, N.trt, man.trt)
-        } else { N[,t,] <- trt_manual(N.t, m.max, N.trt, man.trt) }
+        N.0 <- trt_manual(N.0, m.max, N.trt, man.trt)
       }
     }
     
@@ -101,60 +113,69 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
     
     # 4. Local fruit production
-    N.f <- make_fruits(N.t, pm$lc.mx, pm$mu.E, pm$p.f.E,
-                                  m.max, m.d, dem.st)
-    nFl[N.f$id,t] <- N.f$N.rpr
+    N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, m.d, dem.st)
+    nFl.1[N.f$id] <- N.f$N.rpr
     
     # 5. Short distance dispersal
     N.Sd <- sdd_disperse(id.i, N.f, gamma, pm$p.c.E, s.c, 
                          sdd$sp, sdd.rate, sdd.st, edges)
-    nSd[N.Sd$N.source$id,t] <- N.Sd$N.source$N.produced
-    nSdStay[N.Sd$N.source$id,t] <- N.Sd$N.source$N.dep
-    D[N.Sd$N.seed$id,t] <- N.Sd$N.seed$N
-    D[,t] <- D[,t] - nSdStay[,t]
+    nSd.1[N.Sd$N.source$id] <- N.Sd$N.source$N.produced
+    nSdStay.1[N.Sd$N.source$id] <- N.Sd$N.source$N.dep
+    D.1[N.Sd$N.seed$id] <- N.Sd$N.seed$N
+    D.1 <- D.1 - nSdStay.1
     
     # 6. Seedling establishment
-    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B[,t], pm$p.E, g.D, g.B,
+    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B,
                                s.B, dem.st, bank)
-    B[,t+1] <- estab.out$B
+    B.1 <- estab.out$B
     
     # 7. Long distance dispersal
     estab.out$M.0 <- ldd_disperse(ncell, id.i, estab.out$M.0, n.ldd)
     
-    # 8. Update abundances
+    # 8. Calculate abundances
+    N.1[] <- 0
     if(m.d) {
         for(l in 1:n.lc) {
-          N[,t+1,l,1] <- round(estab.out$M.0 * pm$s.M.E)
-          N[,t+1,l,2:(m[l]-1)] <- round(N[,t,l,1:(m[l]-2)]*s.M[l])
-          N[,t+1,l,m.max] <- pmin(round(N[,t,l,m.max]*s.N[l] + 
-                                         N[,t,l,m[l]-1]*s.M[l]),
-                                 pm$K.lc[,l])
+          N.1[,l,1] <- round(estab.out$M.0 * pm$s.M.E)
+          N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
+          N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + 
+                                        N.0[,l,m[l]-1]*s.M[l]),
+                                pm$K.lc[,l])
         }
     } else if(m.max > 2) {
-      N[,t+1,1] <- round(estab.out$M.0 * pm$s.M.E)
-      N[,t+1,2:(m.max-1)] <- round(N[,t,1:(m.max-2)] * pm$s.M.E)
-      N[,t+1,m.max] <- pmin(round(N[,t,m.max]*pm$s.N.E + N[,t,m.max-1]*pm$s.M.E), 
-                           pm$K.E)
+      N.1[,1] <- round(estab.out$M.0 * pm$s.M.E)
+      N.1[,2:(m.max-1)] <- round(N.0[,1:(m.max-2)]*pm$s.M.E)
+      N.1[,m.max] <- pmin(round(N.0[,m.max]*pm$s.N.E + N.0[,m.max-1]*pm$s.M.E), 
+                          pm$K.E)
     } else if(m.max == 2 ) {
-      N[,t+1,1] <- round(estab.out$M.0 * pm$s.M.E)
-      N[,t+1,m.max] <- pmin(round(N[,t,m.max]*pm$s.N.E + N[,t,1]*pm$s.M.E), 
-                           pm$K.E)
+      N.1[,1] <- round(estab.out$M.0 * pm$s.M.E)
+      N.1[,m.max] <- pmin(round(N.0[,m.max]*pm$s.N.E + N.0[,1]*pm$s.M.E), 
+                          pm$K.E)
     } else {
-      N[,t+1,1] <- pmin(round(N[,t,1]*pm$s.N.E + estab.out$N.rcrt*pm$s.M.E), 
-                        pm$K.E)
+      N.1[,1] <- pmin(round(N.0[,1]*pm$s.N.E + estab.out$N.rcrt*pm$s.M.E), 
+                      pm$K.E)
     }
-    if(verbose) setTxtProgressBar(pb, t)
+    
+    # 9. Store years
+    if(any(k %in% names(yrs))) {
+      yr_k <- which(names(yrs)==k)
+      if(m.d) { N[,yr_k,,] <- N.1
+      } else { N[,yr_k,] <- N.1 }
+      B[,yr_k] <- B.1
+      nFl[,yr_k] <- nFl.1
+      nSd[,yr_k] <- nSd.1
+      nSdStay[,yr_k] <- nSdStay.1
+      D[,yr_k] <- D.1
+    }
+    
+    # 10. Update objects
+    N.0 <- N.1
+    B.0 <- B.1
+    
+    if(verbose) setTxtProgressBar(pb, k)
   }
   if(verbose) close(pb)
   if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
-  if(!is.null(save_yrs)) {
-    N <- N[,save_yrs,]
-    B <- B[,save_yrs]
-    nFl <- nFl[,save_yrs]
-    nSd <- nSd[,save_yrs]
-    nSdStay <- nSdStay[,save_yrs]
-    D <- D[,save_yrs]
-  }
   return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
 
