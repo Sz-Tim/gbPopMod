@@ -70,7 +70,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                    list(param="bird.hab", type="cont", LC=1, 
                         min=c(0.240, 0.270, 0.037, 0.068, 0.068, 0.068), 
                         max=c(0.400, 0.451, 0.06, 0.113, 0.113, 0.113)),
-                   list(param="n.ldd", type="int", LC=0, min=1, max=5),
+                   list(param="n.ldd", type="int", LC=0, 
+                        min=1, max=ifelse(res=="20ac", 5, 3)),
                    list(param="s.c", type="prob", LC=0, min=0.4875, max=0.605),
                    list(param="s.B", type="prob", LC=0, min=0.641, max=0.766),
                    list(param="s.M", type="prob", LC=1,
@@ -170,9 +171,9 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     }
     N.init <- pop_init(ngrid, g.p, lc.df, p.0=cell.init, N.0=g.p$N.0)
     sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, NULL, F, g.p$tmax)
-    saveRDS(sim_i$N[,dim(sim_i$N)[2]], 
+    saveRDS(sim_i$N[,1,dim(sim_i$N)[3]], 
             paste0(sim.dir, "N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(sim_i$B, 
+    saveRDS(sim_i$B[,1], 
             paste0(sim.dir, "B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
