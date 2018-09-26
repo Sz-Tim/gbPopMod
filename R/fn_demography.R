@@ -140,3 +140,69 @@ grow_lambda <- function(N.t, lambda.E, sdd.rate) {
   
   return(N.new)
 }
+
+
+
+
+#' Fill population matrices and calculate lambda in each cell
+#'
+#' Create a demographic matrix for each cell and calculate lambda, incorporating
+#' dispersal.
+#' @param g.p Named list of global parameters set with \code{\link{set_g_p}}
+#' @param lc.df Dataframe or tibble with xy coords, land cover proportions, and
+#'   cell id info
+#' @param sdd.ji List with id.in for cells dispersing TO each target cell j
+#' @param p.ji List with dispersal probabilities TO each target cell j
+#' @return List with array of matrices, \code{[["mx"]]}, and vector of lambdas
+#'   for each inbound cell, \code{[["lambda"]]}.
+#' @keywords matrix, lambda
+#' @export
+
+calc_lambda <- function(g.p, lc.df, sdd.ji, p.ji) {
+  library(tidyverse)
+
+  lc.mx <- dplyr::filter(lc.df, inbd) %>%
+    dplyr::select(one_of("Opn", "Oth", "Dec", "Evg", "WP", "Mxd")) %>%
+    as.matrix
+  ncell <- nrow(lc.mx)
+  m.max <- max(g.p$m)
+  mx <- array(0, dim=c(ncell, m.max+1, m.max+1))
+  mx[,1,1] <- g.p$s.B * (1-g.p$g.B)  # seed bank survival
+  mx[,2,1] <- g.p$g.B * (lc.mx %*% g.p$p) 
+  for(k in 2:m.max) {
+    s.kp1_k <- g.p$s.M * (k < g.p$m)  # pr(k to k+1 | LC)
+    s.N_k <- g.p$s.M * (k == g.p$m)  # pr(k to N | LC)
+    mx[,k+1,k] <- lc.mx %*% s.kp1_k
+    mx[,m.max+1,k] <- lc.mx %*% s.N_k
+  }
+  mx[,m.max+1,m.max+1] <- lc.mx %*% g.p$s.N  # pr(m.max to m.max)
+  SdProd <- lc.mx %*% (g.p$p.f*g.p$mu*g.p$gamma)
+  mx[,1,m.max+1] <- SdProd * lc.mx %*% (1-g.p$p.c) +   # i to i, dropped
+    SdProd * (lc.mx %*% (g.p$p.c*g.p$s.c*exp(-0.5*g.p$sdd.rate))) # i to i, eaten
+  D <- sapply(1:ncell,  # j to i, eaten & dispersed
+              function(x) sum(SdProd[sdd.ji[[x]],] * p.ji[[x]] *
+                                lc.mx[sdd.ji[[x]],] %*% 
+                                   (g.p$p.c*g.p$s.c*(1-exp(-0.5*g.p$sdd.rate)))))
+  mx[,1,m.max+1] <- mx[,1,m.max+1] +  D 
+    
+  return(list(mx=mx, 
+              lambda=sapply(1:ncell, function(x) Re(eigen(mx[x,,])$values[1]))))
+}
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
