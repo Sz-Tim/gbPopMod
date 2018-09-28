@@ -12,6 +12,7 @@
 # devtools::install_github("Sz-Tim/gbPopMod", dependencies=T,
 #                        auth_token="886b37e1694782d91c33da014d201a55d0c80bfb")
 # help(package="gbPopMod")
+
 # The following packages are called by various gbPopMod functions:
 # - here: easier file directory navigation
 # - doSNOW: running in parallel
@@ -41,9 +42,11 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 ## 1. SET UP AND INITIALIZATION
 ##---
 #--- load libraries & landscape
+
 gifs <- TRUE
 res <- "9km2"  # 9km2 or 20ac
 load(paste0("data/USDA_", res, ".rda"))  # loads dataframe as lc.df
+
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)

@@ -27,8 +27,6 @@ save_pars <- function(p.wd, g.p, control.p, verbose=TRUE) {
 }
 
 
-
-
 #' Save simulation output as .rds files
 #'
 #' This function saves both the global and buckthorn control parameters used in
@@ -121,8 +119,6 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 }
 
 
-
-
 #' Save gifs of buckthorn distribution through time
 #'
 #' This function saves gifs of the distribution of buckthorn. This includes
@@ -140,6 +136,7 @@ make_plots_final_t <- function(p.wd, g.p, N.final, txt=NULL, w=8, h=6) {
 #' @return None
 #' @keywords plots, gif, store, save, output
 #' @export
+
 
 make_plots_gifs <- function(p.wd, g.p, N.out, txt=NULL, w=800, h=600) {
   library(gganimate); library(viridis); options(bitmapType='cairo')

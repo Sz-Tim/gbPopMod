@@ -77,8 +77,10 @@ sdd_set_probs <- function(ncell, lc.df, g.p,
   if(verbose) cat("  determining neighborhood cell IDs...\n")
   c.i <- map(n.i, ~fmatch(., lc.df$x_y))
 
+
   if(verbose) cat("  calculating probabilities...\n")
   if(verbose) pb <- txtProgressBar(min=1, max=ncell, style=3)
+
   for(n in 1:ncell) {
     # find cell ID for each cell in neighborhood
     sdd.i[n.y[[n]][1]:n.y[[n]][2],
@@ -90,9 +92,11 @@ sdd_set_probs <- function(ncell, lc.df, g.p,
     sdd.i[,,1,n][ib] <- d.pr[ib] * bird.hab.E[sdd.i[,,2,n][ib]]
     sdd.i[,,2,n][sdd.i[,,1,n]==0] <- 0
     
+
     if(verbose) setTxtProgressBar(pb, n)
   }
   if(verbose) {cat("  finished:", n, "cells\n"); close(pb)}
+
   sdd.i[,,1,] <- apply(sdd.i[,,1,], 3, function(x) x/sum(x))
   sdd.sparse.ls <- vector("list", ncell)
   for(n in 1:ncell) {

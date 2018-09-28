@@ -3,6 +3,7 @@
 Packages <- c("here", "doSNOW", "fastmatch", "scales", "gganimate",
               "gbPopMod", "tidyverse", "magrittr")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
+
 theme_set(theme_bw())
 
 # set parameters
@@ -28,10 +29,18 @@ ncell <- sum(lc.df$inbd)
 id.i <- lc.df %>% select(id, id.in)
 
 # short distance dispersal neighborhoods
-sdd.pr <- sdd_set_probs(ncell, lc.df, g.p)
+sdd.pr <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
 
 # initialize populations
 N.init <- pop_init(ngrid, g.p, lc.df)
+
+
+# how is this related to run_sim? This simulation does not have management controls
+# out.lam <- run_sim_lambda(ngrid, ncell, g.p, lambda_values, 
+#                          lc.df, sdd.pr$i, N.init, TRUE)
+# TODO: is this needed?
+# out <- lc.df %>% mutate(lam=c(as.matrix(lc.df[,4:9]) %*% lambda_values),
+#                        N=out.lam$N[,g.p$tmax+1])
 
 # run simulation
 if(g.p$n.cores > 1) {
