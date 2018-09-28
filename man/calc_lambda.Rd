@@ -4,7 +4,7 @@
 \alias{calc_lambda}
 \title{Fill population matrices and calculate lambda in each cell}
 \usage{
-calc_lambda(g.p, lc.df, sdd.ji, p.ji)
+calc_lambda(g.p, lc.df, sdd.ji, p.ji, method = "wt.mn")
 }
 \arguments{
 \item{g.p}{Named list of global parameters set with \code{\link{set_g_p}}}
@@ -15,6 +15,15 @@ cell id info}
 \item{sdd.ji}{List with id.in for cells dispersing TO each target cell j}
 
 \item{p.ji}{List with dispersal probabilities TO each target cell j}
+
+\item{method}{\code{"wt.mn"} Method for calculating cell expectations, taking
+either \code{"wt.mn"} or \code{"lm"}. If \code{"wt.mn"}, the expectation
+for each parameter is the weighted mean across land cover types
+proportional to their coverage, with the land cover specific values stored
+in the parameter vectors. If \code{"lm"}, the expectation is calculated in
+a regression with the slopes contained in each parameter vector.
+Individuals cannot be assigned to specific land cover categories with
+\code{"lm"}, so \code{"m"} must be scalar.}
 }
 \value{
 List with array of matrices, \code{[["mx"]]}, and vector of lambdas
