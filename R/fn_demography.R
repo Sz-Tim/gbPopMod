@@ -204,9 +204,9 @@ calc_lambda <- function(g.p, lc.df, sdd.ji, p.ji, method="wt.mn") {
   } else {
     mx[,2,1] <- g.p$g.B * antilogit(g.p$p)
     for(k in 2:m.max) {
-      mx[,k+1,k] <- antilogit(lc.mx %*% g.p$s.M)
+      mx[,k+1,k] <- antilogit(pmin(lc.mx %*% g.p$s.M, 700))  # avoid NaN
     }
-    mx[,m.max+1,m.max+1] <- antilogit(lc.mx %*% g.p$s.N)  # pr(m.max to m.max)
+    mx[,m.max+1,m.max+1] <- antilogit(pmin(lc.mx %*% g.p$s.N, 700))  # pr(N to N)
     SdProd <- antilogit(lc.mx %*% g.p$p.f) * exp(lc.mx %*% g.p$mu) * g.p$gamma
     mx[,1,m.max+1] <- SdProd * c(1-g.p$p.c) + 
       SdProd * c(g.p$p.c) * g.p$s.c * exp(-0.5*g.p$sdd.rate)
