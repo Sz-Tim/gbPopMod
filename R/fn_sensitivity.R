@@ -171,10 +171,14 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     }
     N.init <- pop_init(ngrid, g.p, lc.df, p.0=cell.init, N.0=g.p$N.0)
     sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, NULL, F, g.p$tmax)
+    K.E <- na_if(cell_E(lc.df, g.p$K, g.p$s.M, g.p$s.N, g.p$mu, 
+                  g.p$p.f, g.p$p.c, g.p$p)$K.E, 0)
     saveRDS(sim_i$N[,1,dim(sim_i$N)[3]], 
             paste0(sim.dir, "N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
     saveRDS(sim_i$B[,1], 
             paste0(sim.dir, "B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    saveRDS(sim_i$N[,1,dim(sim_i$N)[3]]/K.E, 
+            paste0(sim.dir, "pK_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
   
@@ -182,17 +186,16 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
   if(verbose) cat("Calculating summaries...\n")
   N <- map(dir(sim.dir, "N_", full.names=T), readRDS)
   B <- map(dir(sim.dir, "B_", full.names=T), readRDS)
+  pK <- map(dir(sim.dir, "pK_", full.names=T), readRDS)
   results <- as.data.frame(do.call("cbind", samples))
   par.len <- map_int(samples, ncol)
   par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
   names(results) <- paste0(rep(names(samples), times=par.len), par.num)
   results$pOcc <- map_dbl(N, ~sum(.>0)/ncell)
   results$pSB <- map_dbl(B, ~sum(.>0)/ncell)
-  results$medN <- map_dbl(N, ~median(.[lc.df$inbd], na.rm=T))
+  results$pK <- map2_dbl(pK, N, ~mean(.x[.y>0]))
   results$medNg0 <- map_dbl(N, ~median(.[.>0]))
-  results$meanN <- map_dbl(N, ~mean(.[lc.df$inbd]))
   results$meanNg0 <- map_dbl(N, ~mean(.[.>0]))
-  results$sdN <- map_dbl(N, ~sd(.[lc.df$inbd]))
   results$sdNg0 <- map_dbl(N, ~sd(.[.>0]))
   return(results)
 }
