@@ -29,6 +29,21 @@ logit <- function (x) {
 
 
 
+#' Get the id of the cell containing specified coordinates
+#' 
+#' @param lc.df Dataframe or tibble with columns 'lat' and 'lon'
+#' @param pt_coord Vector with longitude and latitude of a point
+#' @return id from lc.df of cell containing the point
+#' @export
+
+get_pt_id <- function(lc.df, pt_coord) {
+  cell_side <- mean(diff(sort(unique(lc.df$lon))))
+  lc.df$id[which(abs(lc.df$lon-pt_coord[1]) < cell_side/2 & 
+                   abs(lc.df$lat-pt_coord[2]) < cell_side/2)]
+}
+
+
+
 
 #' Expand all pairwise combinations of two vectors into one character vector
 #'
