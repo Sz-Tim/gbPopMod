@@ -169,8 +169,8 @@ par.rng$s.B$max <- exp(-1/(3*1.25))
 
 ## s.M: Annual survival rate for juveniles
 #--- Source: Literature (Ranges from similar species)
-par.rng$s.N$min <- par.best$s.M * 0.75
-par.rng$s.N$max <- pmin(par.best$s.M * 1.25, 1)
+par.rng$s.M$min <- par.best$s.M * 0.75
+par.rng$s.M$max <- pmin(par.best$s.M * 1.25, 1)
 
 
 ## s.N: Annual survival rate for adults
