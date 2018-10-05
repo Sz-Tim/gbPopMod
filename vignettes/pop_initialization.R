@@ -53,10 +53,7 @@ N[,1,,] <- N_0
 B <- matrix(0, nrow=ngrid, ncol=dem_par$tmax+1)
 
 for(k in 1:dem_par$tmax) {
-  out <- iterate_pop(ngrid, ncell, N[,k,,], B[,k], dem_par, lc.df, sdd, 
-                     NULL, NULL, NULL)
-  
-  # update abundances
+  out <- iterate_pop(ngrid, ncell, N[,k,,], B[,k], dem_par, lc.df, sdd)
   N[,k+1,,] <- out$N
   B[,k+1] <- out$B
 }
