@@ -5,7 +5,7 @@
 \title{Implement management and iterate buckthorn populations for one time step}
 \usage{
 iterate_pop(ngrid, ncell, N.0 = NULL, B.0 = NULL, g.p, lc.df, sdd,
-  control.p, grd_cover.i = NULL, mech_chem.i = NULL,
+  control.p = NULL, grd_cover.i = NULL, mech_chem.i = NULL,
   read_write = FALSE, path = NULL)
 }
 \arguments{
@@ -27,7 +27,7 @@ cell id info}
 \item{sdd}{Output with short distance dispersal neighborhoods created by
 \code{\link{sdd_set_probs}}}
 
-\item{control.p}{NULL or named list of buckthorn control treatment parameters
+\item{control.p}{\code{NULL} NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
 
 \item{grd_cover.i}{\code{NULL} Dataframe with a row for each cell

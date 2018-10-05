@@ -273,7 +273,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #'   cell id info
 #' @param sdd Output with short distance dispersal neighborhoods created by
 #'   \code{\link{sdd_set_probs}}
-#' @param control.p NULL or named list of buckthorn control treatment parameters
+#' @param control.p \code{NULL} NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
 #' @param grd_cover.i \code{NULL} Dataframe with a row for each cell
 #'   implementing ground cover management, and columns \code{id} and \code{Trt}
@@ -292,7 +292,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #' @export
 
 iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
-                        control.p, grd_cover.i=NULL, mech_chem.i=NULL, 
+                        control.p=NULL, grd_cover.i=NULL, mech_chem.i=NULL, 
                         read_write=FALSE, path=NULL) {
   library(gbPopMod); library(tidyverse); library(magrittr)
   if(read_write) {
