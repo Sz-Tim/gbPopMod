@@ -87,7 +87,7 @@ cell.init <- lc.df$id[which(abs(lc.df$lon-coord.init[1]) < cell_side/2 &
 
 
 #--- set parameters
-tmax <- 100
+tmax <- 200
 # global parameters: ?set_g_p
 g.p <- set_g_p(tmax=tmax, n.cores=1,  
                K=c(3133908, 0, 462474, 462474, 462474, 462474),
@@ -110,8 +110,8 @@ get.actions2 <- function(N_i, K_i, PP_R, PP_T, TRT, N_EFF, T_EFF,
 trt.i <- list(trt=c("N", "M", "C", "B"), # treatment name
               N_eff=c(0, 0.2, 0.3, 0.9), # effectiveness = mortality rate
               biomass_eff=c(0, 0.1, 0.125, 0.2), # effect on biomass
-              cost=c(0, 200, 100, 300), # cost
-              chem=c(0, 0, 1, 1), # chemical used?
+              cost=c(0, 2000, 3000, 5000), # cost
+              chem=c(1, 1, -1, -1), # chemical used? (-1 = YES, 1 = No)
               wild_eff=c(0, 1, 1, 1)) # effect on wildlife
 WTP_b <- c(10, 40, -20, 60) # willingness-to-pay slopes
 act.mx <- array(0, dim=c(npp, tmax+1)) # store actions in each time step
@@ -158,8 +158,8 @@ for(k in 1:g.p$tmax) {
   mech_chem_id.pp <- presence_pp[action_pp != "N"] # id.pp that are treating
   
   # Set control parameters, identify treated pixel-parcels
+  mech_chem_id.pp <- NULL
   control_par <- set_control_p(null_ctrl=F,
-                               man.i=mech_chem_id.pp, # mech/chem parcels
                                man.trt=setNames(trt.i$N_eff, trt.i$trt)) 
   # Specify which parcels use which treatments
   if(length(mech_chem_id.pp)>0) {
@@ -223,8 +223,18 @@ out.df <- lc.df %>%
          N.final=out.all$N[out.all$year==g.p$tmax+1],
          B.final=B[,g.p$tmax+1])
 
+
+library(doSNOW); library(foreach)
+p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
+sdd.ji.rows <- foreach(x=1:ncell) %dopar% { which(sdd$sp.df$j.idin==x) }
+stopCluster(p.c)
+sdd.ji <- lapply(sdd.ji.rows, function(x) sdd$sp.df$i.idin[x]) 
+p.ji <- lapply(sdd.ji.rows, function(x) sdd$sp.df$pr[x]) 
+out.df$lambda <- calc_lambda(g.p, lc.df, sdd.ji, p.ji)$lambda[out.df$id.in]
+
 # final abundance maps
 final.p <- ggplot(out.df, aes(lon, lat))
+final.p + geom_tile(aes(fill=lambda)) + scale_fill_viridis(option="B")
 final.p + geom_tile(aes(fill=log(N.final))) + scale_fill_viridis(option="B")
 final.p + geom_tile(aes(fill=log(B.final))) + scale_fill_viridis(option="B") 
 
