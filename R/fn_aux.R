@@ -345,8 +345,8 @@ pop_init <- function(ngrid, g.p, lc.df, p.0=NULL, N.0=NULL) {
 #' @param sdd.st \code{TRUE} Include stochasticity in short distance dispersal?
 #' @param bank \code{TRUE} Include seedbank?
 #' @param n.cores \code{4} Number of cores for parallelizing sdd.pr calculation
-#' @param lc.r \code{100} Maximum number of rows (\code{y}) in landscape
-#' @param lc.c \code{100} Maximum number of columns (\code{x}) in landscape
+#' @param lc.r \code{Inf} Maximum number of rows (\code{y}) in landscape
+#' @param lc.c \code{Inf} Maximum number of columns (\code{x}) in landscape
 #' @param n.lc \code{6} Number of land cover categories
 #' @param N.p.t0 \code{10} Number of cells with buckthorn at t=1
 #' @param p.f \code{c(0.45, 0, 0.29, 0.15, 0.15, 0.17)} Vector
@@ -394,7 +394,7 @@ pop_init <- function(ngrid, g.p, lc.df, p.0=NULL, N.0=NULL) {
 #' @export
 
 set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4, 
-                    lc.r=100, lc.c=100, n.lc=6, N.p.t0=10,
+                    lc.r=Inf, lc.c=Inf, n.lc=6, N.p.t0=10,
                     p.f=c(0.45, 0, 0.29, 0.15, 0.15, 0.17),
                     mu=c(1948, 0, 14, 41, 41, 21),
                     gamma=2.48, 
@@ -444,7 +444,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #' manual treatment is enacted in a cell, the adult and juvenile abundances in
 #' that cell are reduced by the corresponding rate.
 #' @param null_ctrl \code{TRUE} Set control parameters to \code{NULL}?
-#' @param t.trt \code{30} Year to start treatments
+#' @param t.trt \code{1} Year to start treatments
 #' @param add.owners \code{FALSE} Do owners treat every year once starting a
 #'   particular treatment?
 #' @param grd.i \code{NULL} Vector of cell IDs to receive ground treatments. If
@@ -467,7 +467,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #' @param man.trt \code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
 #'   treatments and associated mortality (=success) rates; treatments include
 #'   mechanical (M), chemical (C), or both (MC)
-#' @param lc.chg \code{TRUE} Does land cover change (i.e., timber harvest)
+#' @param lc.chg \code{FALSE} Does land cover change (i.e., timber harvest)
 #'   across years?
 #' @param pChg \code{0.0001} Proportion of cells with land cover change each
 #'   year
@@ -477,12 +477,12 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #' @keywords initialize, set up, control, treatment, parameter
 #' @export
 
-set_control_p <- function(null_ctrl=TRUE, t.trt=30, add.owners=FALSE,
+set_control_p <- function(null_ctrl=TRUE, t.trt=1, add.owners=FALSE,
                           grd.i=NULL, man.i=NULL, chg.i=NULL,
                           pTrt.grd=0.05, pTrt.man=0.05,
                           grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
                           man.trt=c(M=0.1, C=0.3, MC=0.8),
-                          lc.chg=TRUE, pChg=0.0001) {
+                          lc.chg=FALSE, pChg=0.0001) {
   
   if(null_ctrl) {
     control.p <- NULL

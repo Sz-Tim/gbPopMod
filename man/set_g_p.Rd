@@ -5,7 +5,7 @@
 \title{Set global parameters}
 \usage{
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
-  n.cores = 4, lc.r = 100, lc.c = 100, n.lc = 6, N.p.t0 = 10,
+  n.cores = 4, lc.r = Inf, lc.c = Inf, n.lc = 6, N.p.t0 = 10,
   p.f = c(0.45, 0, 0.29, 0.15, 0.15, 0.17), mu = c(1948, 0, 14, 41, 41,
   21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149, 0.149,
   0.273, 0.233, 0.233, 0.273), sdd.rate = 0.133, sdd.max = 25,
@@ -26,9 +26,9 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
 
 \item{n.cores}{\code{4} Number of cores for parallelizing sdd.pr calculation}
 
-\item{lc.r}{\code{100} Maximum number of rows (\code{y}) in landscape}
+\item{lc.r}{\code{Inf} Maximum number of rows (\code{y}) in landscape}
 
-\item{lc.c}{\code{100} Maximum number of columns (\code{x}) in landscape}
+\item{lc.c}{\code{Inf} Maximum number of columns (\code{x}) in landscape}
 
 \item{n.lc}{\code{6} Number of land cover categories}
 
