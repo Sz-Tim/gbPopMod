@@ -4,18 +4,21 @@
 \alias{trt_manual}
 \title{Implement cutting & spraying treatments}
 \usage{
-trt_manual(N.t, m.max, N.trt, man.trt)
+trt_manual(N.t, m.max, N.trt, man.trt, byLC = FALSE)
 }
 \arguments{
 \item{N.t}{Matrix or array of abundances, with dims=c(ngrid, (lc), m.max)}
 
 \item{m.max}{Max(age at maturity)}
 
-\item{N.trt}{Tibble output from \code{\link{trt_assign}} with the grid id and
-treatment type for each cell}
+\item{N.trt}{Dataframe, possibly output from \code{\link{trt_assign}}, with
+the grid id and treatment type for each cell. If treatment varies by land
+cover type, then there should be one column per land cover type}
 
 \item{man.trt}{Named vector with treatment types and associated success
 (=mortality) rates}
+
+\item{byLC}{\code{FALSE} Do treatments vary across land cover types?}
 }
 \value{
 Matrix or array of the same dimensions as N.t with adjusted

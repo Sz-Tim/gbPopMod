@@ -273,8 +273,8 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #'   cell id info
 #' @param sdd Output with short distance dispersal neighborhoods created by
 #'   \code{\link{sdd_set_probs}}
-#' @param control.p \code{NULL} NULL or named list of buckthorn control treatment parameters
-#'   set with \code{\link{set_control_p}}
+#' @param control.p \code{NULL} NULL or named list of buckthorn control
+#'   treatment parameters set with \code{\link{set_control_p}}
 #' @param grd_cover.i \code{NULL} Dataframe with a row for each cell
 #'   implementing ground cover management, and columns \code{id} and \code{Trt}
 #'   detailing the cell ID and ground cover treatment (\code{"Cov", "Com",
@@ -311,7 +311,8 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
     p.trt <- NULL
   }
   if(!is.null(mech_chem.i)) {
-    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt)
+    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt, 
+                      ncol(mech_chem.i)>2)
   }
   # pre-multiply compositional parameters for cell expectations
   pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
@@ -407,7 +408,8 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
     p.trt <- trt_ground(grd_cover.i, control.p$grd.trt)
   }
   if(!is.null(mech_chem.i)) {
-    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt)
+    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt, 
+                      ncol(mech_chem.i)>2)
   }
   
   #--- sum abundance within pixels

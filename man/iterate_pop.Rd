@@ -27,8 +27,8 @@ cell id info}
 \item{sdd}{Output with short distance dispersal neighborhoods created by
 \code{\link{sdd_set_probs}}}
 
-\item{control.p}{\code{NULL} NULL or named list of buckthorn control treatment parameters
-set with \code{\link{set_control_p}}}
+\item{control.p}{\code{NULL} NULL or named list of buckthorn control
+treatment parameters set with \code{\link{set_control_p}}}
 
 \item{grd_cover.i}{\code{NULL} Dataframe with a row for each cell
 implementing ground cover management, and columns \code{id} and \code{Trt}

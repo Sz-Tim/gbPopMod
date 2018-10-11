@@ -23,12 +23,6 @@
 # - *gganimate: generating gifs (PLOTS ONLY)
 # - *viridis: for pretty colors (PLOTS ONLY)
 # - *dismo: boosted regression trees for sensitivity analysis (SENSITIVITY ONLY)
-Packages <- c("here", "gbPopMod", "tidyverse", "magrittr", "viridis")
-suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
-set.seed(1)
-
-
-
 
 # Here, the economic model is written in R for illustration and the buckthorn
 # population is iterated each time step. The basic flow is:
@@ -46,6 +40,11 @@ set.seed(1)
 #
 # NOTE: Pixel = grid cell = cell
 #
+# This simulation works with three sets of indexes:
+# - id: rectangular grid ID; identified for all cells
+# - id.in: inbound ID; identified for inbound cells, NA if out of bounds
+# - id.pp: pixel-parcel ID; identifier for each decision-making entity 
+#
 # We accommodate this difference in spatial resolution as follows:
 # - K[id.pp]: Buckthorn carrying capacity per pixel-parcel = K[id] * % of cell
 # - N[id.pp]: Track buckthorn abundance per pixel-parcel, constrained by K
@@ -58,40 +57,39 @@ set.seed(1)
 
 
 
-
 ##---
 ## 1. SET UP AND INITIALIZATION
 ##---
-#--- load libraries & landscape
+#--- set general parameters
 gifs <- TRUE
 res <- "9km2"  # 9km2 or 20ac
+tmax <- 25
+
+#--- load landscape, initial populations
+Packages <- c("here", "gbPopMod", "tidyverse", "magrittr", "viridis")
+suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 load(paste0("data/USDA_", res, ".rda"))  # loads dataframe as lc.df
 parcel.df <- read.csv(paste0("data/USDA_", res, "_parcels.csv")) %>% 
   filter(inbd) %>% droplevels %>% mutate(id.pp=row_number())
+N_0 <- readRDS(paste0("data/inits/N_2018_", res, ".rds"))
+B_0 <- readRDS(paste0("data/inits/B_2018_", res, ".rds"))
+sdd <- readRDS(paste0("data/inits/sdd_", res, ".rds"))
 ngrid <- nrow(lc.df)  # number of cells in bounding box
 ncell <- sum(lc.df$inbd)  # number of inbound cells
 npp <- nrow(parcel.df)  # number of pixel-parcels
 LCs <- names(lc.df)[4:9]
 pp.ls <- map(1:ncell, ~which(parcel.df$id.in==.))
-coord.init <- c(739235.9, 4753487) # 1922: first record; herbarium_records.R
-cell_side <- mean(diff(sort(unique(lc.df$lon))))
-cell.init <- lc.df$id[which(abs(lc.df$lon-coord.init[1]) < cell_side/2 & 
-                              abs(lc.df$lat-coord.init[2]) < cell_side/2)]
-# Note that this works with three sets of indexes:
-# - id: rectangular grid ID; identified for all cells
-# - id.in: inbound ID; identified for inbound cells, NA if out of bounds
-# - id.pp: pixel-parcel ID; identifier for each decision-making entity 
-# This is to allow simpler spatial calculations (i.e., for SDD neighborhoods) 
-# and for allocating buckthorn individuals and management effects appropriately
 
 
 
 #--- set parameters
-tmax <- 200
-# global parameters: ?set_g_p
-g.p <- set_g_p(tmax=tmax, n.cores=1,  
-               K=c(3133908, 0, 462474, 462474, 462474, 462474),
-               sdd.max=7, sdd.rate=1.4)
+# global demographic parameters: ?set_g_p
+g.p <- set_g_p(tmax=tmax, n.cores=1)  
+if(res=="9km2") {
+  g.p$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
+  g.p$sdd.max <- 7
+  g.p$sdd.rate <- 1.4
+}
 
 
 
@@ -110,22 +108,21 @@ get.actions2 <- function(N_i, K_i, PP_R, PP_T, TRT, N_EFF, T_EFF,
 trt.i <- list(trt=c("N", "M", "C", "B"), # treatment name
               N_eff=c(0, 0.2, 0.3, 0.9), # effectiveness = mortality rate
               biomass_eff=c(0, 0.1, 0.125, 0.2), # effect on biomass
-              cost=c(0, 2000, 3000, 5000), # cost
+              cost=c(0, 20, 30, 50), # cost
               chem=c(1, 1, -1, -1), # chemical used? (-1 = YES, 1 = No)
               wild_eff=c(0, 1, 1, 1)) # effect on wildlife
 WTP_b <- c(10, 40, -20, 60) # willingness-to-pay slopes
-act.mx <- array(0, dim=c(npp, tmax+1)) # store actions in each time step
+act.mx <- array(NA, dim=c(npp, tmax)) # store actions in each time step
 
 
 
 
 #--- initialize SDD neighborhoods & buckthorn populations (just load eventually)
-sdd <- sdd_set_probs(ncell, lc.df, g.p, verbose=T)
 B <- matrix(0, nrow=ngrid, ncol=tmax+1) # [cell, year]
+B[,1] <- B_0
 N <- array(0, dim=c(npp, tmax+1, 6, max(g.p$m))) # [px-parcel, year, LC, age]
-N.0.px <- pop_init(ngrid, g.p, lc.df, p.0=cell.init)[lc.df$inbd,,]
+N.0.px <- N_0[lc.df$inbd,,]
 N[,1,,] <- round(N.0.px[parcel.df$id.in,,]*parcel.df$Grid_Proportion)
-for(l in 1:6) { if(g.p$m[l] < 7) { N[,,l,g.p$m[l]:(max(g.p$m)-1)] <- NA } }
   
 parcel.df$K_pp <- (as.matrix(parcel.df[,LCs]) %*% g.p$K) %>%
   multiply_by(parcel.df$Grid_Proportion) %>% c %>% round
@@ -158,13 +155,21 @@ for(k in 1:g.p$tmax) {
   mech_chem_id.pp <- presence_pp[action_pp != "N"] # id.pp that are treating
   
   # Set control parameters, identify treated pixel-parcels
-  mech_chem_id.pp <- NULL
   control_par <- set_control_p(null_ctrl=F,
                                man.trt=setNames(trt.i$N_eff, trt.i$trt)) 
   # Specify which parcels use which treatments
   if(length(mech_chem_id.pp)>0) {
+    # If treatment varies by land cover type, this needs to be a dataframe with
+    # nLC + 1 columns (id, Trt.Opn, Trt.Oth, etc) and a row per pixel-parcel
     mech_chem.i <- data.frame(id=mech_chem_id.pp,
-                              Trt=action_pp[action_pp != "N"]) 
+                              Trt.Opn=action_pp[action_pp != "N"],
+                              Trt.Oth="N",
+                              Trt.Dec="N",
+                              Trt.Evg="N",
+                              Trt.WP="N",
+                              Trt.Mxd="N")
+    # mech_chem.i <- data.frame(id=mech_chem_id.pp,
+    #                           Trt=action_pp[action_pp != "N"])
   } else {
     mech_chem.i <- NULL
   }
@@ -195,7 +200,7 @@ close(pb)
 
 
 # plots
-plot.dir <- "out/econ/"
+plot.dir <- "econ/"
 gifs <- T
 theme_set(theme_bw())
 if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
@@ -209,8 +214,9 @@ out.all <- left_join(lc.df, N.df, by="id.in") %>%
 act.ls <- setNames(vector("list", 4), trt.i$trt)
 for(i in 1:length(trt.i$trt)) {
   act.ls[[i]] <- map_dfr(setNames(1:ncell, 1:ncell), 
-                          ~colSums(act.mx[pp.ls[[.]],]==trt.i$trt[i])/length(pp.ls[[.]])) %>%
-    mutate(year=1:(g.p$tmax+1),
+                          ~colSums(act.mx[pp.ls[[.]],]==trt.i$trt[i])/
+                           length(pp.ls[[.]])) %>%
+    mutate(year=1:(g.p$tmax),
            action=trt.i$trt[i]) %>%
     gather(id.in, prop, 1:ncell) %>%
     mutate(id.in=as.numeric(id.in))

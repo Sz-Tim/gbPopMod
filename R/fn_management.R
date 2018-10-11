@@ -78,26 +78,33 @@ trt_ground <- function(est.trt, grd.trt) {
 #' treatments.
 #' @param N.t Matrix or array of abundances, with dims=c(ngrid, (lc), m.max)
 #' @param m.max Max(age at maturity)
-#' @param N.trt Tibble output from \code{\link{trt_assign}} with the grid id and
-#'   treatment type for each cell
+#' @param N.trt Dataframe, possibly output from \code{\link{trt_assign}}, with
+#'   the grid id and treatment type for each cell. If treatment varies by land
+#'   cover type, then there should be one column per land cover type
 #' @param man.trt Named vector with treatment types and associated success
 #'   (=mortality) rates
+#' @param byLC \code{FALSE} Do treatments vary across land cover types?
 #' @return Matrix or array of the same dimensions as N.t with adjusted
 #'   abundances
 #' @keywords control, treatment, manual, cutting, spraying
 #' @export
 
-trt_manual <- function(N.t, m.max, N.trt, man.trt) {
+trt_manual <- function(N.t, m.max, N.trt, man.trt, byLC=FALSE) {
   
-  library(tibble)
-  
-  trt.eff <- tibble(id=N.trt$id,
-                    surv=1-man.trt[match(N.trt$Trt, names(man.trt))])
-  
-  if(length(dim(N.t)) == 2) {
-    N.t[trt.eff$id,] <- round(N.t[trt.eff$id,] * trt.eff$surv)
+  if(byLC) {
+    trt.eff <- N.trt
+    for(l in 2:ncol(N.trt)) {
+      trt.eff[,l] <- 1 - man.trt[match(N.trt[,l], names(man.trt))]
+      N.t[trt.eff[,1],l-1,] <- round(N.t[trt.eff[,1],l-1,] * trt.eff[,l])
+    }
   } else {
-    N.t[trt.eff$id,,] <- round(N.t[trt.eff$id,,] * trt.eff$surv)
+    trt.eff <- cbind(id=N.trt$id,
+                     surv=1-man.trt[match(N.trt$Trt, names(man.trt))])
+    if(length(dim(N.t)) == 2) {
+      N.t[trt.eff[,1],] <- round(N.t[trt.eff[,1],] * trt.eff[,2])
+    } else {
+      N.t[trt.eff[,1],,] <- round(N.t[trt.eff[,1],,] * trt.eff[,2])
+    }
   }
   
   return(N.t)
