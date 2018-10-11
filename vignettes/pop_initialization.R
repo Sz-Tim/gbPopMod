@@ -1,8 +1,8 @@
 # This script sets up the landscape and initial populations. The first record in
 # the study region is in 1922, and so one iteration is run for 96 years
-# (1922-2018) with the single initial population. The buckthorn distribution in
-# 2018 is then used as the initial state for simulations beginning in the
-# present day.
+# (1922-2018) with the single initial population. The average buckthorn
+# abundance in each cell in 2018 is then used as the initial state for
+# simulations beginning in the present day.
 
 # The buckthorn model functions are stored as an R package called gbPopMod
 # hosted on GitHub. Prior to publication, the repository is private. You can
@@ -19,6 +19,7 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW","fastmatch")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
+n_sim <- 100
 res <- c("20ac", "9km2")[2]
 dem_par <- set_g_p(tmax=96)
 if(res == "9km2") {
@@ -45,23 +46,30 @@ cell.init <- get_pt_id(lc.df, coord.init)
 sdd <- list(sp=sdd_set_probs(ncell, lc.df, dem_par)$sp)
 N_0 <- pop_init(ngrid, dem_par, lc.df, p.0=cell.init)
 
-# run to year 96
-N <- array(0, dim=c(ngrid, dem_par$tmax+1, 6, max(dem_par$m)))
-N[,1,,] <- N_0
+N.tmax <- array(0, dim=c(ngrid, 6, max(dem_par$m), n_sim))
+B.tmax <- matrix(0, nrow=ngrid, ncol=n_sim)
 
-# B = seed bank; dim=[cell, year]
-B <- matrix(0, nrow=ngrid, ncol=dem_par$tmax+1)
-
-for(k in 1:dem_par$tmax) {
-  out <- iterate_pop(ngrid, ncell, N[,k,,], B[,k], dem_par, lc.df, sdd)
-  N[,k+1,,] <- out$N
-  B[,k+1] <- out$B
+pb <- txtProgressBar(min=0, max=n_sim*dem_par$tmax, width=80, style=3)
+for(s in 1:n_sim) {
+  N.k <- N_0
+  B.k <- rep(0, ngrid)
+  for(k in 1:(dem_par$tmax-1)) {
+    out <- iterate_pop(ngrid, ncell, N.k, B.k, dem_par, lc.df, sdd)
+    N.k <- out$N
+    B.k <- out$B
+    setTxtProgressBar(pb, (s-1)*dem_par$tmax + k)
+  }
+  N.tmax[,,,s] <- N.k
+  B.tmax[,s] <- B.k
 }
+close(pb)
+
 
 # store initial abundances & SDD neighborhoods
-saveRDS(N[,96,,], "data/N_2018.rds")
-saveRDS(B[,96], "data/B_2018.rds")
-saveRDS(sdd, "data/sdd.rds")
+if(!dir.exists("data/inits/")) dir.create("data/inits/", recursive=T)
+saveRDS(apply(N.tmax, 1:3, mean), paste0("data/inits/N_2018_", res, ".rds"))
+saveRDS(rowMeans(B.tmax), paste0("data/inits/B_2018_", res, ".rds"))
+saveRDS(sdd, paste0("data/inits/sdd_", res, ".rds"))
 
 
 
