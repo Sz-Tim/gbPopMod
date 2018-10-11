@@ -23,11 +23,16 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW","fastmatch")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
-dem_par <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, n.cores=4, 
-                   sdd.max=7, sdd.rate=1.4)
+res <- c("20ac", "9km2")[2]
+dem_par <- set_g_p(tmax=50)
+if(res == "9km2") {
+  dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
+  dem_par$sdd.max <- 7
+  dem_par$sdd.rate <- 1.4
+}
 
 # load landscape
-load(paste0("data/USDA_9km2.rda")) # loads landscape as lc.df
+load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
@@ -44,9 +49,9 @@ unh.coord <- st_coordinates(unh.mgmt)
 unh.id <- sapply(1:nrow(unh.coord), function(x) get_pt_id(lc.df, unh.coord[x,]))
 
 # initial populations
-N_0 <- readRDS("data/mgmt_N_2018.rds")
-B_0 <- readRDS("data/mgmt_B_2018.rds")
-sdd <- readRDS("data/mgmt_sdd.rds")
+N_0 <- readRDS(paste0("data/inits/N_2018_", res, ".rds"))
+B_0 <- readRDS(paste0("data/inits/B_2018_", res, ".rds"))
+sdd <- readRDS(paste0("data/inits/sdd_", res, ".rds"))
 
 # management plans
 mgmt <- list(none=list(ctrl_par=set_control_p(null_ctrl=TRUE),
@@ -84,10 +89,7 @@ for(m in seq_along(mgmt)) {
   N[,1,,] <- N_0
   # dem_par$m = age at maturity; varies by LC, so some are NA
   # N[,,, dem_par$m] stores the number of buckthorn adults
-  # N[,,, 1:(dem_par$m-1)] stores the number of buckthorn juveniles
-  for(l in 1:6) { 
-    if(dem_par$m[l] < 7) N[,,l,dem_par$m[l]:(max(dem_par$m)-1)] <- NA
-  }
+  # N[,,, 1:(dem_par$m-1)] stores the number of buckthorn juveniles 
   
   # B = seed bank; dim=[cell, year]
   B <- matrix(0, nrow=ngrid, ncol=dem_par$tmax+1)
