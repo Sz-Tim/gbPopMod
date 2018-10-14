@@ -20,8 +20,10 @@ Imports:
   scales,
   tidyverse
 RoxygenNote: 6.1.0
-Suggests: gganimate,
+Suggests: 
+    gganimate,
     knitr,
     rmarkdown,
-    roxygen2
+    roxygen2,
+    viridis
 VignetteBuilder: knitr
