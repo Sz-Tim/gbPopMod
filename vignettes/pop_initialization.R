@@ -14,12 +14,10 @@
 ########
 ## Setup
 ########
-# load libraries
-Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW","fastmatch")
-suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
+library(gbPopMod); library(doSNOW); library(foreach)
 
 # set parameters
-n_sim <- 100
+n_sim <- 3
 res <- c("20ac", "9km2")[2]
 dem_par <- set_g_p(tmax=96)
 if(res == "9km2") {
@@ -43,8 +41,14 @@ cell.init <- get_pt_id(lc.df, coord.init)
 ########
 ## Simulate buckthorn
 ########
-sdd <- list(sp=sdd_set_probs(ncell, lc.df, dem_par)$sp)
-N_0 <- pop_init(ngrid, dem_par, lc.df, p.0=cell.init)
+# sdd <- list(sp=sdd_set_probs(ncell, lc.df, dem_par)$sp)
+sdd <- sdd_set_probs(ncell, lc.df, dem_par)
+p.c <- makeCluster(dem_par$n.cores); registerDoSNOW(p.c)
+sdd.ji.rows <- foreach(x=1:ncell) %dopar% { which(sdd$sp.df$j.idin==x) }
+stopCluster(p.c)
+sdd.ji <- lapply(sdd.ji.rows, function(x) sdd$sp.df$i.idin[x]) 
+p.ji <- lapply(sdd.ji.rows, function(x) sdd$sp.df$pr[x]) 
+N_0 <- pop_init(ngrid, dem_par, lc.df, p.0=cell.init, N.0=10)
 
 N.tmax <- array(0, dim=c(ngrid, 6, max(dem_par$m), n_sim))
 B.tmax <- matrix(0, nrow=ngrid, ncol=n_sim)
@@ -70,6 +74,8 @@ if(!dir.exists("data/inits/")) dir.create("data/inits/", recursive=T)
 saveRDS(apply(N.tmax, 1:3, mean), paste0("data/inits/N_2018_", res, ".rds"))
 saveRDS(rowMeans(B.tmax), paste0("data/inits/B_2018_", res, ".rds"))
 saveRDS(sdd, paste0("data/inits/sdd_", res, ".rds"))
+saveRDS(sdd.ji, paste0("data/inits/sdd_ji_", res, ".rds"))
+saveRDS(p.ji, paste0("data/inits/p_ji_", res, ".rds"))
 
 
 
