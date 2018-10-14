@@ -63,7 +63,7 @@
 #--- set general parameters
 gifs <- TRUE
 res <- "9km2"  # 9km2 or 20ac
-tmax <- 25
+tmax <- 50
 
 #--- load landscape, initial populations
 Packages <- c("here", "gbPopMod", "tidyverse", "magrittr", "viridis")
@@ -74,6 +74,7 @@ parcel.df <- read.csv(paste0("data/USDA_", res, "_parcels.csv")) %>%
 N_0 <- readRDS(paste0("data/inits/N_2018_", res, ".rds"))
 B_0 <- readRDS(paste0("data/inits/B_2018_", res, ".rds"))
 sdd <- readRDS(paste0("data/inits/sdd_", res, ".rds"))
+sdd.ji <- readRDS(paste0("data/inits/sdd_ji_", res, ".rds"))
 ngrid <- nrow(lc.df)  # number of cells in bounding box
 ncell <- sum(lc.df$inbd)  # number of inbound cells
 npp <- nrow(parcel.df)  # number of pixel-parcels
@@ -93,18 +94,31 @@ if(res=="9km2") {
 
 
 
-#--- FAKE ECONOMIC DECISION REGRESSIONS
+#--- FAKE ECONOMIC & TIMBER HARVEST REGRESSIONS
 get.actions2 <- function(N_i, K_i, PP_R, PP_T, TRT, N_EFF, T_EFF, 
                          W, CHEM, B, COST) { 
-  
   WTP <- B[1] * W * PP_R + 
     B[2] * ((1-N_i*N_EFF/K_i)/(1-N_i/K_i)-1) * PP_R + 
     B[3] * CHEM * PP_R + 
     B[4] * N_i * T_EFF * PP_T
-  
   return(TRT[which.max(WTP - COST)])
 }
+time_to_forest <- function(T.0, beta, K, N.t0, N.t1) {
+  (T.0 - 1) * (1 + beta * N.t1/K)/(1 + beta * N.t0/K)
+}
 
+
+
+#--- FAKE FOREST HARVEST DECISION PARAMETERS
+nharvest <- 1000  # number of pixel-parcels that harvest in a given year
+beta <- 1
+L.0 <- 10
+forest.pp <- which(names(parcel.df) %in% c("Dec", "Evg", "WP", "Mxd"))
+cut.df <- data.frame(id.pp=numeric(0), T_regrow=numeric(0))
+
+
+
+#--- FAKE MANAGEMENT DECISION PARAMETERS
 trt.i <- list(trt=c("N", "M", "C", "B"), # treatment name
               N_eff=c(0, 0.2, 0.3, 0.9), # effectiveness = mortality rate
               biomass_eff=c(0, 0.1, 0.125, 0.2), # effect on biomass
@@ -125,18 +139,91 @@ N.0.px <- N_0[lc.df$inbd,,]
 N[,1,,] <- round(N.0.px[parcel.df$id.in,,]*parcel.df$Grid_Proportion)
   
 parcel.df$K_pp <- (as.matrix(parcel.df[,LCs]) %*% g.p$K) %>%
-  multiply_by(parcel.df$Grid_Proportion) %>% c %>% round
+  multiply_by(parcel.df$Grid_Proportion) %>% c %>% ceiling
+
+# store original proportions if forest regrowth is included
+parcel.df_orig <- parcel.df
 
 
 
+########################################
+## SIMULATION LOOP
+####################
 
-system.time({  # just to get a sense
 pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
 for(k in 1:g.p$tmax) {
+  
   ##---
-  ## 2. Management plans are decided
+  ## 2. Change land cover: Timber harvest & regrowth on managed properties
   ##---
-  # Economic decision model: which cells perform which management actions? 
+  # Forest harvest model: which pixel-parcels harvest forest?
+  ## NOTE: You will need to specify how much of each forest type is cleared
+  ##    For regrowth, you'll need to calculate & track time-until-forest for 
+  ##    each harvested pixel-parcel. 
+  
+  # harvest: id.pp, proportion cleared for each forest type (assuming 100% here)
+  if(k>1 && nrow(cut.df)>0) {
+    cut.df$T_regrow <- time_to_forest(T.0=cut.df$T_regrow, 
+                                      beta=beta, 
+                                      K=parcel.df$K_pp[cut.df$id.pp], 
+                                      N.t0=rowSums(N[cut.df$id.pp,k-1,,7]),
+                                      N.t1=rowSums(N[cut.df$id.pp,k,,7]))
+  }
+  cut_k <- data.frame(id.pp=sample(1:npp, nharvest),
+                      Dec=rep(1, nharvest), 
+                      Evg=rep(1, nharvest), 
+                      WP=rep(1, nharvest),  
+                      Mxd=rep(1, nharvest)) 
+  cut.df <- bind_rows(cut.df, 
+                      data.frame(id.pp=cut_k$id.pp, 
+                                 T_regrow=(1+beta*rowSums(N[cut_k$id.pp,k,,7])/
+                                             parcel.df$K_pp[cut_k$id.pp])*L.0))
+  # regrowth
+  if(any(cut.df$T_regrow < 0)) {
+    regrow_id.pp <- cut.df$id.pp[cut.df$T_regrow < 0]
+    cut.df <- filter(cut.df, T_regrow > 0)
+    # regrow to original proportions
+    parcel.df[regrow_id.pp, LCs] <- parcel.df_orig[regrow_id.pp, LCs]
+    regrow_id <- sort(unique(parcel.df$id[regrow_id.pp]))
+    regrow_LC_new <- parcel.df %>% filter(id %in% regrow_id) %>%
+      group_by(id) %>%
+      summarise_at(LCs, sum)
+    regrow_LC_new[,-1] <- regrow_LC_new[,-1]/rowSums(regrow_LC_new[,-1])
+  } else {
+    regrow_id.pp <- regrow_id <- regrow_LC_new <- NULL
+  }
+  # convert to Open
+  parcel.df[cut_k$id.pp, "Opn"] <- parcel.df[cut_k$id.pp, "Opn"] + 
+    rowSums(parcel.df[cut_k$id.pp, forest.pp] * cut_k[,-1])
+  # reduce forest cover by specified proportions
+  parcel.df[cut_k$id.pp, forest.pp] <- parcel.df[cut_k$id.pp, forest.pp] *
+    (1 - cut_k[,-1])
+  # udpate lc.df
+  cut_id <- sort(unique(parcel.df$id[cut_k$id.pp]))
+  cut_LC_new <- parcel.df %>% filter(id %in% cut_id) %>%
+    group_by(id) %>%
+    summarise_at(LCs, sum)
+  cut_LC_new[,-1] <- cut_LC_new[,-1]/rowSums(cut_LC_new[,-1])
+  lc.df[c(cut_id, regrow_id), LCs] <- bind_rows(cut_LC_new[,-1], 
+                                                regrow_LC_new[,-1])
+  # udpate SDD neighborhoods
+  sdd.alter <- tibble(id.in=sdd.ji[lc.df$id.in[c(cut_id, regrow_id)]] %>% 
+                        unlist %>% unique,
+                      id=lc.df$id[match(id.in, lc.df$id.in)])
+  sdd_new <- sdd_update_probs(lc.df, g.p, sdd.alter, sdd$i)
+  sdd$i[,,1,sdd.alter$id.in] <- sdd_new$i
+  sdd$sp[sdd.alter$id.in] <- sdd_new$sp
+  # update carrying capacities
+  parcel.df$K_pp[c(cut_k$id.pp,regrow_id.pp)] <- 
+    (as.matrix(parcel.df[c(cut_k$id.pp,regrow_id.pp),LCs]) %*% g.p$K) %>%
+    multiply_by(parcel.df$Grid_Proportion[c(cut_k$id.pp,regrow_id.pp)]) %>% 
+    c %>% ceiling
+  
+  
+  ##---
+  ## 3. Management plans are decided
+  ##---
+  # Economic decision model: which pixel-parcels perform which mgmt actions? 
   N.k <- rowSums(N[,k,,7])  # buckthorn adult abundance
   presence_pp <- which(N.k>0)  # id.pp with adult buckthorn
   action_pp <- sapply(presence_pp,
@@ -160,23 +247,22 @@ for(k in 1:g.p$tmax) {
   # Specify which parcels use which treatments
   if(length(mech_chem_id.pp)>0) {
     # If treatment varies by land cover type, this needs to be a dataframe with
-    # nLC + 1 columns (id, Trt.Opn, Trt.Oth, etc) and a row per pixel-parcel
+    # nLC + 1 columns (id, Trt.Opn, Trt.Oth, etc) and a row per pixel-parcel. 
+    # As an example, here all treatments are in Open and White Pine.
     mech_chem.i <- data.frame(id=mech_chem_id.pp,
                               Trt.Opn=action_pp[action_pp != "N"],
                               Trt.Oth="N",
                               Trt.Dec="N",
                               Trt.Evg="N",
-                              Trt.WP="N",
+                              Trt.WP=action_pp[action_pp != "N"],
                               Trt.Mxd="N")
-    # mech_chem.i <- data.frame(id=mech_chem_id.pp,
-    #                           Trt=action_pp[action_pp != "N"])
   } else {
     mech_chem.i <- NULL
   }
   
   
   ##---
-  ## 3. MANAGEMENT IS IMPLEMENTED, BUCKTHORN GROWS & SPREADS
+  ## 4. MANAGEMENT IS IMPLEMENTED, BUCKTHORN GROWS & SPREADS
   ##---
   # buckthorn population model
   # Parameters are updated for cells that performed management actions, then
@@ -191,10 +277,16 @@ for(k in 1:g.p$tmax) {
   N.1g0 <- which(rowSums(out$N[,1,])>0)
   N[N.1g0,k+1,,] <- out$N[N.1g0,,]
   B[,k+1] <- out$B
+  
+  # DEBUG
+  k
+  summary(cut.df)
+  summary(colSums(N[,k+1,,7]))
+  # k <- k+1
+  
   setTxtProgressBar(pb, k)
 }
 close(pb)
-})
 
 
 
@@ -229,18 +321,8 @@ out.df <- lc.df %>%
          N.final=out.all$N[out.all$year==g.p$tmax+1],
          B.final=B[,g.p$tmax+1])
 
-
-library(doSNOW); library(foreach)
-p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
-sdd.ji.rows <- foreach(x=1:ncell) %dopar% { which(sdd$sp.df$j.idin==x) }
-stopCluster(p.c)
-sdd.ji <- lapply(sdd.ji.rows, function(x) sdd$sp.df$i.idin[x]) 
-p.ji <- lapply(sdd.ji.rows, function(x) sdd$sp.df$pr[x]) 
-out.df$lambda <- calc_lambda(g.p, lc.df, sdd.ji, p.ji)$lambda[out.df$id.in]
-
 # final abundance maps
 final.p <- ggplot(out.df, aes(lon, lat))
-final.p + geom_tile(aes(fill=lambda)) + scale_fill_viridis(option="B")
 final.p + geom_tile(aes(fill=log(N.final))) + scale_fill_viridis(option="B")
 final.p + geom_tile(aes(fill=log(B.final))) + scale_fill_viridis(option="B") 
 
