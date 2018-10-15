@@ -179,7 +179,7 @@ calc_lambda <- function(g.p, lc.df, sdd.ji, p.ji, method="wt.mn") {
       as.matrix %>% cbind(1, .)
   } else { 
     cat("Error: Method must be 'wt.mn' or 'lm'")
-    break 
+    return("ERROR")
   }
   ncell <- nrow(lc.mx)
   m.max <- max(g.p$m)
