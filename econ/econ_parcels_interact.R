@@ -91,7 +91,9 @@ if(res=="9km2") {
   g.p$sdd.max <- 7
   g.p$sdd.rate <- 1.4
 }
-
+parcel.df$K_pp <- (as.matrix(parcel.df[,LCs]) %*% g.p$K) %>%
+  multiply_by(parcel.df$Grid_Proportion) %>% c %>% ceiling
+parcel.df_orig <- parcel.df  # store original proportions if forest regrowth 
 
 
 #--- FAKE ECONOMIC & TIMBER HARVEST REGRESSIONS
@@ -110,7 +112,7 @@ time_to_forest <- function(T.0, beta, K, N.t0, N.t1) {
 
 
 #--- FAKE FOREST HARVEST DECISION PARAMETERS
-nharvest <- 1000  # number of pixel-parcels that harvest in a given year
+nharvest <- 500  # number of pixel-parcels that harvest in a given year
 beta <- 1
 L.0 <- 10
 forest.pp <- which(names(parcel.df) %in% c("Dec", "Evg", "WP", "Mxd"))
@@ -120,14 +122,13 @@ cut.df <- data.frame(id.pp=numeric(0), T_regrow=numeric(0))
 
 #--- FAKE MANAGEMENT DECISION PARAMETERS
 trt.i <- list(trt=c("N", "M", "C", "B"), # treatment name
-              N_eff=c(0, 0.2, 0.3, 0.9), # effectiveness = mortality rate
-              biomass_eff=c(0, 0.1, 0.125, 0.2), # effect on biomass
-              cost=c(0, 20, 30, 50), # cost
+              N_eff=c(0, 0.3, 0.5, 0.9), # effectiveness = mortality rate
+              biomass_eff=c(0, 0.1, 0.15, 0.3), # effect on biomass
+              cost=c(0, 100, 200, 500), # cost
               chem=c(1, 1, -1, -1), # chemical used? (-1 = YES, 1 = No)
               wild_eff=c(0, 1, 1, 1)) # effect on wildlife
 WTP_b <- c(10, 40, -20, 60) # willingness-to-pay slopes
 act.mx <- array(NA, dim=c(npp, tmax)) # store actions in each time step
-
 
 
 
@@ -137,12 +138,9 @@ B[,1] <- B_0
 N <- array(0, dim=c(npp, tmax+1, 6, max(g.p$m))) # [px-parcel, year, LC, age]
 N.0.px <- N_0[lc.df$inbd,,]
 N[,1,,] <- round(N.0.px[parcel.df$id.in,,]*parcel.df$Grid_Proportion)
+N[,1,,7] <- pmin(N[,1,,7], as.matrix(parcel.df$K_pp * parcel.df[,LCs]))
   
-parcel.df$K_pp <- (as.matrix(parcel.df[,LCs]) %*% g.p$K) %>%
-  multiply_by(parcel.df$Grid_Proportion) %>% c %>% ceiling
 
-# store original proportions if forest regrowth is included
-parcel.df_orig <- parcel.df
 
 
 
@@ -163,19 +161,19 @@ for(k in 1:g.p$tmax) {
   
   # harvest: id.pp, proportion cleared for each forest type (assuming 100% here)
   if(k>1 && nrow(cut.df)>0) {
-    cut.df$T_regrow <- time_to_forest(T.0=cut.df$T_regrow, 
-                                      beta=beta, 
-                                      K=parcel.df$K_pp[cut.df$id.pp], 
+    cut.df$T_regrow <- time_to_forest(T.0=cut.df$T_regrow,
+                                      beta=beta,
+                                      K=parcel.df$K_pp[cut.df$id.pp],
                                       N.t0=rowSums(N[cut.df$id.pp,k-1,,7]),
                                       N.t1=rowSums(N[cut.df$id.pp,k,,7]))
   }
   cut_k <- data.frame(id.pp=sample(1:npp, nharvest),
-                      Dec=rep(1, nharvest), 
-                      Evg=rep(1, nharvest), 
-                      WP=rep(1, nharvest),  
-                      Mxd=rep(1, nharvest)) 
-  cut.df <- bind_rows(cut.df, 
-                      data.frame(id.pp=cut_k$id.pp, 
+                      Dec=rep(1, nharvest),
+                      Evg=rep(1, nharvest),
+                      WP=rep(1, nharvest),
+                      Mxd=rep(1, nharvest))
+  cut.df <- bind_rows(cut.df,
+                      data.frame(id.pp=cut_k$id.pp,
                                  T_regrow=(1+beta*rowSums(N[cut_k$id.pp,k,,7])/
                                              parcel.df$K_pp[cut_k$id.pp])*L.0))
   # regrowth
@@ -185,38 +183,34 @@ for(k in 1:g.p$tmax) {
     # regrow to original proportions
     parcel.df[regrow_id.pp, LCs] <- parcel.df_orig[regrow_id.pp, LCs]
     regrow_id <- sort(unique(parcel.df$id[regrow_id.pp]))
-    regrow_LC_new <- parcel.df %>% filter(id %in% regrow_id) %>%
-      group_by(id) %>%
-      summarise_at(LCs, sum)
-    regrow_LC_new[,-1] <- regrow_LC_new[,-1]/rowSums(regrow_LC_new[,-1])
   } else {
-    regrow_id.pp <- regrow_id <- regrow_LC_new <- NULL
+    regrow_id.pp <- regrow_id <- NULL
   }
+  altered_id.pp <- unique(c(cut_k$id.pp, regrow_id.pp))
   # convert to Open
-  parcel.df[cut_k$id.pp, "Opn"] <- parcel.df[cut_k$id.pp, "Opn"] + 
+  parcel.df[cut_k$id.pp, "Opn"] <- parcel.df[cut_k$id.pp, "Opn"] +
     rowSums(parcel.df[cut_k$id.pp, forest.pp] * cut_k[,-1])
   # reduce forest cover by specified proportions
   parcel.df[cut_k$id.pp, forest.pp] <- parcel.df[cut_k$id.pp, forest.pp] *
     (1 - cut_k[,-1])
   # udpate lc.df
   cut_id <- sort(unique(parcel.df$id[cut_k$id.pp]))
-  cut_LC_new <- parcel.df %>% filter(id %in% cut_id) %>%
+  altered_id <- sort(unique(c(regrow_id, cut_id)))
+  altered_LC <- parcel.df %>% filter(id %in% altered_id) %>%
     group_by(id) %>%
     summarise_at(LCs, sum)
-  cut_LC_new[,-1] <- cut_LC_new[,-1]/rowSums(cut_LC_new[,-1])
-  lc.df[c(cut_id, regrow_id), LCs] <- bind_rows(cut_LC_new[,-1], 
-                                                regrow_LC_new[,-1])
+  altered_LC[,-1] <- altered_LC[,-1]/rowSums(altered_LC[,-1])
+  lc.df[altered_id, LCs] <- altered_LC[,-1]
   # udpate SDD neighborhoods
-  sdd.alter <- tibble(id.in=sdd.ji[lc.df$id.in[c(cut_id, regrow_id)]] %>% 
-                        unlist %>% unique,
+  sdd.alter <- tibble(id.in=unique(unlist(sdd.ji[lc.df$id.in[altered_id]])),
                       id=lc.df$id[match(id.in, lc.df$id.in)])
   sdd_new <- sdd_update_probs(lc.df, g.p, sdd.alter, sdd$i)
   sdd$i[,,1,sdd.alter$id.in] <- sdd_new$i
   sdd$sp[sdd.alter$id.in] <- sdd_new$sp
   # update carrying capacities
-  parcel.df$K_pp[c(cut_k$id.pp,regrow_id.pp)] <- 
-    (as.matrix(parcel.df[c(cut_k$id.pp,regrow_id.pp),LCs]) %*% g.p$K) %>%
-    multiply_by(parcel.df$Grid_Proportion[c(cut_k$id.pp,regrow_id.pp)]) %>% 
+  parcel.df$K_pp[altered_id.pp] <-
+    (as.matrix(parcel.df[altered_id.pp,LCs]) %*% g.p$K) %>%
+    multiply_by(parcel.df$Grid_Proportion[altered_id.pp]) %>%
     c %>% ceiling
   
   
@@ -240,10 +234,10 @@ for(k in 1:g.p$tmax) {
                                                COST=trt.i$cost))
   act.mx[presence_pp,k] <- action_pp # store pixel-parcel decisions
   mech_chem_id.pp <- presence_pp[action_pp != "N"] # id.pp that are treating
-  
+
   # Set control parameters, identify treated pixel-parcels
   control_par <- set_control_p(null_ctrl=F,
-                               man.trt=setNames(trt.i$N_eff, trt.i$trt)) 
+                               man.trt=setNames(trt.i$N_eff, trt.i$trt))
   # Specify which parcels use which treatments
   if(length(mech_chem_id.pp)>0) {
     # If treatment varies by land cover type, this needs to be a dataframe with
@@ -296,7 +290,7 @@ plot.dir <- "econ/"
 gifs <- T
 theme_set(theme_bw())
 if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
-N.tot <- t(sapply(1:ncell, function(x) apply(N[pp.ls[[x]],,,max(g.p$m)], 2, sum)))
+N.tot <- t(sapply(1:ncell, function(x) apply(N[pp.ls[[x]],,,7], 2, sum)))
 N.df <- setNames(as.data.frame(N.tot), 1:ncol(N.tot))
 N.df$id.in <- 1:nrow(N.df)
 out.all <- left_join(lc.df, N.df, by="id.in") %>%

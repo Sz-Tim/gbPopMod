@@ -436,10 +436,10 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   B.1 <- estab.out$B
   for(l in 1:6) {
     N.1[,l,1] <- round(estab.out$M.0[parcel.df$id.in] * 
-                         pm$lc.mx[parcel.df$id,l] * parcel.df$Grid_Proportion)
+                         parcel.df[,LCs[l]] * parcel.df$Grid_Proportion)
     N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
-                          parcel.df$K*parcel.df[,LCs[l]])
+                          ceiling(parcel.df$K_pp*parcel.df[,LCs[l]]))
   }
   
   #--- retroactively apply ground cover treatment by recalculating establishment
