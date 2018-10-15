@@ -272,12 +272,6 @@ for(k in 1:g.p$tmax) {
   N[N.1g0,k+1,,] <- out$N[N.1g0,,]
   B[,k+1] <- out$B
   
-  # DEBUG
-  k
-  summary(cut.df)
-  summary(colSums(N[,k+1,,7]))
-  # k <- k+1
-  
   setTxtProgressBar(pb, k)
 }
 close(pb)
