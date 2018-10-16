@@ -5,7 +5,7 @@
 \title{Run demographic simulation}
 \usage{
 run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, verbose = TRUE,
-  save_yrs = NULL)
+  save_yrs = NULL, K_max = NULL)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -30,6 +30,8 @@ set with \code{\link{set_control_p}}}
 
 \item{save_yrs}{\code{NULL} Vector of years to save; if \code{NULL}, all
 years are returned}
+
+\item{K_max}{\code{NULL} Maximum carrying capacity to avoid memory overloads}
 }
 \value{
 Array N of abundances for each cell and age group, matrix B of seed

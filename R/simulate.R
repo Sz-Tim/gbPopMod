@@ -17,6 +17,7 @@
 #' @param verbose \code{TRUE} Show progress bar?
 #' @param save_yrs \code{NULL} Vector of years to save; if \code{NULL}, all
 #'   years are returned
+#' @param K_max \code{NULL} Maximum carrying capacity to avoid memory overloads
 #' @return Array N of abundances for each cell and age group, matrix B of seed
 #'   bank abundances, matrix nFl with number of flowering individuals, matrix
 #'   nSd of total seeds produced in each cell, matrix nSdStay of total seeds
@@ -25,7 +26,7 @@
 #' @export
 
 run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, 
-                    control.p, verbose=TRUE, save_yrs=NULL) {
+                    control.p, verbose=TRUE, save_yrs=NULL, K_max=NULL) {
   
   library(tidyverse); library(magrittr)
   
@@ -111,6 +112,9 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     
     # 3. Pre-multiply compositional parameters for cell expectations
     pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
+    if(!is.null(K_max)) {
+      pm$K.E <- pmin(K_max, pm$K.E)
+    }
     
     # 4. Local fruit production
     N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, m.d, dem.st)
