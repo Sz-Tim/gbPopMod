@@ -190,7 +190,7 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 #' @param s.M Vector \code{length=n.lc} with juvenile survival probability for
 #'   each land cover type or vector of slopes corresponding with columns in
 #'   lc.df
-#' @param s.N \code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+#' @param s.N Vector \code{length=n.lc} of annual
 #'   adult survival rates or vector of slopes corresponding with columns in
 #'   lc.df
 #' @param mu Vector \code{length=n.lc} with mean per-individual fruit production
@@ -248,17 +248,18 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
   library(tidyverse)
   
   if(method=="wt.mn") {
-    # scalar = same value for all LC categories
-    if(length(K)==1) K <- rep(K, 6)
-    if(length(s.N)==1) s.N <- rep(s.N, 6)
-    if(length(s.M)==1) s.M <- rep(s.M, 6)
-    if(length(mu)==1) mu <- rep(mu, 6)
-    if(length(p.f)==1) p.f <- rep(p.f, 6)
-    if(length(p.c)==1) p.c <- rep(p.c, 6)
-    if(length(p)==1) p <- rep(p, 6)
-    # take weighted mean
     lc.mx <- as.matrix(select(lc.df, 
-                              one_of("Opn", "Oth", "Dec", "Evg", "WP", "Mxd")))
+                        -one_of("x", "y", "x_y", "inbd", "id", "id.in", "lat", "lon")))
+    nLC <- ncol(lc.mx)
+    # scalar = same value for all LC categories
+    if(length(K)==1) K <- rep(K, nLC)
+    if(length(s.N)==1) s.N <- rep(s.N, nLC)
+    if(length(s.M)==1) s.M <- rep(s.M, nLC)
+    if(length(mu)==1) mu <- rep(mu, nLC)
+    if(length(p.f)==1) p.f <- rep(p.f, nLC)
+    if(length(p.c)==1) p.c <- rep(p.c, nLC)
+    if(length(p)==1) p <- rep(p, nLC)
+    # take weighted mean
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))
     rel.dens <- t(apply(lc.mx, 1, function(x) K*x/c(x%*%K)))

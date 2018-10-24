@@ -112,9 +112,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
     
     # 3. Pre-multiply compositional parameters for cell expectations
     pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
-    if(!is.null(K_max)) {
-      pm$K.E <- pmin(K_max, pm$K.E)
-    }
+    if(!is.null(K_max)) pm$K.E <- pmin(K_max, pm$K.E)
     
     # 4. Local fruit production
     N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, m.d, dem.st)
@@ -417,7 +415,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   }
   
   #--- sum abundance within pixels
-  N.0.px <- unique(parcel.df$id.in[N.0[,1,7]>0])
+  N.0.px <- unique(parcel.df$id.in[rowSums(N.0[,,7])>0])
   N.px <- array(0, dim=c(ncell, length(LCs), m.max))
   N.px[N.0.px,,] <- aperm(vapply(N.0.px, 
                                  function(x) apply(N.0[pp.ls[[x]],,], 2:3, sum),
@@ -438,12 +436,12 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   
   #--- allocate seedlings among parcels
   B.1 <- estab.out$B
-  for(l in 1:6) {
+  for(l in 1:n.lc) {
     N.1[,l,1] <- round(estab.out$M.0[parcel.df$id.in] * 
                          parcel.df[,LCs[l]] * parcel.df$Grid_Proportion)
     N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
-                          ceiling(parcel.df$K_pp*parcel.df[,LCs[l]]))
+                          parcel.df[,paste0("K_", LCs[l])])
   }
   
   #--- retroactively apply ground cover treatment by recalculating establishment

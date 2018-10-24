@@ -18,7 +18,7 @@ type or vector of slopes corresponding with columns in lc.df}
 each land cover type or vector of slopes corresponding with columns in
 lc.df}
 
-\item{s.N}{\code{c(1, 1, 1, 1, 1, 1)} Vector \code{length=n.lc} of annual
+\item{s.N}{Vector \code{length=n.lc} of annual
 adult survival rates or vector of slopes corresponding with columns in
 lc.df}
 
