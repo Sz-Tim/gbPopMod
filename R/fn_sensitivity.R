@@ -49,15 +49,15 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
     )
   } else if(span=="gb"){
     par.ls <- list(list(param="p.f", type="prob", LC=1, 
-                        min=c(0.338, 0, 0.218, 0.1125, 0.1125, 0.126), 
-                        max=c(0.563, 0.563, 0.364, 0.1875, 0.1875, 0.210)),
+                        min=c(0.338, 0, 0.218, 0.232, 0.232, 0.204), 
+                        max=c(0.563, 0, 0.364, 0.387, 0.387, 0.340)),
                    list(param="mu", type="cont", LC=1, 
-                        min=c(1461, 0, 10, 31, 31, 15), 
+                        min=c(1461, 0, 10, 31, 31, 16), 
                         max=c(2435, 0, 17, 52, 52, 26)),
                    list(param="gamma", type="cont", LC=0, min=2.378, max=2.595),
                    list(param="m", type="int", LC=1, 
                         min=c(2, 2, 4, 4, 4, 4), 
-                        max=c(4, 4, 8, 8, 8, 8)),
+                        max=c(4, 4, 10, 10, 10, 10)),
                    list(param="p.c", type="prob", LC=1,
                         min=c(0.113, 0.113, 0.222, 0.205, 0.205, 0.222), 
                         max=c(0.206, 0.206, 0.314, 0.250, 0.250, 0.314)),
@@ -86,8 +86,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                    list(param="g.D", type="prob", LC=0, min=0, max=0),
                    list(param="g.B", type="prob", LC=0, min=0.18, max=0.28),
                    list(param="p", type="prob", LC=1,
-                        min=c(0.263, 0, 0.3, 0.075, 0.075, 0.113), 
-                        max=c(0.438, 0.438, 0.5, 0.125, 0.125, 0.188))
+                        min=c(0.269, 0, 0.316, 0.0594, 0.0594, 0.188), 
+                        max=c(0.448, 0, 0.526, 0.099, 0.099, 0.313))
     )
   }
   

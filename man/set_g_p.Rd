@@ -6,13 +6,13 @@
 \usage{
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = Inf, lc.c = Inf, n.lc = 6, N.p.t0 = 10,
-  p.f = c(0.45, 0, 0.29, 0.15, 0.15, 0.17), mu = c(1948, 0, 14, 41, 41,
-  21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149, 0.149,
-  0.273, 0.233, 0.233, 0.273), sdd.rate = 0.133, sdd.max = 25,
+  p.f = c(0.45, 0, 0.291, 0.309, 0.309, 0.272), mu = c(1948, 0, 14, 41,
+  41, 21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149,
+  0.149, 0.273, 0.233, 0.233, 0.273), sdd.rate = 0.133, sdd.max = 25,
   bird.hab = c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09), n.ldd = 1,
   s.c = 0.585, s.B = 0.72, s.M = c(0.9, 0, 0.6, 0.6, 0.6, 0.6),
   s.N = c(1, 1, 1, 1, 1, 1), K = c(28205, 0, 4162, 4162, 4162, 4162),
-  g.D = 0, g.B = 0.2, p = c(0.35, 0, 0.4, 0.1, 0.1, 0.15),
+  g.D = 0, g.B = 0.2, p = c(0.358, 0, 0.421, 0.0792, 0.0792, 0.25),
   edges = "wall", method = "wt.mn")
 }
 \arguments{
@@ -34,7 +34,7 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
 
 \item{N.p.t0}{\code{10} Number of cells with buckthorn at t=1}
 
-\item{p.f}{\code{c(0.45, 0, 0.29, 0.15, 0.15, 0.17)} Vector
+\item{p.f}{\code{c(0.45, 0, 0.291, 0.309, 0.309, 0.272)} Vector
 \code{length=n.lc} of fruiting probabilities}
 
 \item{mu}{\code{c(1948, 0, 14, 41, 41, 21)} Vector \code{length=n.lc} of mean
@@ -56,7 +56,7 @@ cells); value assumes 20ac (8.1 ha) grid cells}
 value assumes 20ac (8.1 ha) grid cells}
 
 \item{bird.hab}{\code{c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09)} Vector
-\code{length=n.lc} of bird habitat preferences}
+\code{length=n.lc} of relative bird habitat preferences}
 
 \item{n.ldd}{\code{1} Number of long distance dispersal events per year}
 
@@ -78,8 +78,8 @@ germinates in the same year it is produced)}
 
 \item{g.B}{\code{0.2} Probability of germinating from the seed bank}
 
-\item{p}{\code{c(0.35, 0, 0.4, 0.1, 0.1, 0.15)} Vector \code{length=n.lc} of
-seedling establishment probabilities}
+\item{p}{\code{c(0.358, 0, 0.421, 0.0792, 0.0792, 0.25)} Vector
+\code{length=n.lc} of seedling establishment probabilities}
 
 \item{edges}{\code{"wall"} Boundary behavior, taking values of \code{"wall"},
 \code{"sink"}, or \code{"none"}. See boundary_behavior.Rmd for descriptions}

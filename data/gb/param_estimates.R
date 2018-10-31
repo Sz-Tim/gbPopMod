@@ -20,7 +20,7 @@
 ## set up
 ########
 library(tidyverse); library(magrittr); library(gbPopMod)
-res <- c("20ac", "9km2")[2]
+res <- c("20ac", "9km2")[1]
 # Data sets
 fec_allen <- read_csv("data/gb/Allen_fecundity.csv") %>%
   mutate(Date=as.Date(Date, format="%m/%d/%Y"))
@@ -29,6 +29,8 @@ dens_lee <- read_csv("data/gb/Lee_density.csv") %>% group_by(Canopy)
 fec_lee <- read_csv("data/gb/Lee_fecundity.csv")
 emerge_lee <- read_csv("data/gb/Lee_emerge.csv")
 germ_lee <- read_csv("data/gb/Lee_germ.csv")
+sM_lee <- read_csv("data/gb/Lee_juvMortality.csv")
+flwr_bibaud <- read_csv("data/gb/Bibaud_flower.csv")
 ann_aiello <- read_csv("data/gb/Aiello_fral-df-ann.csv") %>%
   mutate(nhlc=factor(nhlc, labels=c("Opn", "Dec", "Mxd", "WP"))) %>%
   filter(!is.na(nhlc))
@@ -47,12 +49,19 @@ par.rng <- set_sensitivity_pars(names(par.best))
 ########
 
 ## p.f: Mean flowering probability
-#--- Source: Allen Lab field + Aiello-Lammens field
+#--- Source: Allen Lab field + Aiello-Lammens field + Bibaud field
 p.f_allen <- flwr_allen %>% group_by(Plot_type) %>% summarise(p.f=mean(Fruit))
 p.f_aiello <- ann_aiello %>% group_by(nhlc) %>% summarise(p.f=mean(fruit>0))
-par.best$p.f <- c(mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])), 0,
-                  p.f_aiello$p.f[2], p.f_allen$p.f[3], p.f_allen$p.f[3],
-                  mean(c(p.f_allen$p.f[2], p.f_aiello$p.f[3])))
+m_bibaud <- flwr_bibaud %>% filter(!is.na(Flowering)) %>% summarise(m=min(Age))
+p.f_bibaud <- flwr_bibaud %>% filter(Age > m_bibaud$m) %>% group_by(Canopy) %>% 
+  summarise(nFlower=sum(Flowering, na.rm=T),
+            nNotFlower=sum(NotFlowering, na.rm=T),
+            p.f=nFlower/nNotFlower)
+par.best$p.f <- c(mean(c(p.f_allen$p.f[1], p.f_aiello$p.f[1])), 
+                  0,
+                  mean(p.f_aiello$p.f[2], p.f_bibaud$p.f[1]), 
+                  p.f_bibaud$p.f[2], p.f_bibaud$p.f[2],
+                  mean(c(p.f_bibaud$p.f, p.f_aiello$p.f[3])))
 par.rng$p.f$min <- par.best$p.f * 0.75
 par.rng$p.f$max <- pmin(1, par.best$p.f * 1.25)
 
@@ -94,10 +103,11 @@ par.rng$gamma$max <- quantile(frt_data, 0.75)
 
 
 ## m: Age at adulthood
-#--- Source: Expert opinion (Tom Lee)
+#--- Source: Bibaud field + Expert opinion (Tom Lee)
+m_bibaud <- flwr_bibaud %>% filter(!is.na(Flowering)) %>% summarise(m=min(Age))
 par.best$m <- c(3, 3, 7, 7, 7, 7)
 par.rng$m$min <- c(2, 2, 4, 4, 4, 4)
-par.rng$m$max <- c(4, 4, 8, 8, 8, 8)
+par.rng$m$max <- c(4, 4, 10, 10, 10, 10)
 
 
 
@@ -123,7 +133,7 @@ par.rng$sdd.rate$max <- 1/(1/par.best$sdd.rate * 0.75)
 
 
 ## sdd.max: Maximum SDD distance
-#--- Source: Merow et al 2011 (max distance ~ 22km, but )
+#--- Source: Merow et al 2011 (max distance ~ 22km, but seems unnecessary here)
 par.best$sdd.max <- ifelse(res=="20ac", 
                            floor(22/0.285),  # 20 acre cell ~ 0.285 x 0.285 km
                            floor(22/3))  # 9 km^2 cell = 3 x 3 km
@@ -214,7 +224,9 @@ par.rng$g.B$max <- quantile(germ_data, 0.75)
 
 ## p: Proportion of germinants that establish
 #--- Source: Tom Lee field + Allen Lab field
-par.best$p <- c(0.07, 0, 0.08, 0.02, 0.02, 0.03)/par.best$g.B
+p_lee <- emerge_lee %>% group_by(Treatment) %>% summarise(p=mean(propEmerge))
+par.best$p <- c(p_lee$p[2], 0, p_lee$p[3], 
+                p_lee$p[4], p_lee$p[4], mean(p_lee$p[3:4])) / par.best$g.B
 par.rng$p$min <- par.best$p * 0.75
 par.rng$p$max <- pmin(1, par.best$p * 1.25)
 
