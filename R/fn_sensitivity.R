@@ -159,7 +159,7 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     }
   } 
   if(is.null(sdd) && !any(grepl("sdd", names(par.ls)))) {
-    sdd <- sdd_set_probs(ncell, lc.df, g.p)
+    sdd <- list(sp=sdd_set_probs(ncell, lc.df, g.p)$sp)
   }
   if(verbose) cat("Running simulations...\n")
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
@@ -167,10 +167,10 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
                  .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
     g.p[names(par.ls)] <- map(samples, ~.[i,])
     if(any(grepl("sdd", names(par.ls)))) {
-      sdd <- sdd_set_probs(ncell, lc.df, g.p)
+      sdd <- list(sp=sdd_set_probs(ncell, lc.df, g.p)$sp)
     }
     N.init <- pop_init(ngrid, g.p, lc.df, p.0=cell.init, N.0=g.p$N.0)
-    sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, NULL, F, g.p$tmax)
+    sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, NULL, F, g.p$tmax, F)
     K.E <- na_if(cell_E(lc.df, g.p$K, g.p$s.M, g.p$s.N, g.p$mu, 
                   g.p$p.f, g.p$p.c, g.p$p)$K.E, 0)
     # saveRDS(sim_i$N[,1,dim(sim_i$N)[3]], 
