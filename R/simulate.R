@@ -18,6 +18,7 @@
 #' @param save_yrs \code{NULL} Vector of years to save; if \code{NULL}, all
 #'   years are returned
 #' @param K_max \code{NULL} Maximum carrying capacity to avoid memory overloads
+#' @param dem_out \code{TRUE} Store nFl, nSd, nSdStay, D?
 #' @return Array N of abundances for each cell and age group, matrix B of seed
 #'   bank abundances, matrix nFl with number of flowering individuals, matrix
 #'   nSd of total seeds produced in each cell, matrix nSdStay of total seeds
@@ -25,8 +26,8 @@
 #' @keywords run, simulate
 #' @export
 
-run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, 
-                    control.p, verbose=TRUE, save_yrs=NULL, K_max=NULL) {
+run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, 
+                    verbose=TRUE, save_yrs=NULL, K_max=NULL, dem_out=TRUE) {
   
   library(tidyverse); library(magrittr)
   
@@ -58,7 +59,8 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   ## annual temp objects: x.0 = start of year, x.1 = end of year
   N.0 <- N.1 <- N.init
   B.0 <- rep(0, ngrid)
-  B <- nFl <- nSd <- nSdStay <- D <- matrix(0, nrow=ngrid, ncol=n_yrs)
+  B <- matrix(0, nrow=ngrid, ncol=n_yrs)
+  if(dem_out) nFl <- nSd <- nSdStay <- D <- B
   if(m.d) {
     N <- array(0, dim=c(ngrid, n_yrs, n.lc, m.max))  
     for(l in 1:n.lc) {
@@ -70,15 +72,18 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   } else {
     N <- array(0, dim=c(ngrid, n_yrs, m.max))
   }
+  # 2. Pre-multiply compositional parameters for cell expectations
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
+  if(!is.null(K_max)) pm$K.E <- pmin(K_max, pm$K.E)
   
   if(verbose) pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
   for(k in 1:tmax) {  
     
-    nFl.1 <- nSd.1 <- nSdStay.1 <- D.1 <- rep(0, ngrid)
+    if(dem_out) nFl.1 <- nSd.1 <- nSdStay.1 <- D.1 <- rep(0, ngrid)
     
-    # 2. Implement management
+    # 3. Implement management
     if(!is.null(control.p) && k >= t.trt) {
-      # 2A. Adjust LC %
+      # 3A. Adjust LC %
       if(lc.chg && nChg >= 1) { 
         # i. decide which cells change and how much of each kind of forest
         chg.asn <- cut_assign(pChg, ncell, chg.i, lc.df, forest.col=6:9)
@@ -93,15 +98,17 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
         sdd$sp[sdd.i$id.in] <- sdd_new$sp
       }
       
-      # 2B. Adjust p
+      # 3B. Adjust p
       if(pTrt.grd*ncell > 0.5 || !is.null(grd.i)) { 
         est.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=grd.i, 
                               pTrt=pTrt.grd, trt.eff=grd.trt, 
                               addOwners=add.owners, trt.m1=est.trt)
         p.trt <- trt_ground(est.trt, grd.trt)
+        pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
+        if(!is.null(K_max)) pm$K.E <- pmin(K_max, pm$K.E)
       }
       
-      # 2C. Adjust N
+      # 3C. Adjust N
       if(pTrt.man*ncell > 0.5 || !is.null(man.i)) { 
         N.trt <- trt_assign(id.i=id.i, ncell=ncell, assign_i=man.i, 
                             pTrt=pTrt.man, trt.eff=man.trt, 
@@ -110,21 +117,19 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       }
     }
     
-    # 3. Pre-multiply compositional parameters for cell expectations
-    pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
-    if(!is.null(K_max)) pm$K.E <- pmin(K_max, pm$K.E)
-    
     # 4. Local fruit production
     N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, m.d, dem.st)
-    nFl.1[N.f$id] <- N.f$N.rpr
+    if(dem_out) nFl.1[N.f$id] <- N.f$N.rpr
     
     # 5. Short distance dispersal
     N.Sd <- sdd_disperse(id.i, N.f, gamma, pm$p.c.E, s.c, 
                          sdd$sp, sdd.rate, sdd.st, edges)
-    nSd.1[N.Sd$N.source$id] <- N.Sd$N.source$N.produced
-    nSdStay.1[N.Sd$N.source$id] <- N.Sd$N.source$N.dep
-    D.1[N.Sd$N.seed$id] <- N.Sd$N.seed$N
-    D.1 <- D.1 - nSdStay.1
+    if(dem_out) {
+      nSd.1[N.Sd$N.source$id] <- N.Sd$N.source$N.produced
+      nSdStay.1[N.Sd$N.source$id] <- N.Sd$N.source$N.dep
+      D.1[N.Sd$N.seed$id] <- N.Sd$N.seed$N
+      D.1 <- D.1 - nSdStay.1
+    }
     
     # 6. Seedling establishment
     estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B,
@@ -164,10 +169,12 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
       if(m.d) { N[,yr_k,,] <- N.1
       } else { N[,yr_k,] <- N.1 }
       B[,yr_k] <- B.1
-      nFl[,yr_k] <- nFl.1
-      nSd[,yr_k] <- nSd.1
-      nSdStay[,yr_k] <- nSdStay.1
-      D[,yr_k] <- D.1
+      if(dem_out) {
+        nFl[,yr_k] <- nFl.1
+        nSd[,yr_k] <- nSd.1
+        nSdStay[,yr_k] <- nSdStay.1
+        D[,yr_k] <- D.1
+      }
     }
     
     # 10. Update objects
@@ -178,6 +185,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init,
   }
   if(verbose) close(pb)
   if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
+  if(!dem_out) nFl <- nSd <- nSdStay <- D <- NULL
   return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
 
