@@ -49,10 +49,7 @@ ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
 # initialize
-coord.init <- c(739235.9, 4753487) # 1922: first record; herbarium_records.R
-cell_side <- mean(diff(sort(unique(lc.df$lon))))
-cell.init <- lc.df$id[which(abs(lc.df$lon-coord.init[1]) < cell_side/2 & 
-                              abs(lc.df$lat-coord.init[2]) < cell_side/2)]
+cell.init <- get_pt_id(lc.df, c(739235.9, 4753487)) # 1922: herbarium_records.R
 
 
 ########
