@@ -434,9 +434,11 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   #--- short distance dispersal
   N.Sd <- sdd_disperse(lc.df[,c("id", "id.in")], N.f, gamma, pm$p.c.E, 
                        s.c, sdd$sp, sdd.rate)
+  rm(N.f)
   
   #--- seedling establishment
   estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B, s.B)
+  rm(N.Sd)
   estab.out$M.0 <- estab.out$M.0[lc.df$inbd]
   
   #--- allocate seedlings among parcels
@@ -448,6 +450,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
     N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + N.1[,l,m[l]-1]*s.M[l]),
                           parcel.df[,paste0("K_", LCs[l])])
   }
+  rm(estab.out)
   
   #--- retroactively apply ground cover treatment by recalculating establishment
   if(!is.null(p.trt)) {
