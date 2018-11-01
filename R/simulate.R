@@ -63,12 +63,6 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
   if(dem_out) nFl <- nSd <- nSdStay <- D <- B
   if(m.d) {
     N <- array(0, dim=c(ngrid, n_yrs, n.lc, m.max))  
-    for(l in 1:n.lc) {
-      if(m[l] < m.max) { 
-        N[,,l,m[l]:(m.max-1)] <- NA 
-        N.0[,l,m[l]:(m.max-1)] <- NA 
-      }
-    }
   } else {
     N <- array(0, dim=c(ngrid, n_yrs, m.max))
   }
@@ -124,6 +118,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     # 5. Short distance dispersal
     N.Sd <- sdd_disperse(id.i, N.f, gamma, pm$p.c.E, s.c, 
                          sdd$sp, sdd.rate, sdd.st, edges)
+    rm(N.f)
     if(dem_out) {
       nSd.1[N.Sd$N.source$id] <- N.Sd$N.source$N.produced
       nSdStay.1[N.Sd$N.source$id] <- N.Sd$N.source$N.dep
@@ -134,6 +129,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     # 6. Seedling establishment
     estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B,
                                s.B, dem.st, bank)
+    rm(N.Sd)
     B.1 <- estab.out$B
     
     # 7. Long distance dispersal
@@ -162,9 +158,10 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
       N.1[,1] <- pmin(round(N.0[,1]*pm$s.N.E + estab.out$N.rcrt*pm$s.M.E), 
                       pm$K.E)
     }
+    rm(estab.out)
     
     # 9. Store years
-    if(any(k %in% names(yrs))) {
+    if(k %in% names(yrs)) {
       yr_k <- which(names(yrs)==k)
       if(m.d) { N[,yr_k,,] <- N.1
       } else { N[,yr_k,] <- N.1 }
