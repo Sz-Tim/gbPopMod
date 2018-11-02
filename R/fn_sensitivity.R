@@ -162,6 +162,10 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     sdd <- list(sp=sdd_set_probs(ncell, lc.df, g.p)$sp)
   }
   if(verbose) cat("Running simulations...\n")
+  results <- as.data.frame(do.call("cbind", samples))
+  par.len <- map_int(samples, ncol)
+  par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
+  names(results) <- paste0(rep(names(samples), times=par.len), par.num)
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
   out <- foreach(i=1:nSamp, .errorhandling="pass",
                  .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
@@ -183,38 +187,46 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     
     # save grid-wide summaries
     Ng0 <- which(sim_i$N[,1,dim(sim_i$N)[3]]>0)
-    saveRDS(length(Ng0)/ncell,
-            paste0(sim.dir, "pOcc_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(sum(sim_i$B[,1]>0)/ncell,
-            paste0(sim.dir, "pSB_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(mean((sim_i$N[,1,dim(sim_i$N)[3]]/K.E)[Ng0]),
-            paste0(sim.dir, "pK_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(median(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
-            paste0(sim.dir, "medNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(mean(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
-            paste0(sim.dir, "meanNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    saveRDS(sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
-            paste0(sim.dir, "sdNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    
+    out_i <- results[i,]
+    out_i$pOcc <- length(Ng0)/ncell
+    out_i$pSB <- sum(sim_i$B[,1]>0)/ncell
+    out_i$pK <- mean((sim_i$N[,1,dim(sim_i$N)[3]]/K.E)[Ng0])
+    out_i$medNg0 <- median(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
+    out_i$meanNg0 <- mean(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
+    out_i$sdNg0 <- sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
+    write.csv(out_i, paste0(sim.dir, "results_", 
+                            str_pad(i, nchar(nSamp), "left", "0"), ".csv"))
+    # saveRDS(length(Ng0)/ncell,
+    #         paste0(sim.dir, "pOcc_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    # saveRDS(sum(sim_i$B[,1]>0)/ncell,
+    #         paste0(sim.dir, "pSB_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    # saveRDS(mean((sim_i$N[,1,dim(sim_i$N)[3]]/K.E)[Ng0]),
+    #         paste0(sim.dir, "pK_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    # saveRDS(median(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
+    #         paste0(sim.dir, "medNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    # saveRDS(mean(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
+    #         paste0(sim.dir, "meanNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
+    # saveRDS(sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
+    #         paste0(sim.dir, "sdNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
   
   # calculate grid-wide summaries
-  if(verbose) cat("Calculating summaries...\n")
-  # N <- map(dir(sim.dir, "N_", full.names=T), readRDS)
-  # B <- map(dir(sim.dir, "B_", full.names=T), readRDS)
-  # pK <- map(dir(sim.dir, "pK_", full.names=T), readRDS)
-  results <- as.data.frame(do.call("cbind", samples))
-  par.len <- map_int(samples, ncol)
-  par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
-  names(results) <- paste0(rep(names(samples), times=par.len), par.num)
-  results$pOcc <- map_dbl(dir(sim.dir, "pOcc_", full.names=T), readRDS)
-  results$pSB <- map_dbl(dir(sim.dir, "pSB_", full.names=T), readRDS)
-  results$pK <- map_dbl(dir(sim.dir, "pK_", full.names=T), readRDS)
-  results$medNg0 <- map_dbl(dir(sim.dir, "medNg0_", full.names=T), readRDS)
-  results$meanNg0 <- map_dbl(dir(sim.dir, "meanNg0_", full.names=T), readRDS)
-  results$sdNg0 <- map_dbl(dir(sim.dir, "sdNg0_", full.names=T), readRDS)
-  return(results)
+  # if(verbose) cat("Calculating summaries...\n")
+  # # N <- map(dir(sim.dir, "N_", full.names=T), readRDS)
+  # # B <- map(dir(sim.dir, "B_", full.names=T), readRDS)
+  # # pK <- map(dir(sim.dir, "pK_", full.names=T), readRDS)
+  # results <- as.data.frame(do.call("cbind", samples))
+  # par.len <- map_int(samples, ncol)
+  # par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
+  # names(results) <- paste0(rep(names(samples), times=par.len), par.num)
+  # results$pOcc <- map_dbl(dir(sim.dir, "pOcc_", full.names=T), readRDS)
+  # results$pSB <- map_dbl(dir(sim.dir, "pSB_", full.names=T), readRDS)
+  # results$pK <- map_dbl(dir(sim.dir, "pK_", full.names=T), readRDS)
+  # results$medNg0 <- map_dbl(dir(sim.dir, "medNg0_", full.names=T), readRDS)
+  # results$meanNg0 <- map_dbl(dir(sim.dir, "meanNg0_", full.names=T), readRDS)
+  # results$sdNg0 <- map_dbl(dir(sim.dir, "sdNg0_", full.names=T), readRDS)
+  return(cat("Finished", nSamp, "samples\n"))
 }
 
 

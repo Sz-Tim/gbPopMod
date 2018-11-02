@@ -57,34 +57,34 @@ cell.init <- get_pt_id(lc.df, c(739235.9, 4753487)) # 1922: herbarium_records.R
 ########
 # run sensitivity analysis
 out.dir <- paste0("out/", res, "/")
-out <- global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
-                          sdd=NULL, cell.init, control.p=NULL, verbose=T, 
-                          sim.dir=paste0(out.dir, "sims/"))
-write_csv(out, paste0(out.dir, "gsa_results.csv"))
+global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
+                   sdd=NULL, cell.init, control.p=NULL, verbose=T, 
+                   sim.dir=paste0(out.dir, "sims/"))
+# out <- list.files(paste0(out.dir, "sims"), full.names=T) %>% map_dfr(read.csv)
 
 
 
 ########
 ## Emulate output
 ########
-nMetric <- 6  # pOcc, pSB, pK, meanNg0, medNg0, sdNg0
-nPar <- ncol(out)-nMetric
-brt.sum <- vector("list", nMetric)
-for(i in 1:nMetric) {
-  metric <- names(out)[nPar+i]
-  emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric, 
-                      brt.dir=paste0(out.dir, "brt/"))
-  brt.sum[[i]] <- emulation_summary(metric, paste0(out.dir, "brt/"))
-}
+# nMetric <- 6  # pOcc, pSB, pK, meanNg0, medNg0, sdNg0
+# nPar <- ncol(out)-nMetric
+# brt.sum <- vector("list", nMetric)
+# for(i in 1:nMetric) {
+#   metric <- names(out)[nPar+i]
+#   emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric, 
+#                       brt.dir=paste0(out.dir, "brt/"))
+#   brt.sum[[i]] <- emulation_summary(metric, paste0(out.dir, "brt/"))
+# }
 
 
 
 ########
 ## Store emulation results
 ########
-write_csv(map_dfr(brt.sum, ~.$ri.df), paste0(out.dir, "BRT_RI.csv"))
-write_csv(map_dfr(brt.sum, ~.$cvDev.df), paste0(out.dir, "BRT_cvDev.csv"))
-write_csv(map_dfr(brt.sum, ~.$betaDiv.df), paste0(out.dir, "BRT_betaDiv.csv"))
+# write_csv(map_dfr(brt.sum, ~.$ri.df), paste0(out.dir, "BRT_RI.csv"))
+# write_csv(map_dfr(brt.sum, ~.$cvDev.df), paste0(out.dir, "BRT_cvDev.csv"))
+# write_csv(map_dfr(brt.sum, ~.$betaDiv.df), paste0(out.dir, "BRT_betaDiv.csv"))
 
 
 
