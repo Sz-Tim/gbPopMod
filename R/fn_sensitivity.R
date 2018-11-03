@@ -140,6 +140,10 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
                                verbose=FALSE, sim.dir="out/sims/") {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   if(!dir.exists(sim.dir)) dir.create(sim.dir, recursive=TRUE)
+  dir_0 <- ifelse(length(dir(sim.dir))>0,
+                  str_split_fixed(dir(sim.dir), "_", 2)[,2] %>%
+                    str_remove(., ".csv") %>% as.numeric(.) %>% max,
+                  0)
   
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
@@ -169,6 +173,7 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
   p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
   out <- foreach(i=1:nSamp, .errorhandling="pass",
                  .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
+    dir_i <- dir_0 + i
     g.p[names(par.ls)] <- map(samples, ~.[i,])
     if(any(grepl("sdd", names(par.ls)))) {
       sdd <- list(sp=sdd_set_probs(ncell, lc.df, g.p)$sp)
@@ -195,7 +200,7 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     out_i$meanNg0 <- mean(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
     out_i$sdNg0 <- sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
     write.csv(out_i, paste0(sim.dir, "results_", 
-                            str_pad(i, nchar(nSamp), "left", "0"), ".csv"))
+                            str_pad(dir_i, nchar(nSamp), "left", "0"), ".csv"))
     # saveRDS(length(Ng0)/ncell,
     #         paste0(sim.dir, "pOcc_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
     # saveRDS(sum(sim_i$B[,1]>0)/ncell,
