@@ -139,11 +139,18 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     N.1[] <- 0
     if(m.d) {
         for(l in 1:n.lc) {
-          N.1[,l,1] <- round(estab.out$M.0 * pm$s.M.E)
-          N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
-          N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + 
-                                        N.0[,l,m[l]-1]*s.M[l]),
-                                pm$K.lc[,l])
+          if(m[l] > 2) {
+            N.1[,l,1] <- round(estab.out$M.0 * s.M[l])
+            N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
+            N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + 
+                                          N.0[,l,m[l]-1]*s.M[l]),
+                                  pm$K.lc[,l])
+          } else {
+            N.1[,l,1] <- round(estab.out$M.0 * s.M[l])
+            N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*pm$s.N.E + 
+                                          N.0[,l,1]*s.M[l]), 
+                                  pm$K.lc[,l])
+          }
         }
     } else if(m.max > 2) {
       N.1[,1] <- round(estab.out$M.0 * pm$s.M.E)
