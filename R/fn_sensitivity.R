@@ -264,7 +264,7 @@ emulate_sensitivity <- function(sens.out, par.ls, n.cores=1, n.sub=10,
   if(!dir.exists(brt.dir)) dir.create(brt.dir)
   x <- which(str_split_fixed(names(sens.out), "_", 2)[,1] %in% names(par.ls))
   y <- which(names(sens.out)==resp)
-  sub.prop <- seq(0.5, 1, length.out=n.sub)
+  sub.prop <- seq(0.75, 1, length.out=n.sub)
   
   p.c <- makeCluster(n.cores); registerDoSNOW(p.c)
   out <- foreach(i=1:n.sub,
