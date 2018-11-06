@@ -19,12 +19,12 @@
 ## Setup
 ########
 # load libraries
-Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW","fastmatch")
+Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW", "fastmatch")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
 res <- c("20ac", "9km2")[2]
-dem_par <- set_g_p(tmax=50)
+dem_par <- set_g_p(tmax=20)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
   dem_par$sdd.max <- 7
@@ -65,9 +65,9 @@ mgmt <- list(none=list(ctrl_par=set_control_p(null_ctrl=TRUE),
                           thresh=1000,
                           trt.int=3),
              manual=list(ctrl_par=set_control_p(null_ctrl=FALSE,
-                                                man.trt=c("C"=0.6)),
+                                                man.trt=c("MC"=0.9)),
                          manual.i=data.frame(id=unh.id,
-                                             Trt="C"),
+                                             Trt="MC"),
                          cover.i=NULL,
                          thresh=500,
                          trt.int=2),
@@ -119,11 +119,8 @@ for(m in seq_along(mgmt)) {
     N[,k+1,,] <- out$N
     B[,k+1] <- out$B
   }
-  # plots
-  plot.dir <- "out/mgmt/"
-  gifs <- T
-  theme_set(theme_bw())
-  if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
+  
+  # summarise
   N.tot <- apply(N[,,,max(dem_par$m)], 1:2, sum) # sum adults across LCs
   N.df <- as.data.frame(N.tot); names(N.df) <- 1:ncol(N.df)
   out.all.ls[[m]] <- cbind(lc.df, N.df) %>%
@@ -138,6 +135,10 @@ for(m in seq_along(mgmt)) {
            managed=id %in% unh.id)
 }
 
+# plots
+plot.dir <- "out/mgmt/"
+gifs <- F
+theme_set(theme_bw())
 out.df <- dplyr::bind_rows(out.df.ls, .id="mgmt")
 out.all <- dplyr::bind_rows(out.all.ls, .id="mgmt")
 # final maps
@@ -155,6 +156,7 @@ ggplot(filter(out.all, managed), aes(year, N, group=id)) +
 # gifs
 if(gifs) {
   library(gganimate)
+  if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
   anim_save(paste0(plot.dir, "N_mgmt.gif"),
             animate(ggplot(out.all, aes(lon, lat)) + 
                       geom_tile(aes(fill=N, colour=managed), size=0.5) +
