@@ -183,12 +183,6 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
                      F, g.p$tmax, NULL, F)
     K.E <- na_if(cell_E(lc.df, g.p$K, g.p$s.M, g.p$s.N, g.p$mu, 
                   g.p$p.f, g.p$p.c, g.p$p)$K.E, 0)
-    # saveRDS(sim_i$N[,1,dim(sim_i$N)[3]], 
-    #         paste0(sim.dir, "N_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(sim_i$B[,1], 
-    #         paste0(sim.dir, "B_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(sim_i$N[,1,dim(sim_i$N)[3]]/K.E, 
-    #         paste0(sim.dir, "pK_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
     
     # save grid-wide summaries
     Ng0 <- which(sim_i$N[,1,dim(sim_i$N)[3]]>0)
@@ -201,18 +195,6 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     out_i$sdNg0 <- sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
     write.csv(out_i, paste0(sim.dir, "results_", 
                             str_pad(dir_i, nchar(nSamp), "left", "0"), ".csv"))
-    # saveRDS(length(Ng0)/ncell,
-    #         paste0(sim.dir, "pOcc_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(sum(sim_i$B[,1]>0)/ncell,
-    #         paste0(sim.dir, "pSB_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(mean((sim_i$N[,1,dim(sim_i$N)[3]]/K.E)[Ng0]),
-    #         paste0(sim.dir, "pK_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(median(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
-    #         paste0(sim.dir, "medNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(mean(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
-    #         paste0(sim.dir, "meanNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
-    # saveRDS(sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0]),
-    #         paste0(sim.dir, "sdNg0_", str_pad(i, nchar(nSamp), "left", "0"), ".rds"))
   }
   stopCluster(p.c)
   
