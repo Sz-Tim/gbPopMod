@@ -138,31 +138,36 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     # 8. Calculate abundances
     N.1[] <- 0
     if(m.d) {
+      M.occ <- which(estab.out$M.0 > 0)
         for(l in 1:n.lc) {
           if(m[l] > 2) {
-            N.1[,l,1] <- round(estab.out$M.0 * pm$lc.mx[l] * s.M[l])
+            N.1[M.occ,l,1] <- rbinom(length(M.occ), estab.out$M.0[M.occ], 
+                                     pm$lc.mx[M.occ,l])
+            # N.1[,l,1] <- round(estab.out$M.0 * pm$lc.mx[,l])
             N.1[,l,2:(m[l]-1)] <- round(N.0[,l,1:(m[l]-2)]*s.M[l])
             N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*s.N[l] + 
                                           N.0[,l,m[l]-1]*s.M[l]),
                                   pm$K.lc[,l])
           } else {
-            N.1[,l,1] <- round(estab.out$M.0 * pm$lc.mx[l] * s.M[l])
+            N.1[M.occ,l,1] <- rbinom(length(M.occ), estab.out$M.0[M.occ], 
+                                     pm$lc.mx[M.occ,l])
+            # N.1[,l,1] <- round(estab.out$M.0 * pm$lc.mx[,l])
             N.1[,l,m.max] <- pmin(round(N.0[,l,m.max]*pm$s.N.E + 
                                           N.0[,l,1]*s.M[l]), 
                                   pm$K.lc[,l])
           }
         }
     } else if(m.max > 2) {
-      N.1[,1] <- round(estab.out$M.0 * pm$s.M.E)
+      N.1[,1] <- round(estab.out$M.0)
       N.1[,2:(m.max-1)] <- round(N.0[,1:(m.max-2)]*pm$s.M.E)
       N.1[,m.max] <- pmin(round(N.0[,m.max]*pm$s.N.E + N.0[,m.max-1]*pm$s.M.E), 
                           pm$K.E)
     } else if(m.max == 2 ) {
-      N.1[,1] <- round(estab.out$M.0 * pm$s.M.E)
+      N.1[,1] <- round(estab.out$M.0)
       N.1[,m.max] <- pmin(round(N.0[,m.max]*pm$s.N.E + N.0[,1]*pm$s.M.E), 
                           pm$K.E)
     } else {
-      N.1[,1] <- pmin(round(N.0[,1]*pm$s.N.E + estab.out$N.rcrt*pm$s.M.E), 
+      N.1[,1] <- pmin(round(N.0[,1]*pm$s.N.E + estab.out$M.0), 
                       pm$K.E)
     }
     rm(estab.out)
