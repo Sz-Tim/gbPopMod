@@ -330,7 +330,7 @@ emulation_summary <- function(resp, brt.dir="out/brt/") {
     summarise(rel.inf=sum(rel.inf)) %>% 
     ungroup %>% group_by(response, td, smp) %>%
     mutate(rel.inf=rel.inf/sum(rel.inf))
-  smp_i <- unique(ri.df$smp)
+  smp_i <- sort(as.numeric(unique(ri.df$smp)))
   for(i in unique(ri.df$td)) {
     for(j in 2:n_distinct(ri.df$smp)) {
       temp <- ri.df %>% ungroup %>% filter(td==i & smp %in% smp_i[c(j-1,j)]) %>%
