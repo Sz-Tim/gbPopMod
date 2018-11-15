@@ -1,10 +1,12 @@
+
+
 Packages <- c("raster", "gbPopMod", "tidyverse", "magrittr", 
               "here", "doSNOW", "sf", "viridis")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 
 # set parameters
-res <- c("20ac", "9km2")[1]
+res <- c("20ac", "9km2")[2]
 
 # load landscape & woodland xlsx
 load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
@@ -27,9 +29,10 @@ all_boundaries <- map(boundary.f,
   do.call("rbind", .) %>%
   mutate(property=boundary.f)
 bbox_22km <- st_bbox(st_buffer(all_boundaries, dist=22000))
-lc.df_22km <- filter(lc.df, lon<=bbox_22km$xmax & lon>=bbox_22km$xmin &
-                       lat<=bbox_22km$ymax & lat>=bbox_22km$ymin)
-lc.st <- raster::rasterFromXYZ(lc.df_22km[,c(10,11,4:9,12:14)])
+x_rng <- range(filter(lc.df, lon<=bbox_22km$xmax & lon>=bbox_22km$xmin)$x)
+y_rng <- range(filter(lc.df, lat<=bbox_22km$ymax & lat>=bbox_22km$ymin)$y)
+lc.df_22km <- filter(lc.df, x>=x_rng[1] & x<=x_rng[2] & y>=y_rng[1] & y<=y_rng[2])
+lc.st <- raster::rasterFromXYZ(lc.df_22km[lc.df_22km$inbd,c(10,11,4:9,12:14)])
 raster::crs(lc.st) <- sp::CRS('+init=EPSG:32618')
 lc.st <- rasterToPolygons(lc.st) %>% st_as_sf()
 lc.UNH.overlap <- st_intersects(all_boundaries, lc.st) %>%
@@ -39,8 +42,13 @@ overlap.df <- data.frame(id.in=unlist(lc.UNH.overlap),
                          property=unlist(map2(lc.UNH.overlap, 
                                               names(lc.UNH.overlap), 
                                               ~rep(.y, length(.x)))))
-lc.df_22km$in.UNH <- lc.df_22km$id.in %in% overlap.df$id.in
-lc.df_22km$Property <- overlap.df$property[match(lc.df_22km$id.in, overlap.df$id.in)]
+lc.df_22km <- lc.df_22km %>% 
+  mutate(in.UNH=id.in %in% overlap.df$id.in,
+         Property=overlap.df$property[match(id.in, overlap.df$id.in)],
+         id.full=id,
+         id.in.full=id.in,
+         id=row_number(),
+         id.in=min_rank(na_if(inbd*id, 0)))
 
 write_csv(lc.df_22km, "data/USDA_UNH_mgmt.csv")
 save(lc.df_22km, file="data/USDA_UNH_mgmt.rda")

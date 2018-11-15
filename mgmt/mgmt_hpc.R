@@ -32,54 +32,38 @@ if(res == "9km2") {
 }
 
 # load landscape
-load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
+# load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
+lc.df <- read.csv("data/USDA_UNH_mgmt.csv")
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
 
-# load UNH woodland properties
-library(measurements); library(sf)
-unh.mgmt <- readxl::read_xlsx("~/Desktop/UNH_woodlands_summary.xlsx", 1) %>%
-  mutate(Lat=gsub("°", " ", str_remove(Lat, "'")),
-         Lon=gsub("°", " ", str_remove(Lon, "'"))) %>%
-  mutate(Lat=as.numeric(conv_unit(Lat, from='deg_dec_min', to='dec_deg')),
-         Lon=as.numeric(conv_unit(Lon, from='deg_dec_min', to='dec_deg'))) %>%
-  st_as_sf(coords=c("Lon", "Lat"), crs=4326) %>%
-  st_transform(crs=32618)
-unh.coord <- st_coordinates(unh.mgmt)
-unh.id <- sapply(1:nrow(unh.coord), function(x) get_pt_id(lc.df, unh.coord[x,]))
-
 # initial populations
-N_0 <- readRDS(paste0("data/inits/N_2018_", res, ".rds"))
-B_0 <- readRDS(paste0("data/inits/B_2018_", res, ".rds"))
-sdd <- readRDS(paste0("data/inits/sdd_", res, ".rds"))
+N_0 <- readRDS(paste0("data/inits/N_2018_", res, ".rds"))[lc.df$id.full,,]
+B_0 <- readRDS(paste0("data/inits/B_2018_", res, ".rds"))[lc.df$id.full]
+sdd <- sdd_set_probs(ncell, lc.df, dem_par, verbose=T)
 
 # management plans
-mgmt <- list(none=list(ctrl_par=set_control_p(null_ctrl=TRUE),
-                       manual.i=NULL,
-                       cover.i=NULL),
-             current=list(ctrl_par=set_control_p(null_ctrl=FALSE,
-                                                 man.trt=c("MC"=0.9)),
-                          manual.i=data.frame(id=unh.id,
-                                              Trt="MC"),
-                          cover.i=NULL,
-                          thresh=1000,
-                          trt.int=3),
-             manual=list(ctrl_par=set_control_p(null_ctrl=FALSE,
-                                                man.trt=c("MC"=0.9)),
-                         manual.i=data.frame(id=unh.id,
-                                             Trt="MC"),
-                         cover.i=NULL,
-                         thresh=500,
-                         trt.int=2),
-             manual_cover=list(ctrl_par=set_control_p(null_ctrl=FALSE,
-                                                      man.trt=c("MC"=0.9),
-                                                      grd.trt=c("Cov"=0.001)),
-                               manual.i=data.frame(id=unh.id,
-                                                   Trt="MC"),
-                               cover.i=data.frame(id=unh.id,
-                                                  Trt="Cov"),
-                               thresh=500,
-                               trt.int=5))
+mgmt_plans <- dir("mgmt", "plan", full.names=T) %>% map(read.csv) %>%
+  setNames(str_remove(str_remove(dir("mgmt", "plan"), "plan_"), ".csv"))
+mgmt <- setNames(vector("list", length(mgmt_plans)), names(mgmt_plans))
+lc.UNH <- filter(lc.df, in.UNH)
+for(m in seq_along(mgmt)) {
+  if(names(mgmt)[m] == "none") {
+    mgmt[[m]] <- list(ctrl_par=set_control_p(null_ctrl=TRUE),
+                      manual.i=NULL,
+                      cover.i=NULL)
+  } else {
+    mgmt_index <- match(lc.UNH$Property, mgmt_plans[[m]]$Property)
+    mgmt_m <- cbind(id=lc.UNH$id, mgmt_plans[[m]][mgmt_index,])
+    mgmt[[m]] <- list(ctrl_par=set_control_p(null_ctrl=FALSE,
+                                             man.trt=c("M"=0.4, "C"=0.9, 
+                                                       "MC"=0.96, "N"=0)),
+                      manual.i=mgmt_m[,grep("id|Trt", names(mgmt_m))],
+                      thresh=mgmt_m$thresh,
+                      trt.int=mgmt_m$trt.cycle,
+                      trt.followup=mgmt_m$trt.followup)
+  }
+} 
 out.df.ls <- out.all.ls <- setNames(vector("list", 4), names(mgmt))
 
 for(m in seq_along(mgmt)) {
@@ -102,8 +86,10 @@ for(m in seq_along(mgmt)) {
   for(k in 1:dem_par$tmax) {
     
     # decide which cells are managed this year
-    if(m != 1 && (k %% mgmt[[m]]$trt.int) == 0) {  
-      managed_k <- managed[apply(N[managed,k,,], 1, sum) > mgmt[[m]]$thresh]
+    if(names(mgmt)[m] != "none" && 
+       any((k %% mgmt[[m]]$trt.int) <= mgmt[[m]]$trt.followup)) {  
+      managed_k <- managed[apply(N[managed,k,,], 1, sum) > mgmt[[m]]$thresh &
+                             (k %% mgmt[[m]]$trt.int) <= mgmt[[m]]$trt.followup]
       manual_k <- mgmt[[m]]$manual.i[mgmt[[m]]$manual.i$id %in% managed_k,]
       cover_k <- mgmt[[m]]$cover.i[mgmt[[m]]$cover.i$id %in% managed_k,]
     } else {
@@ -112,12 +98,13 @@ for(m in seq_along(mgmt)) {
     }
     
     # buckthorn management, population growth, dispersal
-    out <- iterate_pop(ngrid, ncell, N[,k,,], B[,k], dem_par, lc.df, sdd, 
-                       mgmt[[m]]$ctrl_par, cover_k, manual_k)
+    out <- iterate_pop(ngrid, ncell, N[,k,,], B[,k], dem_par, lc.df[,-(15:18)], 
+                       sdd, mgmt[[m]]$ctrl_par, cover_k, manual_k)
     
     # update abundances
     N[,k+1,,] <- out$N
     B[,k+1] <- out$B
+    k <- k+1
   }
   
   # summarise
@@ -125,33 +112,36 @@ for(m in seq_along(mgmt)) {
   N.df <- as.data.frame(N.tot); names(N.df) <- 1:ncol(N.df)
   out.all.ls[[m]] <- cbind(lc.df, N.df) %>%
     gather(year, N, (ncol(lc.df)+1):ncol(.)) %>% 
-    mutate(year=as.numeric(year)) %>%
-    mutate(managed=id %in% unh.id)
+    mutate(year=as.numeric(year),
+           B=c(B))
   out.df.ls[[m]] <- lc.df %>%
     mutate(N.0=N.tot[,1],
            B.0=B[,1],
            N.final=N.tot[,dem_par$tmax+1],
-           B.final=B[,dem_par$tmax+1],
-           managed=id %in% unh.id)
+           B.final=B[,dem_par$tmax+1])
 }
 
 # plots
+library(viridis)
 plot.dir <- "out/mgmt/"
-gifs <- F
+gifs <- T
 theme_set(theme_bw())
 out.df <- dplyr::bind_rows(out.df.ls, .id="mgmt")
 out.all <- dplyr::bind_rows(out.all.ls, .id="mgmt")
-# final maps
-library(viridis)
-final.p <- ggplot(out.df, aes(lon, lat)) + facet_wrap(~mgmt)
-# final.p + geom_tile(aes(fill=log(N.final), colour=managed), size=0.5) + 
-#   scale_fill_viridis(option="B") + scale_colour_manual(values=c(NA, "blue"))
-# final.p + geom_tile(aes(fill=log(B.final), colour=managed), size=0.5) + 
-#   scale_fill_viridis(option="B") + scale_colour_manual(values=c(NA, "blue"))
-
+out.property <- out.all %>% filter(!is.na(Property)) %>%
+  group_by(mgmt, year, Property) %>% 
+  summarise(N=sum(N), B=sum(B), nCell=n())
 # abundance through time
-ggplot(filter(out.all, managed), aes(year, N, group=id)) + 
-  geom_line(alpha=0.5) + facet_wrap(~mgmt)
+ggplot(filter(out.all, in.UNH), aes(year, log(N), group=id, colour=Property)) + 
+  geom_line() + facet_wrap(~mgmt)
+ggplot(filter(out.all, in.UNH), aes(year, log(B), group=id, colour=Property)) + 
+  geom_line() + facet_wrap(~mgmt)
+ggplot(out.property, aes(year, N/nCell, group=Property, colour=Property)) +
+  geom_line() + facet_wrap(~mgmt) + 
+  labs(y=paste("Buckthorn adult density per", res))
+ggplot(out.property, aes(year, B/nCell, group=Property, colour=Property)) +
+  geom_line() + facet_wrap(~mgmt) + 
+  labs(y=paste("Buckthorn seed bank density per", res))
 
 # gifs
 if(gifs) {
@@ -159,12 +149,22 @@ if(gifs) {
   if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
   anim_save(paste0(plot.dir, "N_mgmt.gif"),
             animate(ggplot(out.all, aes(lon, lat)) + 
-                      geom_tile(aes(fill=N, colour=managed), size=0.5) +
+                      geom_tile(aes(fill=log(N), colour=in.UNH), size=0.5) +
                       scale_fill_viridis(option="B") + 
                       scale_colour_manual(values=c(NA, "white")) +
                       transition_time(year) +  
                       facet_wrap(~mgmt) +
-                      ggtitle("Adult abundance. Year {frame_time}"),
+                      ggtitle("Adult log(abundance). Year {frame_time}"),
+                    nframes=n_distinct(out.all$year), 
+                    width=800, height=600, units="px"))
+  anim_save(paste0(plot.dir, "B_mgmt.gif"),
+            animate(ggplot(out.all, aes(lon, lat)) + 
+                      geom_tile(aes(fill=log(B), colour=in.UNH), size=0.5) +
+                      scale_fill_viridis(option="B") + 
+                      scale_colour_manual(values=c(NA, "white")) +
+                      transition_time(year) +  
+                      facet_wrap(~mgmt) +
+                      ggtitle("Seed bank log(abundance). Year {frame_time}"),
                     nframes=n_distinct(out.all$year), 
                     width=800, height=600, units="px"))
 }
