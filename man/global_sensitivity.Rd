@@ -5,8 +5,8 @@
 \title{Run global sensitivity analysis}
 \usage{
 global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, sdd = NULL,
-  cell.init, control.p = NULL, verbose = FALSE,
-  sim.dir = "out/sims/")
+  cell.init, control.p = NULL, save_yrs = NULL, verbose = FALSE,
+  sim.dir = "out/")
 }
 \arguments{
 \item{par.ls}{List output from \code{\link{set_par_ranges}} with parameter to
@@ -33,6 +33,10 @@ are calculated}
 
 \item{control.p}{NULL or named list of buckthorn control treatment parameters
 set with \code{\link{set_control_p}}}
+
+\item{save_yrs}{\code{NULL} Years to store full abundances for. If
+\code{NULL}, only grid-wide summaries are stored. Else, the total adult
+per-cell N is stored for the specified years.}
 
 \item{verbose}{\code{FALSE} Give updates?}
 

@@ -62,16 +62,19 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                         min=c(0.113, 0.113, 0.222, 0.205, 0.205, 0.222), 
                         max=c(0.206, 0.206, 0.314, 0.250, 0.250, 0.314)),
                    list(param="sdd.rate", type="cont", LC=0, 
-                        min=ifelse(res=="20ac", 0.107, 1.12), 
+                        min=ifelse(res=="20ac", 0.05, 0.1), 
+                        # min=ifelse(res=="20ac", 0.107, 1.12), 
                         max=ifelse(res=="20ac", 0.178, 1.87)),
                    list(param="sdd.max", type="int", LC=0, 
                         min=ifelse(res=="20ac", 7, 3), 
-                        max=ifelse(res=="20ac", 36, 9)),
+                        max=ifelse(res=="20ac", 36, 13)),
+                        # max=ifelse(res=="20ac", 36, 9)),
                    list(param="bird.hab", type="cont", LC=1, 
                         min=c(0.240, 0.270, 0.037, 0.068, 0.068, 0.068), 
                         max=c(0.400, 0.451, 0.06, 0.113, 0.113, 0.113)),
                    list(param="n.ldd", type="int", LC=0, 
-                        min=1, max=ifelse(res=="20ac", 5, 3)),
+                        min=1, max=ifelse(res=="20ac", 10, 10)),
+                        # min=1, max=ifelse(res=="20ac", 5, 3)),
                    list(param="s.c", type="prob", LC=0, min=0.4875, max=0.605),
                    list(param="s.B", type="prob", LC=0, min=0.641, max=0.766),
                    list(param="s.M", type="prob", LC=1,
@@ -127,6 +130,9 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 #' @param cell.init Vector with grid id of cells populated at t=0
 #' @param control.p NULL or named list of buckthorn control treatment parameters
 #'   set with \code{\link{set_control_p}}
+#' @param save_yrs \code{NULL} Years to store full abundances for. If
+#'   \code{NULL}, only grid-wide summaries are stored. Else, the total adult
+#'   per-cell N is stored for the specified years.
 #' @param verbose \code{FALSE} Give updates?
 #' @param sim.dir \code{"out/sims/"} Directory to store simulation output
 #' @return list with elements \code{out} containing the full output from
@@ -137,13 +143,18 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
 
 global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
                                sdd=NULL, cell.init, control.p=NULL, 
-                               verbose=FALSE, sim.dir="out/sims/") {
+                               save_yrs=NULL, verbose=FALSE, sim.dir="out/") {
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   if(!dir.exists(sim.dir)) dir.create(sim.dir, recursive=TRUE)
   dir_0 <- ifelse(length(dir(sim.dir))>0,
                   str_split_fixed(dir(sim.dir), "_", 2)[,2] %>%
                     str_remove(., ".csv") %>% as.numeric(.) %>% max,
                   0)
+  if(is.null(save_yrs)) {
+    out_yrs <- g.p$tmax
+  } else {
+    out_yrs <- save_yrs
+  }
   
   # modified from Prowse et al 2016
   if(verbose) cat("Drawing parameters...\n")
@@ -180,39 +191,28 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
     }
     N.init <- pop_init(ngrid, g.p, lc.df, p.0=cell.init, N.0=g.p$N.0)
     sim_i <- run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, NULL, 
-                     F, g.p$tmax, NULL, F)
+                     F, out_yrs, NULL, F)
     K.E <- na_if(cell_E(lc.df, g.p$K, g.p$s.M, g.p$s.N, g.p$mu, 
                   g.p$p.f, g.p$p.c, g.p$p)$K.E, 0)
-    
     # save grid-wide summaries
-    Ng0 <- which(sim_i$N[,1,dim(sim_i$N)[3]]>0)
+    adults <- dim(sim_i$N)[3]
+    final <- dim(sim_i$N)[2]
+    Ng0 <- which(sim_i$N[,final,adults]>0)
     out_i <- results[i,]
     out_i$pOcc <- length(Ng0)/ncell
-    out_i$pSB <- sum(sim_i$B[,1]>0)/ncell
-    out_i$pK <- mean((sim_i$N[,1,dim(sim_i$N)[3]]/K.E)[Ng0])
-    out_i$medNg0 <- median(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
-    out_i$meanNg0 <- mean(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
-    out_i$sdNg0 <- sd(sim_i$N[,1,dim(sim_i$N)[3]][Ng0])
-    write.csv(out_i, paste0(sim.dir, "results_", 
+    out_i$pSB <- sum(sim_i$B[,final]>0)/ncell
+    out_i$pK <- mean((sim_i$N[,final,adults]/K.E)[Ng0])
+    out_i$medNg0 <- median(sim_i$N[,final,adults][Ng0])
+    out_i$meanNg0 <- mean(sim_i$N[,final,adults][Ng0])
+    out_i$sdNg0 <- sd(sim_i$N[,final,adults][Ng0])
+    if(!is.null(save_yrs)) {
+      saveRDS(sim_i$N[,,adults], 
+              paste0(sim.dir, "N_", str_pad(dir_i, nchar(nSamp), "left", "0"), ".rds"))
+    }
+    write_csv(out_i, paste0(sim.dir, "results_", 
                             str_pad(dir_i, nchar(nSamp), "left", "0"), ".csv"))
   }
   stopCluster(p.c)
-  
-  # calculate grid-wide summaries
-  # if(verbose) cat("Calculating summaries...\n")
-  # # N <- map(dir(sim.dir, "N_", full.names=T), readRDS)
-  # # B <- map(dir(sim.dir, "B_", full.names=T), readRDS)
-  # # pK <- map(dir(sim.dir, "pK_", full.names=T), readRDS)
-  # results <- as.data.frame(do.call("cbind", samples))
-  # par.len <- map_int(samples, ncol)
-  # par.num <- unlist(list("", paste0("_", 1:6))[(par.len > 1)+1])
-  # names(results) <- paste0(rep(names(samples), times=par.len), par.num)
-  # results$pOcc <- map_dbl(dir(sim.dir, "pOcc_", full.names=T), readRDS)
-  # results$pSB <- map_dbl(dir(sim.dir, "pSB_", full.names=T), readRDS)
-  # results$pK <- map_dbl(dir(sim.dir, "pK_", full.names=T), readRDS)
-  # results$medNg0 <- map_dbl(dir(sim.dir, "medNg0_", full.names=T), readRDS)
-  # results$meanNg0 <- map_dbl(dir(sim.dir, "meanNg0_", full.names=T), readRDS)
-  # results$sdNg0 <- map_dbl(dir(sim.dir, "sdNg0_", full.names=T), readRDS)
   return(cat("Finished", nSamp, "samples\n"))
 }
 
