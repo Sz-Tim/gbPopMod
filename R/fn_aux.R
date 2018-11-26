@@ -465,7 +465,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #'   ground treatments and associated seedling establishment probabilities;
 #'   treatments include litter (Lit), cover crops (Cov), and soil compaction
 #'   (Com)
-#' @param man.trt \code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
+#' @param man.trt \code{c(M=0.68, C=0.9, MC=0.97)} Named vector with manual
 #'   treatments and associated mortality (=success) rates; treatments include
 #'   mechanical (M), chemical (C), or both (MC)
 #' @param lc.chg \code{FALSE} Does land cover change (i.e., timber harvest)
@@ -482,7 +482,7 @@ set_control_p <- function(null_ctrl=TRUE, t.trt=1, add.owners=FALSE,
                           grd.i=NULL, man.i=NULL, chg.i=NULL,
                           pTrt.grd=0.05, pTrt.man=0.05,
                           grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
-                          man.trt=c(M=0.1, C=0.3, MC=0.8),
+                          man.trt=c(M=0.68, C=0.9, MC=0.97),
                           lc.chg=FALSE, pChg=0.0001) {
   
   if(null_ctrl) {

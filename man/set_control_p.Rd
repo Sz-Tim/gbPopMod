@@ -7,7 +7,7 @@
 set_control_p(null_ctrl = TRUE, t.trt = 1, add.owners = FALSE,
   grd.i = NULL, man.i = NULL, chg.i = NULL, pTrt.grd = 0.05,
   pTrt.man = 0.05, grd.trt = c(Lit = 0.005, Cov = 0.01, Com = 1e-05),
-  man.trt = c(M = 0.1, C = 0.3, MC = 0.8), lc.chg = FALSE,
+  man.trt = c(M = 0.68, C = 0.9, MC = 0.97), lc.chg = FALSE,
   pChg = 1e-04)
 }
 \arguments{
@@ -41,7 +41,7 @@ ground treatments and associated seedling establishment probabilities;
 treatments include litter (Lit), cover crops (Cov), and soil compaction
 (Com)}
 
-\item{man.trt}{\code{c(M=0.1, C=0.3, MC=0.8)} Named vector with manual
+\item{man.trt}{\code{c(M=0.68, C=0.9, MC=0.97)} Named vector with manual
 treatments and associated mortality (=success) rates; treatments include
 mechanical (M), chemical (C), or both (MC)}
 
