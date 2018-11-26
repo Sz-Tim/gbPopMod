@@ -30,5 +30,9 @@ inst/doc
 # econ output
 econ/*.gif
 
-
-
+# temporary or exploratory
+vignettes/simple_RL_setup*
+vignettes/wtmn_v_lm.R
+vignettes/Get Actions Code.R
+data/USDA_9km2_parcels.csv
+vignettes/*.jpeg
