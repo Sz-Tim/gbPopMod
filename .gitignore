@@ -27,3 +27,8 @@ vignettes/*.pdf
 .Rproj.user
 inst/doc
 
+# econ output
+econ/*.gif
+
+
+
