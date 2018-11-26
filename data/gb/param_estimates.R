@@ -39,6 +39,9 @@ edd_maps <- read.csv("data/gb/eddmaps_gb.csv",
   filter(grossAreaInAcres > infestedAreaInAcres &
            grossAreaInAcres > 15 & grossAreaInAcres < 500) %>%
   mutate(prop_infested=infestedAreaInAcres/grossAreaInAcres)
+mort_eis <- read_csv("data/gb/Eisenhaure_cut.csv") %>% 
+  mutate(Date=as.Date(Date, format="%m/%d/%Y"),
+         Season=forcats::lvls_reorder(Season, c(3,2,1)))
 # Storage
 par.best <- set_g_p()
 par.rng <- set_sensitivity_pars(names(par.best))
@@ -232,6 +235,179 @@ par.rng$p$max <- pmin(1, par.best$p * 1.25)
 
 
 
+########
+## Management mortality
+########
+
+mort_none <- mort_eis %>% 
+  filter(Season == "Start" & Treatment=="NONE") %>%
+  mutate(Y0=case_when(Year=="2008" ~ 2008,
+                      Year=="2009" ~ 2009,
+                      Year=="2010" ~ 2009)) %>%
+  bind_rows(., filter(., Year==2009) %>% mutate(Y0=2008)) %>%
+  mutate(category=case_when(Y0==Year & Height=="short" ~ "S0",
+                            Y0<Year & Height=="short" ~ "S1",
+                            Y0==Year & Height=="tall" ~ "T0",
+                            Y0<Year & Height=="tall" ~ "T1")) %>%
+  select(Y0, Subblock, Treatment, N, category) %>%
+  spread(category, N) %>%
+  mutate(N0=S0+T0, N1=S1+T1,
+         dS=S1-S0, dT=T1-T0, dN=N1-N0,
+         pS=dS/S0, pT=dT/T0, pN=dN/N0)
+mort_cut <- mort_eis %>% 
+  filter(Season == "Start" & Treatment=="CUT") %>%
+  mutate(Y0=case_when(Year=="2008" ~ 2008,
+                      Year=="2009" ~ 2009,
+                      Year=="2010" ~ 2009)) %>%
+  bind_rows(., filter(., Year==2009) %>% mutate(Y0=2008)) %>%
+  mutate(category=case_when(Y0==Year & Height=="short" ~ "S0",
+                            Y0<Year & Height=="short" ~ "S1",
+                            Y0==Year & Height=="tall" ~ "T0",
+                            Y0<Year & Height=="tall" ~ "T1")) %>%
+  select(Y0, Subblock, Treatment, N, category) %>%
+  spread(category, N) %>%
+  mutate(N0=S0+T0, N1=S1+T1,
+         dS=S1-S0, dT=T1-T0, dN=N1-N0,
+         pS=dS/S0, pT=dT/T0, pN=dN/N0)
+mean((mort_cut$pN - mort_none$pN)) # 97% decrease overall, but one big outlier
+mean((mort_cut$pN - mort_none$pN)[1:3]) # 68% decrease for Y0=2008
+mean((mort_cut$pN - mort_none$pN)[4:6]) # 125% decrease for Y0=2009
 
 
 
+stop("Unused exploration beyond this point.")
+##------------- cut efficacy exploration -------------##
+## Notation:
+##  S_: 'short' abundance
+##  T_: 'tall' abundance
+##  N_: total abundance
+##  _0: start of year 0
+##  _1: start of year 1
+##  s: survival rate (no treatment)
+##  g: pr(S0 -> T1 | survival)
+##  B: new sprout abundance
+##  r: pr(resprout from cutting) = 1 - mortality from cutting
+##  p: proportion of resprouts from T0 to S1
+
+## No Treatment
+# N0 = S0 + T0
+# N1 = S1 + T1 = N0*s + B
+# S1 = S0*s - S0*s*g + B
+# T1 = T0*s + S0*s*g
+#   g = (T1-T0*s)/(S0*s)
+#   B = N1 - N0*s
+
+## Cut
+# N0 = S0 + T0
+# N1 = S1 + T1 = N0*s*r + B
+# S1 = S0*s*r - S0*s*r*g + T0*s*r*p + B
+# T1 = T0*s*r*(1-p) + S0*s*r*g
+#   r = (N1-B)/(N0*s)
+#   p = 1 - (T1-S0*s*r*g)/(T0*s*r)
+
+## M: mechanical only
+# Estimate g, B from Treatment=="NONE" for each subblock
+s <- 0.6  # need s ≤ 0.18 for all g>0 & B>0
+mort_height <- mort_eis %>% 
+  filter(Season == "Start" & Treatment=="NONE") %>%
+  mutate(Y0=case_when(Year=="2008" ~ 2008,
+                      Year=="2009" ~ 2009,
+                      Year=="2010" ~ 2009)) %>%
+  bind_rows(., filter(., Year==2009) %>% mutate(Y0=2008)) %>%
+  mutate(category=case_when(Y0==Year & Height=="short" ~ "S0",
+                            Y0<Year & Height=="short" ~ "S1",
+                            Y0==Year & Height=="tall" ~ "T0",
+                            Y0<Year & Height=="tall" ~ "T1")) %>%
+  select(Y0, Subblock, Treatment, N, category) %>%
+  spread(category, N) %>%
+  mutate(N0=S0+T0, N1=S1+T1,
+         dS=S1-S0, dT=T1-T0, dN=N1-N0,
+         pS=dS/S0, pT=dT/T0, pN=dN/N0,
+         g=(T1-T0*s)/(S0*s),
+         B=N1-N0*s, pB=B/N0)
+none_est <- mort_height %>% 
+  group_by(Treatment) %>% 
+  summarise(mn_g=mean(g), mn_pB=mean(pB))
+
+# Calculate r, p using estimates of g, B
+mort_cut <- mort_eis %>% 
+  filter(Season == "Start" & Treatment=="CUT") %>%
+  mutate(Y0=case_when(Year=="2008" ~ 2008,
+                      Year=="2009" ~ 2009,
+                      Year=="2010" ~ 2009)) %>%
+  bind_rows(., filter(., Year==2009) %>% mutate(Y0=2008)) %>%
+  mutate(category=case_when(Y0==Year & Height=="short" ~ "S0",
+                            Y0<Year & Height=="short" ~ "S1",
+                            Y0==Year & Height=="tall" ~ "T0",
+                            Y0<Year & Height=="tall" ~ "T1")) %>%
+  select(Y0, Subblock, Treatment, N, category) %>%
+  spread(category, N) %>%
+  mutate(N0=S0+T0, N1=S1+T1,
+         dS=S1-S0, dT=T1-T0, dN=N1-N0,
+         pS=dS/S0, pT=dT/T0, pN=dN/N0,
+         g=none_est$mn_g[match(Subblock, none_est$Subblock)],
+         pB=none_est$mn_pB[match(Subblock, none_est$Subblock)],
+         B=pB*N0,
+         r=(N1-B)/(N0*s),
+         p=1-(T1-S0*s*r*g)/(T0*s*r))
+mean((mort_cut$pN - mort_height$pN)[1:3])
+
+# WITHIN YEAR
+mort_height <- mort_eis %>% 
+  filter(Season != "Mid" & Year !=2010 & Treatment=="NONE") %>%
+  mutate(category=case_when(Season=="Start" & Height=="short" ~ "S0",
+                            Season=="End" & Height=="short" ~ "S1",
+                            Season=="Start" & Height=="tall" ~ "T0",
+                            Season=="End" & Height=="tall" ~ "T1")) %>%
+  select(Subblock, Treatment, N, Year, category) %>%
+  spread(category, N) %>%
+  mutate(N0=S0+T0, N1=S1+T1,
+         dS=S1-S0, dT=T1-T0, dN=N1-N0,
+         pS=dS/S0, pT=dT/T0, pN=dN/N0,
+         g=(T1-T0*s)/(S0*s),
+         B=N1-N0*s, pB=B/N0)
+none_est <- mort_height %>% 
+  group_by(Subblock, Treatment) %>% 
+  summarise(mn_g=mean(g), mn_pB=mean(pB))
+
+# Calculate r, p using estimates of g, B
+mort_cut <- mort_eis %>% 
+  filter(Season != "Mid" & Year !=2010 & Treatment=="CUT") %>%
+  mutate(category=case_when(Season=="Start" & Height=="short" ~ "S0",
+                            Season=="End" & Height=="short" ~ "S1",
+                            Season=="Start" & Height=="tall" ~ "T0",
+                            Season=="End" & Height=="tall" ~ "T1")) %>%
+  select(Subblock, Treatment, N, Year, category) %>%
+  spread(category, N) %>%
+  mutate(N0=S0+T0, N1=S1+T1,
+         dS=S1-S0, dT=T1-T0, dN=N1-N0,
+         pS=dS/S0, pT=dT/T0, pN=dN/N0,
+         g=none_est$mn_g[match(Subblock, none_est$Subblock)],
+         pB=none_est$mn_pB[match(Subblock, none_est$Subblock)],
+         B=pB*N0,
+         r=(N1-B)/(s*N0),
+         p=1-(T1-s*r*g*S0)/(s*r*T0))
+mean(mort_cut$pN - mort_height$pN)
+
+mort_sum <- mort_eis %>% group_by(Subblock, Treatment, Date, Season, Year) %>%
+  summarise(N=sum(N))
+mort_pct <- mort_eis %>% 
+  filter(Season != "Mid" & Year != 2010) %>% 
+  select(-Date) %>% 
+  spread(Season, N) %>%
+  mutate(chg.N=End-Start,
+         chg.pct=chg.N/(Start))
+mort_sum_pct <- mort_sum %>% ungroup %>%
+  filter(Season != "Mid" & Year != 2010) %>% 
+  select(-Date) %>% 
+  spread(Season, N) %>%
+  mutate(chg.N=End-Start,
+         chg.pct=chg.N/(Start))
+mort_diff <- mort_pct %>%
+  select(Subblock, Treatment, Year, Height, chg.pct) %>%
+  spread(Treatment, chg.pct) %>%
+  mutate(chg.pct.cut_none=CUT-NONE)
+mort_sum_diff <- mort_sum_pct %>%
+  select(Subblock, Treatment, Year, chg.pct) %>%
+  spread(Treatment, chg.pct) %>%
+  mutate(chg.pct.cut_none=CUT-NONE)
