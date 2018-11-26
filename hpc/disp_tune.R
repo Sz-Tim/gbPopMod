@@ -75,9 +75,9 @@ write_csv(out, paste0(out.dir, "dispersal_out.csv"))
 
 if(plots) {
   library(viridis)
-  ggplot(out, aes(sdd.rate, pCorr, colour=n.ldd)) + 
+  ggplot(out, aes(sdd.rate, pCorr, colour=n.ldd, group=n.ldd)) + 
     geom_vline(xintercept=g.p$sdd.rate) + 
-    geom_point(alpha=0.8) + stat_smooth(method="loess", se=F) + 
+    geom_point(alpha=0.4) + stat_smooth(method="loess", se=F) + 
     facet_wrap(~Year) + scale_colour_viridis(option="B")
   ggplot(out, aes(sdd.max, pCorr)) + geom_boxplot(aes(group=sdd.max)) +
     stat_smooth(method="loess") + facet_wrap(~Year)
