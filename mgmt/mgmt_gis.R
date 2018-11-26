@@ -1,4 +1,5 @@
-
+# This script rasterizes the vector boundaries of each UNH woodlands property
+# and identifies the landscape cells within each property
 
 Packages <- c("raster", "gbPopMod", "tidyverse", "magrittr", 
               "here", "doSNOW", "sf", "viridis")
@@ -6,7 +7,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 
 # set parameters
-res <- c("20ac", "9km2")[2]
+res <- c("20ac", "9km2")[1]
 
 # load landscape & woodland xlsx
 load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
@@ -50,8 +51,8 @@ lc.df_22km <- lc.df_22km %>%
          id=row_number(),
          id.in=min_rank(na_if(inbd*id, 0)))
 
-write_csv(lc.df_22km, "data/USDA_UNH_mgmt.csv")
-save(lc.df_22km, file="data/USDA_UNH_mgmt.rda")
+write_csv(lc.df_22km, paste0("data/USDA_", res, "_mgmt.csv"))
+save(lc.df_22km, file=paste0("data/USDA_", res, "_mgmt.rda"))
 
 
 ggplot() + 
