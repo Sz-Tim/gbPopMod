@@ -18,8 +18,8 @@ library(gbPopMod); library(doSNOW); library(foreach)
 
 # set parameters
 n_sim <- 3
-res <- c("20ac", "9km2")[2]
-dem_par <- set_g_p(tmax=96)
+res <- c("20ac", "9km2")[1]
+dem_par <- set_g_p(tmax=96, n.cores=1)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
   dem_par$sdd.max <- 7
