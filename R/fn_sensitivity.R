@@ -147,7 +147,7 @@ global_sensitivity <- function(par.ls, nSamp, ngrid, ncell, g.p, lc.df,
   library(tidyverse); library(magrittr); library(foreach); library(doSNOW)
   if(!dir.exists(sim.dir)) dir.create(sim.dir, recursive=TRUE)
   dir_0 <- ifelse(length(dir(sim.dir))>0,
-                  str_split_fixed(dir(sim.dir), "_", 2)[,2] %>%
+                  str_split_fixed(dir(sim.dir, "results"), "_", 2)[,2] %>%
                     str_remove(., ".csv") %>% as.numeric(.) %>% max,
                   0)
   if(is.null(save_yrs)) {
