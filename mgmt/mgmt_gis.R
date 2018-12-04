@@ -29,11 +29,11 @@ all_boundaries <- map(boundary.f,
   map(~st_transform(., crs=32618)) %>%
   do.call("rbind", .) %>%
   mutate(property=boundary.f)
-bbox_22km <- st_bbox(st_buffer(all_boundaries, dist=22000))
-x_rng <- range(filter(lc.df, lon<=bbox_22km$xmax & lon>=bbox_22km$xmin)$x)
-y_rng <- range(filter(lc.df, lat<=bbox_22km$ymax & lat>=bbox_22km$ymin)$y)
-lc.df_22km <- filter(lc.df, x>=x_rng[1] & x<=x_rng[2] & y>=y_rng[1] & y<=y_rng[2])
-lc.st <- raster::rasterFromXYZ(lc.df_22km[lc.df_22km$inbd,c(10,11,4:9,12:14)])
+bbox_2sdd <- st_bbox(st_buffer(all_boundaries, dist=set_g_p()$sdd.max*2*285))
+x_rng <- range(filter(lc.df, lon<=bbox_2sdd$xmax & lon>=bbox_2sdd$xmin)$x)
+y_rng <- range(filter(lc.df, lat<=bbox_2sdd$ymax & lat>=bbox_2sdd$ymin)$y)
+lc.df_2sdd <- filter(lc.df, x>=x_rng[1] & x<=x_rng[2] & y>=y_rng[1] & y<=y_rng[2])
+lc.st <- raster::rasterFromXYZ(lc.df_2sdd[lc.df_2sdd$inbd,c(10,11,4:9,12:14)])
 raster::crs(lc.st) <- sp::CRS('+init=EPSG:32618')
 lc.st <- rasterToPolygons(lc.st) %>% st_as_sf()
 lc.UNH.overlap <- st_intersects(all_boundaries, lc.st) %>%
@@ -43,7 +43,7 @@ overlap.df <- data.frame(id.in=unlist(lc.UNH.overlap),
                          property=unlist(map2(lc.UNH.overlap, 
                                               names(lc.UNH.overlap), 
                                               ~rep(.y, length(.x)))))
-lc.df_22km <- lc.df_22km %>% 
+lc.df_2sdd <- lc.df_2sdd %>% 
   mutate(in.UNH=id.in %in% overlap.df$id.in,
          Property=overlap.df$property[match(id.in, overlap.df$id.in)],
          id.full=id,
@@ -51,12 +51,12 @@ lc.df_22km <- lc.df_22km %>%
          id=row_number(),
          id.in=min_rank(na_if(inbd*id, 0)))
 
-write_csv(lc.df_22km, paste0("data/USDA_", res, "_mgmt.csv"))
-save(lc.df_22km, file=paste0("data/USDA_", res, "_mgmt.rda"))
+write_csv(lc.df_2sdd, paste0("data/USDA_", res, "_mgmt.csv"))
+save(lc.df_2sdd, file=paste0("data/USDA_", res, "_mgmt.rda"))
 
 
 ggplot() + 
-  geom_tile(data=lc.df_22km, aes(lon, lat)) +
-  geom_tile(data=filter(lc.df_22km, in.UNH), aes(lon, lat, fill=Property)) +
+  geom_tile(data=lc.df_2sdd, aes(lon, lat)) +
+  geom_tile(data=filter(lc.df_2sdd, in.UNH), aes(lon, lat, fill=Property)) +
   scale_fill_viridis(option="D", discrete=TRUE, na.value=NA)
 
