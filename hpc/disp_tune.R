@@ -25,7 +25,7 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 # set parameters
 plots <- FALSE
 res <- c("20ac", "9km2")[1]
-g.p <- set_g_p(tmax=96, lc.r=Inf, lc.c=Inf, N.p.t0=1, n.cores=5)
+g.p <- set_g_p(tmax=96, lc.r=Inf, lc.c=Inf, N.p.t0=1, n.cores=4)
 par.ls <- set_sensitivity_pars(names(g.p)[c(15,16,18)], "gb", res)
 g.p$N.0 <- 10
 nSamp <- 2500
@@ -48,7 +48,7 @@ cell.init <- get_pt_id(lc.df, c(739235.9, 4753487)) # 1922: herbarium_records.R
 ## Run model
 ########
 # run sensitivity analysis
-out.dir <- paste0("out/sdd_tune/", res, "/")
+out.dir <- paste0("out/sdd_tune/", res, "/4_5/")
 global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, select(lc.df, -MinObsYear), 
                    sdd=NULL, cell.init, control.p=NULL, save_yrs=1:g.p$tmax,
                    verbose=T, sim.dir=paste0(out.dir, "sims/"))
