@@ -19,13 +19,13 @@
 ## Setup
 ########
 # load libraries
-Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW","fastmatch")
+Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "foreach","doSNOW")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
 plots <- FALSE
 res <- c("20ac", "9km2")[1]
-g.p <- set_g_p(tmax=96, lc.r=Inf, lc.c=Inf, N.p.t0=1, n.cores=5)
+g.p <- set_g_p(tmax=96, lc.r=Inf, lc.c=Inf, N.p.t0=1, n.cores=8)
 par.ls <- set_sensitivity_pars(names(g.p)[c(15,16,18)], "gb", res)
 g.p$N.0 <- 10
 nSamp <- 2500
@@ -58,32 +58,83 @@ global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, select(lc.df, -MinObsYear),
 ## validate pattern of spread 
 ########
 
-f.nums <- str_remove(str_remove(dir(paste0(out.dir, "sims"), "N"), ".rds"), "N_")
+f <- dir(out.dir, "N", recursive=TRUE)
 Years <- sort(unique(lc.df$MinObsYear)[!is.na(unique(lc.df$MinObsYear))])
 k.hist.occ <- map(Years, ~which(lc.df$MinObsYear <= .))
 if(!dir.exists(paste0(out.dir, "pred"))) dir.create(paste0(out.dir, "pred"))
-for(i in seq_along(f.nums)) {
-  N <- readRDS(paste0(out.dir, "sims/N_", f.nums[i], ".rds")) 
-  par <- read.csv(paste0(out.dir, "sims/results_", f.nums[i], ".csv"))
+
+p.c <- makeCluster(g.p$n.cores); registerDoSNOW(p.c)
+foreach(i=seq_along(f), .packages=Packages) %dopar% {
+  N <- readRDS(paste0(out.dir, f[i])) 
+  par <- read.csv(paste0(out.dir, str_replace(str_replace(f[i], "N", "results"),
+                                              ".rds", ".csv")))
   results <- merge(data.frame(Year=Years), par) %>%
     mutate(pCorr=map2_dbl(k.hist.occ, Years, ~sum(N[.x,.y-1922]>0)/length(.x)))
-  write_csv(results, paste0(out.dir, "pred/results_", f.nums[i], ".csv"))
+  write_csv(results, paste0(out.dir, "pred/results_", i, ".csv"))
+  return(i)
 }
+stopCluster(p.c)
 
 out <- map_dfr(dir(paste0(out.dir, "pred"), full.names=T), read.csv)
 write_csv(out, paste0(out.dir, "dispersal_out.csv"))
 
 if(plots) {
   library(viridis)
-  ggplot(out, aes(sdd.rate, pCorr, colour=n.ldd, group=n.ldd)) + 
+  # univariate
+  ggplot(out, aes(sdd.rate, pCorr)) + 
     geom_vline(xintercept=g.p$sdd.rate) + 
-    geom_point(alpha=0.4) + stat_smooth(method="loess", se=F) + 
-    facet_wrap(~Year) + scale_colour_viridis(option="B")
-  ggplot(out, aes(sdd.max, pCorr)) + geom_boxplot(aes(group=sdd.max)) +
-    stat_smooth(method="loess") + facet_wrap(~Year)
-  ggplot(out, aes(n.ldd, pCorr)) + geom_boxplot(aes(group=n.ldd)) +
-    stat_smooth(method="loess") + facet_wrap(~Year)
+    geom_point(alpha=0.1) + stat_smooth(method="loess", se=F) + 
+    facet_wrap(~Year) + ylim(0,1) +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("sdd.rate and prediction of historical records")
+  ggplot(out, aes(sdd.max, pCorr)) + 
+    geom_boxplot(aes(group=sdd.max), outlier.size=0.5) +
+    geom_vline(xintercept=g.p$sdd.max) + 
+    stat_smooth(method="loess") + facet_wrap(~Year) + ylim(0,1) +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("sdd.max and prediction of historical records")
+  ggplot(out, aes(n.ldd, pCorr)) + 
+    geom_boxplot(aes(group=n.ldd), outlier.size=0.5) +
+    geom_vline(xintercept=g.p$n.ldd) + 
+    stat_smooth(method="loess") + facet_wrap(~Year) + ylim(0,1) +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("n.ldd and prediction of historical records")
   
+  # bivariate
+  ggplot(out, aes(sdd.rate, pCorr, colour=n.ldd, group=n.ldd)) + 
+    geom_vline(xintercept=g.p$sdd.rate) + ylim(0,1) + 
+    geom_point(alpha=0.4) + stat_smooth(method="loess", se=F) + 
+    facet_wrap(~Year) + scale_colour_viridis(option="B") +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("sdd.rate, n.ldd, and prediction of historical records")
+  ggplot(out, aes(sdd.max, pCorr, colour=n.ldd, group=n.ldd)) + 
+    geom_vline(xintercept=g.p$sdd.max) + ylim(0,1) + 
+    geom_point(alpha=0.4) + stat_smooth(method="loess", se=F) + 
+    facet_wrap(~Year) + scale_colour_viridis(option="B") +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("sdd.max, n.ldd, and prediction of historical records")
+  ggplot(out, aes(sdd.rate, pCorr, colour=sdd.max, group=sdd.max)) + 
+    geom_vline(xintercept=g.p$sdd.rate) + ylim(0,1) + 
+    geom_point(alpha=0.4) + stat_smooth(method="loess", se=F) + 
+    facet_wrap(~Year) + scale_colour_viridis(option="B") +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("sdd.rate, sdd.max, and prediction of historical records")
+  ggplot(out, aes(n.ldd, pCorr, colour=sdd.max, group=sdd.max)) + 
+    geom_vline(xintercept=g.p$n.ldd) + ylim(0,1) + 
+    geom_point(alpha=0.4) + stat_smooth(method="loess", se=F) + 
+    facet_wrap(~Year) + scale_colour_viridis(option="B") +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("n.ldd, sdd.max, and prediction of historical records")
+  
+  # trivariate
+  ggplot(out, aes(sdd.rate, pCorr, colour=sdd.max, group=sdd.max)) + 
+    geom_vline(xintercept=g.p$sdd.rate) + ylim(0,1) + 
+    geom_point(alpha=0.4) +  
+    facet_grid(n.ldd~Year) + scale_colour_viridis(option="B") +
+    labs(y="Proportion of correctly predicted presences") +
+    ggtitle("sdd.rate, sdd.max, n.ldd, and prediction of historical records")
+  
+  # subset: final year
   ggplot(filter(out, Year==2018), aes(sdd.rate, pOcc, colour=n.ldd, group=n.ldd)) + 
     geom_point(alpha=0.8) + stat_smooth(method="loess", se=F) + 
     scale_colour_viridis(option="B")
@@ -92,6 +143,35 @@ if(plots) {
     scale_colour_viridis(option="B")
   ggplot(filter(out, Year==2018), aes(n.ldd, pOcc)) + geom_boxplot(aes(group=n.ldd)) +
     stat_smooth(method="loess")
+  
+  
+  ggplot(filter(out, Year==2018), aes(sdd.rate, pCorr, colour=n.ldd, group=n.ldd)) + 
+    geom_point(alpha=0.8) + stat_smooth(method="loess", se=F, size=1.5) + 
+    scale_colour_viridis(option="B")
+  ggplot(filter(out, n.ldd==15), aes(sdd.rate, pCorr, colour=sdd.max, group=sdd.max)) + 
+    geom_point(alpha=0.8) + 
+    scale_colour_viridis(option="B")
+  ggplot(filter(out, Year==2018), aes(sdd.rate, pCorr, colour=sdd.max)) + 
+    geom_point(alpha=0.8) + facet_wrap(~n.ldd) + ylim(0,1) +
+    scale_colour_viridis(option="B")
+  ggplot(filter(out, Year==2018), aes(sdd.rate, pCorr, colour=n.ldd, group=n.ldd)) + 
+    geom_point(alpha=0.8) + facet_wrap(~sdd.max) + ylim(0,1) +
+    scale_colour_viridis(option="B")
+  
+  ggplot(out, aes(sdd.rate, pCorr, colour=Year, group=Year)) + 
+    geom_point(alpha=0.8) +
+    facet_wrap(~n.ldd) +
+    stat_smooth(method="loess", se=F)
+  
+  out %>% filter(pCorr > 0.8 & Year==2018) %>% arrange(pCorr) %>% summary()
+  # medians:
+  # sdd.rate = 0.0589
+  # sdd.max = 27
+  # n.ldd = 13
+  # pOcc = 0.671
+  # pSB = 0.814
+  # pK = 0.537
+  # pCorr = 0.818
 }
 
 
