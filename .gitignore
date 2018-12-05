@@ -36,3 +36,13 @@ vignettes/wtmn_v_lm.R
 vignettes/Get Actions Code.R
 data/USDA_9km2_parcels.csv
 vignettes/*.jpeg
+
+# output from the cluster
+out/20ac/1*
+out/20ac/2*
+out/20ac/5*
+out/20ac/brt
+out/sdd_tune/20ac/1*
+out/sdd_tune/20ac/4*
+out/sdd_tune/20ac/5*
+out/sdd_tune/20ac/pred
