@@ -25,7 +25,7 @@ ggplot(cvDev.df, aes(x=smp, y=Dev, group=td, colour=td)) + geom_line(size=1) +
 ggplot(beta.df, aes(x=smp, y=beta, group=td, colour=td)) +  geom_line(size=1) +
   facet_wrap(~response, scale="free_y") + 
   scale_colour_gradient(low="black", high="dodgerblue") +
-  facet_wrap(~response) + ylim(NA, max(1.02, beta.df$beta, na.rm=T)) +
+  facet_wrap(~response) + ylim(NA, max(1.01, beta.df$beta, na.rm=T)) +
   ggtitle("Stability of relative influence")
 
 # Relative influence: facets = parameters
@@ -34,7 +34,8 @@ ggplot(filter(ri.df, smp==max(ri.df$smp) & td==max(ri.df$td)),
   geom_hline(yintercept=0, size=0.25, colour="gray30") + 
   scale_fill_manual(values=resp_col) + 
   scale_x_discrete(limits=rev(c("pOcc", "pSB", "meanNg0", "medNg0", "sdNg0", "pK")),
-                   labels=rev(c("Pr(N)", "Pr(B)", "mean(N | N>0)", "median(N | N>0)",
+                   labels=rev(c("Pr(N > 0)", "Pr(B > 0)", 
+                                "mean(N | N>0)", "median(N | N>0)",
                                 "sd(N | N>0)", "Pr(N=K | N>0)"))) +
   scale_y_continuous(breaks=c(0, 0.5, 1), labels=c("0", "0.5", "1")) + 
   geom_bar(stat="identity", colour="gray30") + facet_wrap(~param) + 
