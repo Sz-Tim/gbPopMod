@@ -44,17 +44,12 @@ cell.init <- get_pt_id(lc.df, coord.init)
 ########
 # sdd <- list(sp=sdd_set_probs(ncell, lc.df, dem_par)$sp)
 sdd <- sdd_set_probs(ncell, lc.df, dem_par)
-p.c <- makeCluster(dem_par$n.cores); registerDoSNOW(p.c)
-sdd.ji.rows <- foreach(x=1:ncell) %dopar% { which(sdd$sp.df$j.idin==x) }
-stopCluster(p.c)
-sdd.ji <- parallel::mclapply(sdd.ji.rows, function(x) sdd$sp.df$i.idin[x]) 
-p.ji <- parallel::mclapply(sdd.ji.rows, function(x) sdd$sp.df$pr[x]) 
+
 
 # store SDD neighborhoods
 if(!dir.exists("data/inits/temp")) dir.create("data/inits/temp", recursive=T)
 saveRDS(sdd, paste0("data/inits/sdd_", res, ".rds"))
-saveRDS(sdd.ji, paste0("data/inits/sdd_ji_", res, ".rds"))
-saveRDS(p.ji, paste0("data/inits/p_ji_", res, ".rds"))
+
 
 N_0 <- pop_init(ngrid, dem_par, lc.df, p.0=cell.init, N.0=10)
 N.tmax <- array(0, dim=c(ngrid, 6, max(dem_par$m), n_sim))
@@ -88,6 +83,16 @@ B.tmax <- dir("data/inits/temp", paste0(res, "_B_"), full.names=T) %>%
   Reduce(`+`, .)/n_sim
 saveRDS(N.tmax, paste0("data/inits/N_2018_", res, ".rds"))
 saveRDS(B.tmax, paste0("data/inits/B_2018_", res, ".rds"))
+
+
+# calculate extra SDD info
+p.c <- makeCluster(dem_par$n.cores); registerDoSNOW(p.c)
+sdd.ji.rows <- foreach(x=1:ncell) %dopar% { which(sdd$sp.df$j.idin==x) }
+stopCluster(p.c)
+sdd.ji <- parallel::mclapply(sdd.ji.rows, function(x) sdd$sp.df$i.idin[x]) 
+p.ji <- parallel::mclapply(sdd.ji.rows, function(x) sdd$sp.df$pr[x]) 
+saveRDS(sdd.ji, paste0("data/inits/sdd_ji_", res, ".rds"))
+saveRDS(p.ji, paste0("data/inits/p_ji_", res, ".rds"))
 
 
 
