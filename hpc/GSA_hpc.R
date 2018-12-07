@@ -36,7 +36,7 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW","fastmatch")
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
-res <- c("20ac", "9km2")[2]
+res <- c("20ac", "9km2")[1]
 g.p <- set_g_p(tmax=50, lc.r=Inf, lc.c=Inf, N.p.t0=1, n.cores=4)
 par.ls <- set_sensitivity_pars(names(g.p)[10:26][-15], "gb", res)
 par.ls$N.0 <- list(param="N.0", type="int", LC=0, min=1, max=100)
@@ -60,31 +60,32 @@ out.dir <- paste0("out/", res, "/")
 global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, lc.df, 
                    sdd=NULL, cell.init, control.p=NULL, verbose=T, 
                    sim.dir=paste0(out.dir, "sims/"))
-# out <- list.files(paste0(out.dir, "sims"), full.names=T) %>% map_dfr(read.csv)
+
+out <- dir(out.dir, recursive=T, full.names=T) %>% map_dfr(read.csv)
 
 
 
 ########
 ## Emulate output
 ########
-# nMetric <- 6  # pOcc, pSB, pK, meanNg0, medNg0, sdNg0
-# nPar <- ncol(out)-nMetric
-# brt.sum <- vector("list", nMetric)
-# for(i in 1:nMetric) {
-#   metric <- names(out)[nPar+i]
-#   emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric, 
-#                       brt.dir=paste0(out.dir, "brt/"))
-#   brt.sum[[i]] <- emulation_summary(metric, paste0(out.dir, "brt/"))
-# }
+nMetric <- 6  # pOcc, pSB, pK, meanNg0, medNg0, sdNg0
+nPar <- ncol(out)-nMetric
+brt.sum <- vector("list", nMetric)
+for(i in 1:nMetric) {
+  metric <- names(out)[nPar+i]
+  emulate_sensitivity(out, par.ls, g.p$n.cores, resp=metric,
+                      brt.dir=paste0(out.dir, "brt/"))
+  brt.sum[[i]] <- emulation_summary(metric, paste0(out.dir, "brt/"))
+}
 
 
 
 ########
 ## Store emulation results
 ########
-# write_csv(map_dfr(brt.sum, ~.$ri.df), paste0(out.dir, "BRT_RI.csv"))
-# write_csv(map_dfr(brt.sum, ~.$cvDev.df), paste0(out.dir, "BRT_cvDev.csv"))
-# write_csv(map_dfr(brt.sum, ~.$betaDiv.df), paste0(out.dir, "BRT_betaDiv.csv"))
+write_csv(map_dfr(brt.sum, ~.$ri.df), paste0(out.dir, "BRT_RI.csv"))
+write_csv(map_dfr(brt.sum, ~.$cvDev.df), paste0(out.dir, "BRT_cvDev.csv"))
+write_csv(map_dfr(brt.sum, ~.$betaDiv.df), paste0(out.dir, "BRT_betaDiv.csv"))
 
 
 
