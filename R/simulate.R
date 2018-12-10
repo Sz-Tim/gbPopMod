@@ -193,7 +193,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     if(verbose) setTxtProgressBar(pb, k)
   }
   if(verbose) close(pb)
-  if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
+  #if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
   if(!dem_out) nFl <- nSd <- nSdStay <- D <- NULL
   return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
