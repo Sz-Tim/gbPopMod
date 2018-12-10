@@ -19,6 +19,7 @@
 #'   years are returned
 #' @param K_max \code{NULL} Maximum carrying capacity to avoid memory overloads
 #' @param dem_out \code{TRUE} Store nFl, nSd, nSdStay, D?
+#' @param collapse_LCs \code{TRUE} Sum abundances within each cell?
 #' @return Array N of abundances for each cell and age group, matrix B of seed
 #'   bank abundances, matrix nFl with number of flowering individuals, matrix
 #'   nSd of total seeds produced in each cell, matrix nSdStay of total seeds
@@ -27,7 +28,8 @@
 #' @export
 
 run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, 
-                    verbose=TRUE, save_yrs=NULL, K_max=NULL, dem_out=TRUE) {
+                    verbose=TRUE, save_yrs=NULL, K_max=NULL, dem_out=TRUE,
+                    collapse_LCs=TRUE) {
   
   library(tidyverse); library(magrittr)
   
@@ -193,7 +195,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     if(verbose) setTxtProgressBar(pb, k)
   }
   if(verbose) close(pb)
-  #if(m.d) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
+  if(collapse_LCs) N <- apply(N, c(1,2,4), sum, na.rm=TRUE)
   if(!dem_out) nFl <- nSd <- nSdStay <- D <- NULL
   return(list(N=N, B=B, nFl=nFl, nSd=nSd, nSdStay=nSdStay, D=D))
 }
