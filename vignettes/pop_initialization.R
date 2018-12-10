@@ -47,42 +47,50 @@ sdd <- sdd_set_probs(ncell, lc.df, dem_par)
 
 
 # store SDD neighborhoods
-if(!dir.exists("data/inits/temp")) dir.create("data/inits/temp", recursive=T)
+tmp.dir <- "data/inits/temp/"
+if(!dir.exists(tmp.dir)) dir.create(tmp.dir, recursive=T)
 saveRDS(sdd, paste0("data/inits/sdd_", res, ".rds"))
 
 
 N_0 <- pop_init(ngrid, dem_par, lc.df, p.0=cell.init, N.0=10)
-N.tmax <- array(0, dim=c(ngrid, 6, max(dem_par$m), n_sim))
-B.tmax <- matrix(0, nrow=ngrid, ncol=n_sim)
 
 p.c <- makeCluster(dem_par$n.cores); registerDoSNOW(p.c)
 sim.out <- foreach(s=1:n_sim,
                    .packages=c("gbPopMod", "stringr")) %dopar% {
-  N.k <- N_0
-  B.k <- rep(0, ngrid)
-  for(k in 1:(dem_par$tmax-1)) {
-    out <- iterate_pop(ngrid, ncell, N.k, B.k, dem_par, lc.df, sdd)
-    N.k <- out$N
-    B.k <- out$B
-  }
+  out <- run_sim(ngrid, ncell, dem_par, lc.df, sdd, N_0, NULL, F, dem_par$tmax)
   s.f <- str_pad(s, 4, "left", "0")
-  saveRDS(N.k, paste0("data/inits/temp/", res, "_N_", s.f, ".rds"))
-  saveRDS(B.k, paste0("data/inits/temp/", res, "_B_", s.f, ".rds"))
+  saveRDS(out$N[,1,], paste0(tmp.dir, res, "_N_", s.f, ".rds"))
+  saveRDS(out$B[,1], paste0(tmp.dir, res, "_B_", s.f, ".rds"))
+  saveRDS(out$nSd[,1], paste0(tmp.dir, res, "_nSd_", s.f, ".rds"))
+  saveRDS(out$nSdStay[,1], paste0(tmp.dir, res, "_nSdStay_", s.f, ".rds"))
+  saveRDS(out$D[,1], paste0(tmp.dir, res, "_D_", s.f, ".rds"))
   return(s)
 }
 stopCluster(p.c)
 
 
 
-# store abundances
-N.tmax <- dir("data/inits/temp", paste0(res, "_N_"), full.names=T) %>%
+# store summarized output
+N.tmax <- dir(tmp.dir, paste0(res, "_N_"), full.names=T) %>%
   map(readRDS) %>%
   Reduce(`+`, .)/n_sim
-B.tmax <- dir("data/inits/temp", paste0(res, "_B_"), full.names=T) %>%
+B.tmax <- dir(tmp.dir, paste0(res, "_B_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+nSd.tmax <- dir(tmp.dir, paste0(res, "_nSd_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+nSdStay.tmax <- dir(tmp.dir, paste0(res, "_nSdStay_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+D.tmax <- dir(tmp.dir, paste0(res, "_D_"), full.names=T) %>%
   map(readRDS) %>%
   Reduce(`+`, .)/n_sim
 saveRDS(N.tmax, paste0("data/inits/N_2018_", res, ".rds"))
 saveRDS(B.tmax, paste0("data/inits/B_2018_", res, ".rds"))
+saveRDS(nSd.tmax, paste0("data/inits/nSd_2018_", res, ".rds"))
+saveRDS(nSdStay.tmax, paste0("data/inits/nSdStay_2018_", res, ".rds"))
+saveRDS(D.tmax, paste0("data/inits/D_2018_", res, ".rds"))
 
 
 # calculate extra SDD info
