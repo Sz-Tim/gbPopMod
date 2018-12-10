@@ -17,8 +17,8 @@
 library(gbPopMod); library(doSNOW); library(foreach)
 
 # set parameters
-n_sim <- 100
-res <- c("20ac", "9km2")[1]
+n_sim <- 20
+res <- c("20ac", "9km2")[2]
 dem_par <- set_g_p(tmax=96, n.cores=10)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
@@ -64,6 +64,7 @@ sim.out <- foreach(s=1:n_sim,
   saveRDS(out$nSd[,1], paste0(tmp.dir, res, "_nSd_", s.f, ".rds"))
   saveRDS(out$nSdStay[,1], paste0(tmp.dir, res, "_nSdStay_", s.f, ".rds"))
   saveRDS(out$D[,1], paste0(tmp.dir, res, "_D_", s.f, ".rds"))
+  saveRDS(out$nFl[,1], paste0(tmp.dir, res, "_nFl_", s.f, ".rds"))
   return(s)
 }
 stopCluster(p.c)
@@ -86,11 +87,15 @@ nSdStay.tmax <- dir(tmp.dir, paste0(res, "_nSdStay_"), full.names=T) %>%
 D.tmax <- dir(tmp.dir, paste0(res, "_D_"), full.names=T) %>%
   map(readRDS) %>%
   Reduce(`+`, .)/n_sim
+nFl.tmax <- dir(tmp.dir, paste0(res, "_nFl_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
 saveRDS(N.tmax, paste0("data/inits/N_2018_", res, ".rds"))
 saveRDS(B.tmax, paste0("data/inits/B_2018_", res, ".rds"))
 saveRDS(nSd.tmax, paste0("data/inits/nSd_2018_", res, ".rds"))
 saveRDS(nSdStay.tmax, paste0("data/inits/nSdStay_2018_", res, ".rds"))
 saveRDS(D.tmax, paste0("data/inits/D_2018_", res, ".rds"))
+saveRDS(nFl.tmax, paste0("data/inits/nFl_2018_", res, ".rds"))
 
 
 # calculate extra SDD info
