@@ -5,7 +5,8 @@
 \title{Run demographic simulation}
 \usage{
 run_sim(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p, verbose = TRUE,
-  save_yrs = NULL, K_max = NULL, dem_out = TRUE)
+  save_yrs = NULL, K_max = NULL, dem_out = TRUE,
+  collapse_LCs = TRUE)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -34,6 +35,8 @@ years are returned}
 \item{K_max}{\code{NULL} Maximum carrying capacity to avoid memory overloads}
 
 \item{dem_out}{\code{TRUE} Store nFl, nSd, nSdStay, D?}
+
+\item{collapse_LCs}{\code{TRUE} Sum abundances within each cell?}
 }
 \value{
 Array N of abundances for each cell and age group, matrix B of seed

@@ -57,9 +57,10 @@ N_0 <- pop_init(ngrid, dem_par, lc.df, p.0=cell.init, N.0=10)
 p.c <- makeCluster(dem_par$n.cores); registerDoSNOW(p.c)
 sim.out <- foreach(s=1:n_sim,
                    .packages=c("gbPopMod", "stringr")) %dopar% {
-  out <- run_sim(ngrid, ncell, dem_par, lc.df, sdd, N_0, NULL, F, dem_par$tmax)
+  out <- run_sim(ngrid, ncell, dem_par, lc.df, sdd, N_0, NULL, F, dem_par$tmax, 
+                 collapse_LCs=F)
   s.f <- str_pad(s, 4, "left", "0")
-  saveRDS(out$N[,1,], paste0(tmp.dir, res, "_N_", s.f, ".rds"))
+  saveRDS(out$N[,1,,], paste0(tmp.dir, res, "_N_", s.f, ".rds"))
   saveRDS(out$B[,1], paste0(tmp.dir, res, "_B_", s.f, ".rds"))
   saveRDS(out$nSd[,1], paste0(tmp.dir, res, "_nSd_", s.f, ".rds"))
   saveRDS(out$nSdStay[,1], paste0(tmp.dir, res, "_nSdStay_", s.f, ".rds"))
