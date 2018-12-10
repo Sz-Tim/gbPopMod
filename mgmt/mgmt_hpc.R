@@ -23,8 +23,8 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW", "fastmatch"
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
-res <- c("20ac", "9km2")[2]
-n.sim <- 10
+res <- c("20ac", "9km2")[1]
+n.sim <- 100
 dem_par <- set_g_p(tmax=20, n.cores=4)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
@@ -33,7 +33,6 @@ if(res == "9km2") {
 }
 
 # load landscape
-# load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
 lc.df <- read.csv(paste0("data/USDA_", res, "_mgmt.csv"))
 ngrid <- nrow(lc.df)
 ncell <- sum(lc.df$inbd)
@@ -56,18 +55,18 @@ for(m in seq_along(mgmt)) {
   } else {
     mgmt_index <- match(lc.UNH$Property, mgmt_plans[[m]]$Property)
     mgmt_m <- cbind(id=lc.UNH$id, mgmt_plans[[m]][mgmt_index,])
-    mgmt[[m]] <- list(ctrl_par=set_control_p(null_ctrl=FALSE,
-                                             man.trt=c("M"=0.4, "C"=0.9, 
-                                                       "MC"=0.96, "N"=0)),
+    mgmt[[m]] <- list(ctrl_par=set_control_p(null_ctrl=FALSE),
                       manual.i=mgmt_m[,grep("id|Trt", names(mgmt_m))],
                       thresh=mgmt_m$thresh,
                       trt.int=mgmt_m$trt.cycle,
-                      trt.followup=mgmt_m$trt.followup)
+                      trt.followup=mgmt_m$trt.followup,
+                      cover.i=mgmt_m[,grep("id|ground", names(mgmt_m))] %>%
+                        dplyr::rename(Trt=ground_cover))
   }
 } 
 
 # storage and initialization objects
-out.df.ls <- out.all.ls <- setNames(vector("list", 4), names(mgmt))
+out.df.ls <- out.all.ls <- setNames(vector("list", length(mgmt)), names(mgmt))
 N <- array(0, dim=c(ngrid, dem_par$tmax+1, 6, max(dem_par$m)))
 N[,1,,] <- N_0
 B <- matrix(0, nrow=ngrid, ncol=dem_par$tmax+1)
@@ -95,6 +94,7 @@ for(m in seq_along(mgmt)) {
                                (k %% mgmt[[m]]$trt.int) <= mgmt[[m]]$trt.followup]
         manual_k <- mgmt[[m]]$manual.i[mgmt[[m]]$manual.i$id %in% managed_k,]
         cover_k <- mgmt[[m]]$cover.i[mgmt[[m]]$cover.i$id %in% managed_k,]
+        if(names(mgmt)[m] != "aggressive") cover_k <- NULL
       } else {
         manual_k <- NULL
         cover_k <- NULL
@@ -117,17 +117,22 @@ for(m in seq_along(mgmt)) {
   B_m <- map(out_m, ~.$B)
   
   # summarise: means across simulations
-  N.tot <- Reduce('+', map(N_m, ~apply(.[,,,max(dem_par$m)], 1:2, sum)))/n.sim
+  N_adult.tot <- Reduce('+', map(N_m, ~apply(.[,,,max(dem_par$m)], 1:2, sum)))/n.sim
+  N_all.tot <- Reduce('+', map(N_m, ~apply(., 1:2, sum)))/n.sim
   B.tot <- Reduce('+', B_m)/n.sim
-  N.df <- as.data.frame(N.tot); names(N.df) <- 1:ncol(N.df)
-  out.all.ls[[m]] <- cbind(lc.df, N.df) %>%
-    gather(year, N, (ncol(lc.df)+1):ncol(.)) %>% 
+  N_adult.df <- as.data.frame(N_adult.tot); names(N_adult.df) <- 1:ncol(N_adult.df)
+  N_all.df <- as.data.frame(N_all.tot); names(N_all.df) <- 1:ncol(N_all.df)
+  out.all.ls[[m]] <- cbind(lc.df, N_adult.df) %>%
+    gather(year, N_adult, (ncol(lc.df)+1):ncol(.)) %>% 
     mutate(year=as.numeric(year),
+           N_all=unlist(N_all.df),
            B=c(B.tot))
   out.df.ls[[m]] <- lc.df %>%
-    mutate(N.0=N.tot[,1],
+    mutate(N_adult.0=N_adult.tot[,1],
+           N_all.0=N_all.tot[,1],
            B.0=B.tot[,1],
-           N.final=N.tot[,dem_par$tmax+1],
+           N_adult.final=N_adult.tot[,dem_par$tmax+1],
+           N_all.final=N_all.tot[,dem_par$tmax+1],
            B.final=B.tot[,dem_par$tmax+1])
 }
 
@@ -140,25 +145,48 @@ out.df <- dplyr::bind_rows(out.df.ls, .id="mgmt")
 out.all <- dplyr::bind_rows(out.all.ls, .id="mgmt")
 out.property <- out.all %>% filter(!is.na(Property)) %>%
   group_by(mgmt, year, Property) %>% 
-  summarise(N=sum(N), B=sum(B), nCell=n())
+  summarise(N_adult=sum(N_adult), N_all=sum(N_all), B=sum(B), nCell=n())
+mgmt_comp.df <- out.df %>% 
+  select(mgmt, lon, lat, id, id.in, in.UNH, Property, N_all.final) %>% 
+  tidyr::spread(mgmt, N_all.final) %>%
+  mutate(propDiff.none=(none-none)/none,
+         propDiff.stated=(stated-none)/none,
+         propDiff.reality=(reality-none)/none,
+         propDiff.agg=(aggressive-none)/none) %>%
+  select(-c(none, stated, reality, aggressive)) %>%
+  gather(mgmt, prDiff, contains("propDiff"))
+write.csv(out.df, paste0(plot.dir, res, "_out_df.csv"))
+write.csv(out.all, paste0(plot.dir, res, "_out_all.csv"))
+write.csv(out.property, paste0(plot.dir, res, "_out_property.csv"))
+write.csv(mgmt_comp.df, paste0(plot.dir, res, "_mgmt_comp.csv"))
+unh.bbox <- with(filter(lc.df, in.UNH), c(range(lon), range(lat)))
+
 # abundance through time
-ggplot(filter(out.all, in.UNH), aes(year, log(N), group=id, colour=Property)) + 
-  geom_line() + facet_wrap(~mgmt)
-ggplot(filter(out.all, in.UNH), aes(year, log(B), group=id, colour=Property)) + 
-  geom_line() + facet_wrap(~mgmt)
-ggplot(out.property, aes(year, N/nCell, group=Property, colour=Property)) +
+ggplot(filter(out.all, in.UNH), aes(year, N_adult, group=id)) + 
+  geom_line(alpha=0.5) + facet_grid(mgmt~Property)
+ggplot(filter(out.all, in.UNH), aes(year, N_all, group=id)) + 
+  geom_line(alpha=0.5) + facet_grid(mgmt~Property)
+ggplot(filter(out.all, in.UNH), aes(year, B, group=id)) + 
+  geom_line(alpha=0.5) + facet_grid(mgmt~Property)
+ggplot(out.property, aes(year, N_adult/nCell, group=Property, colour=Property)) +
   geom_line() + facet_wrap(~mgmt) + 
-  labs(y=paste("Buckthorn adult density per", res))
+  labs(y=paste("Mean buckthorn adult density per", res))
+ggplot(out.property, aes(year, N_all/nCell, group=Property, colour=Property)) +
+  geom_line() + facet_wrap(~mgmt) + 
+  labs(y=paste("Mean buckthorn total density per", res))
 ggplot(out.property, aes(year, B/nCell, group=Property, colour=Property)) +
   geom_line() + facet_wrap(~mgmt) + 
-  labs(y=paste("Buckthorn seed bank density per", res))
+  labs(y=paste("Mean buckthorn seed bank density per", res))
 
 # gifs
 if(gifs) {
   library(gganimate)
   if(!dir.exists(plot.dir)) dir.create(plot.dir, recursive=T)
   anim_save(paste0(plot.dir, "N_mgmt.gif"),
-            animate(ggplot(out.all, aes(lon, lat)) + 
+            animate(ggplot(filter(out.all, 
+                                          lon>=unh.bbox[1] & lon<=unh.bbox[2] &
+                                            lat>=unh.bbox[3] & lat<=unh.bbox[4]), 
+                                   aes(lon, lat)) + 
                       geom_tile(aes(fill=log(N), colour=in.UNH), size=0.5) +
                       scale_fill_viridis(option="B") + 
                       scale_colour_manual(values=c(NA, "white")) +
@@ -168,7 +196,10 @@ if(gifs) {
                     nframes=n_distinct(out.all$year), 
                     width=800, height=600, units="px"))
   anim_save(paste0(plot.dir, "B_mgmt.gif"),
-            animate(ggplot(out.all, aes(lon, lat)) + 
+            animate(ggplot(filter(out.all, 
+                                  lon>=unh.bbox[1] & lon<=unh.bbox[2] &
+                                    lat>=unh.bbox[3] & lat<=unh.bbox[4]), 
+                           aes(lon, lat)) + 
                       geom_tile(aes(fill=log(B), colour=in.UNH), size=0.5) +
                       scale_fill_viridis(option="B") + 
                       scale_colour_manual(values=c(NA, "white")) +
@@ -180,4 +211,28 @@ if(gifs) {
 }
 
 
+
+ggplot(mgmt_comp.df, aes(lon, lat, fill=prDiff)) + geom_tile() +
+  scale_fill_gradient2(low="blue", high="red", limits=c(-1,1)) + facet_wrap(~mgmt)
+
+ggplot(filter(out.df, 
+              lon>=unh.bbox[1] & lon<=unh.bbox[2] &
+                lat>=unh.bbox[3] & lat<=unh.bbox[4]),
+       aes(lon, lat, fill=log(N_adult.final), colour=in.UNH)) +
+  geom_tile() + scale_colour_manual(values=c(NA, "white")) +
+  scale_fill_viridis(option="B") + facet_wrap(~mgmt)
+
+ggplot(filter(mgmt_comp.df, 
+              lon>=unh.bbox[1] & lon<=unh.bbox[2] &
+                lat>=unh.bbox[3] & lat<=unh.bbox[4]), 
+       aes(lon, lat, fill=prDiff, colour=in.UNH)) + 
+  geom_tile() + scale_colour_manual(values=c(NA, "black")) +
+  scale_fill_gradient2(low="blue", high="red", limits=c(-1,1)) + facet_wrap(~mgmt)
+
+ggplot(filter(mgmt_comp.df, in.UNH)) + 
+  geom_density(aes(x=prDiff, colour=mgmt)) +
+  facet_wrap(~Property, scales="free_y")
+ggplot(filter(mgmt_comp.df, in.UNH)) + 
+  geom_boxplot(aes(x=mgmt, y=prDiff)) +
+  facet_wrap(~Property)
 

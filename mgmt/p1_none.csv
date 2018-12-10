@@ -1,13 +1,13 @@
-Property,thresh,trt.cycle,trt.followup,Trt_Opn,Trt_Oth,Trt_Dec,Trt_WP,Trt_Evg,Trt_Mxd
-Burley-Demeritt,0,100,0,N,N,N,N,N,N
-College Woods,0,100,0,N,N,N,N,N,N
-Davis Park,0,100,0,N,N,N,N,N,N
-Dudley Lot,0,100,0,N,N,N,N,N,N
-East Foss Farm,0,100,0,N,N,N,N,N,N
-Horticulture Farm,0,100,0,N,N,N,N,N,N
-Kingman Farm,0,100,0,N,N,N,N,N,N
-MacDonald Lot,0,100,0,N,N,N,N,N,N
-Moore Fields,0,100,0,N,N,N,N,N,N
-Saddleback Mountain,0,100,0,N,N,N,N,N,N
-Thompson Farm,0,100,0,N,N,N,N,N,N
-West Foss Farm,0,100,0,N,N,N,N,N,N
+Property,thresh,trt.cycle,trt.followup,Trt_Opn,Trt_Oth,Trt_Dec,Trt_WP,Trt_Evg,Trt_Mxd,ground_cover
+Burley-Demeritt,0,100,0,N,N,N,N,N,N,NULL
+College Woods,0,100,0,N,N,N,N,N,N,NULL
+Davis Park,0,100,0,N,N,N,N,N,N,NULL
+Dudley Lot,0,100,0,N,N,N,N,N,N,NULL
+East Foss Farm,0,100,0,N,N,N,N,N,N,NULL
+Horticulture Farm,0,100,0,N,N,N,N,N,N,NULL
+Kingman Farm,0,100,0,N,N,N,N,N,N,NULL
+MacDonald Lot,0,100,0,N,N,N,N,N,N,NULL
+Moore Fields,0,100,0,N,N,N,N,N,N,NULL
+Saddleback Mountain,0,100,0,N,N,N,N,N,N,NULL
+Thompson Farm,0,100,0,N,N,N,N,N,N,NULL
+West Foss Farm,0,100,0,N,N,N,N,N,N,NULL
