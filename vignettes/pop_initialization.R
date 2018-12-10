@@ -17,9 +17,9 @@
 library(gbPopMod); library(doSNOW); library(foreach)
 
 # set parameters
-n_sim <- 3
-res <- c("20ac", "9km2")[2]
-dem_par <- set_g_p(tmax=96, n.cores=4)
+n_sim <- 100
+res <- c("20ac", "9km2")[1]
+dem_par <- set_g_p(tmax=96, n.cores=10)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
   dem_par$sdd.max <- 7
@@ -67,7 +67,7 @@ sim.out <- foreach(s=1:n_sim,
   }
   s.f <- str_pad(s, 4, "left", "0")
   saveRDS(N.k, paste0("data/inits/temp/", res, "_N_", s.f, ".rds"))
-  saveRDS(N.k, paste0("data/inits/temp/", res, "_B_", s.f, ".rds"))
+  saveRDS(B.k, paste0("data/inits/temp/", res, "_B_", s.f, ".rds"))
   return(s)
 }
 stopCluster(p.c)
