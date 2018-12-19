@@ -232,6 +232,8 @@ par.best$p <- c(p_lee$p[2], 0, p_lee$p[3],
                 p_lee$p[4], p_lee$p[4], mean(p_lee$p[3:4])) / par.best$g.B
 par.rng$p$min <- par.best$p * 0.75
 par.rng$p$max <- pmin(1, par.best$p * 1.25)
+# ground cover treatment: cover crop
+p_lee$p[5]/par.best$g.B
 
 
 
