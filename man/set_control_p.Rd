@@ -2,16 +2,16 @@
 % Please edit documentation in R/fn_aux.R
 \name{set_control_p}
 \alias{set_control_p}
-\title{Set buckthorn control treatment parameters}
+\title{Set buckthorn control (management) treatment parameters}
 \usage{
 set_control_p(null_ctrl = TRUE, t.trt = 1, add.owners = FALSE,
   grd.i = NULL, man.i = NULL, chg.i = NULL, pTrt.grd = 0.05,
-  pTrt.man = 0.05, grd.trt = c(Lit = 0.005, Cov = 0.01, Com = 1e-05),
+  pTrt.man = 0.05, grd.trt = c(Lit = 0.08, Cov = 0.175, Com = 0.246),
   man.trt = c(M = 0.68, C = 0.9, MC = 0.97, N = 0), lc.chg = FALSE,
   pChg = 1e-04)
 }
 \arguments{
-\item{null_ctrl}{\code{TRUE} Set control parameters to \code{NULL}?}
+\item{null_ctrl}{\code{TRUE} Set all control parameters to \code{NULL}?}
 
 \item{t.trt}{\code{1} Year to start treatments}
 
@@ -36,7 +36,7 @@ each time step; only used if \code{grd.i=NULL}}
 \item{pTrt.man}{\code{0.05} Proportion of cells with manual treatments in
 each time step; only used if \code{man.i=NULL}}
 
-\item{grd.trt}{\code{c(Lit=0.005, Cov=0.01, Com=0.00001)} Named vector with
+\item{grd.trt}{\code{c(Lit=0.08, Cov=0.175, Com=0.246)} Named vector with
 ground treatments and associated seedling establishment probabilities;
 treatments include litter (Lit), cover crops (Cov), and soil compaction
 (Com)}

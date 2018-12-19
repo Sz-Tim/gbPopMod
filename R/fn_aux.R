@@ -360,13 +360,13 @@ pop_init <- function(ngrid, g.p, lc.df, p.0=NULL, N.0=NULL) {
 #' @param p.c \code{c(0.149, 0.149, 0.273, 0.233, 0.233, 0.273)} Vector
 #'   \code{length=n.lc} of proportion of fruits eaten by birds, with
 #'   \code{1-p.c} assumed to drop directly below buckthorn individuals
-#' @param sdd.rate \code{0.0589} 1/mn for exponential dispersal kernel (units =
+#' @param sdd.rate \code{0.03775} 1/mn for exponential dispersal kernel (units =
 #'   cells); value assumes 20ac (8.1 ha) grid cells
-#' @param sdd.max \code{27} Maximum dispersal distance in cells (units = cells);
+#' @param sdd.max \code{24} Maximum dispersal distance in cells (units = cells);
 #'   value assumes 20ac (8.1 ha) grid cells
 #' @param bird.hab \code{c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09)} Vector
 #'   \code{length=n.lc} of relative bird habitat preferences
-#' @param n.ldd \code{13} Number of long distance dispersal events per year
+#' @param n.ldd \code{19} Number of long distance dispersal events per year
 #' @param s.c \code{0.585} Seed viability post-digestion
 #' @param s.B \code{0.72} Probability of annual survival in seed bank
 #' @param s.M \code{c(0.9, 0. 0.6, 0.6, 0.6, 0.6)} Vector \code{length=n.lc} of
@@ -401,10 +401,10 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
                     gamma=2.48, 
                     m=c(3, 3, 7, 7, 7, 7), 
                     p.c=c(0.149, 0.149, 0.273, 0.233, 0.233, 0.273),
-                    sdd.rate=0.0589, 
-                    sdd.max=27, 
+                    sdd.rate=0.03775, 
+                    sdd.max=24, 
                     bird.hab=c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09), 
-                    n.ldd=13,
+                    n.ldd=19,
                     s.c=0.585,
                     s.B=0.72, 
                     s.M=c(0.9, 0, 0.6, 0.6, 0.6, 0.6),
@@ -430,7 +430,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 
 
 
-#' Set buckthorn control treatment parameters
+#' Set buckthorn control (management) treatment parameters
 #'
 #' Set the buckthorn control treatment parameters for the simulation, allowing
 #' for individual elements to be reassigned. Treatments fall into two broad
@@ -444,7 +444,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #' mortality rates) are assigned in \code{set_control_p()$man.trt}, and when a
 #' manual treatment is enacted in a cell, the adult and juvenile abundances in
 #' that cell are reduced by the corresponding rate.
-#' @param null_ctrl \code{TRUE} Set control parameters to \code{NULL}?
+#' @param null_ctrl \code{TRUE} Set all control parameters to \code{NULL}?
 #' @param t.trt \code{1} Year to start treatments
 #' @param add.owners \code{FALSE} Do owners treat every year once starting a
 #'   particular treatment?
@@ -461,7 +461,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 #'   each time step; only used if \code{grd.i=NULL}
 #' @param pTrt.man \code{0.05} Proportion of cells with manual treatments in
 #'   each time step; only used if \code{man.i=NULL}
-#' @param grd.trt \code{c(Lit=0.005, Cov=0.01, Com=0.00001)} Named vector with
+#' @param grd.trt \code{c(Lit=0.08, Cov=0.175, Com=0.246)} Named vector with
 #'   ground treatments and associated seedling establishment probabilities;
 #'   treatments include litter (Lit), cover crops (Cov), and soil compaction
 #'   (Com)
@@ -481,7 +481,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
 set_control_p <- function(null_ctrl=TRUE, t.trt=1, add.owners=FALSE,
                           grd.i=NULL, man.i=NULL, chg.i=NULL,
                           pTrt.grd=0.05, pTrt.man=0.05,
-                          grd.trt=c(Lit=0.005, Cov=0.01, Com=0.00001),
+                          grd.trt=c(Lit=0.08, Cov=0.175, Com=0.246),
                           man.trt=c(M=0.68, C=0.9, MC=0.97, N=0),
                           lc.chg=FALSE, pChg=0.0001) {
   
