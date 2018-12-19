@@ -48,7 +48,7 @@ cell.init <- get_pt_id(lc.df, c(739235.9, 4753487)) # 1922: herbarium_records.R
 ## Run model
 ########
 # run sensitivity analysis
-out.dir <- paste0("out/sdd_tune/", res, "/4_5/")
+out.dir <- paste0("out/sdd_tune/", res, "/")
 global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, select(lc.df, -MinObsYear), 
                    sdd=NULL, cell.init, control.p=NULL, save_yrs=1:g.p$tmax,
                    verbose=T, sim.dir=paste0(out.dir, "sims/"))
@@ -60,6 +60,7 @@ global_sensitivity(par.ls, nSamp, ngrid, ncell, g.p, select(lc.df, -MinObsYear),
 
 f <- dir(out.dir, "N", recursive=TRUE)
 Years <- sort(unique(lc.df$MinObsYear)[!is.na(unique(lc.df$MinObsYear))])
+Years[1] <- 1923
 k.hist.occ <- map(Years, ~which(lc.df$MinObsYear <= .))
 if(!dir.exists(paste0(out.dir, "pred"))) dir.create(paste0(out.dir, "pred"))
 
@@ -164,14 +165,13 @@ if(plots) {
     stat_smooth(method="loess", se=F)
   
   out %>% filter(pCorr > 0.8 & Year==2018) %>% arrange(pCorr) %>% summary()
-  # medians:
-  # sdd.rate = 0.0589
-  # sdd.max = 27
-  # n.ldd = 13
-  # pOcc = 0.671
-  # pSB = 0.814
-  # pK = 0.537
-  # pCorr = 0.818
+  # sdd.rate = med: 0.05457; max: 0.12202
+  # sdd.max = med: 24; min: 10
+  # n.ldd = med: 16; min: 6
+  out %>% filter(pCorr > 0.9 & Year==2018) %>% arrange(pCorr) %>% summary()
+  # sdd.rate = med: 0.03775; max: 0.05457
+  # sdd.max = med: 23.5; min: 12
+  # n.ldd = med: 19; min: 11
 }
 
 
