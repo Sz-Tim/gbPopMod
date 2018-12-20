@@ -121,9 +121,9 @@ par.rng$m$max <- c(4, 4, 10, 10, 10, 10)
 
 ## p.c: Proportion of fruits consumed by birds
 #--- Source: Allen Lab field -- see data/gb/pc_calculation.R
-par.best$p.c <- c(0.149, 0.273, 0.233)[c(1,1,2,3,3,2)]
-par.rng$p.c$min <- c(0.113, 0.222, 0.205)[c(1,1,2,3,3,2)]
-par.rng$p.c$max <- c(0.206, 0.314, 0.25)[c(1,1,2,3,3,2)]
+par.best$p.c <- c(0.165, 0.296, 0.252)[c(1,1,2,3,3,2)]
+par.rng$p.c$min <- c(0.122, 0.25, 0.219)[c(1,1,2,3,3,2)]
+par.rng$p.c$max <- c(0.229, 0.333, 0.262)[c(1,1,2,3,3,2)]
 
 
 ## sdd.rate: Rate parameter for SDD exponential kernel (unit = cells)

@@ -7,8 +7,8 @@
 set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   n.cores = 4, lc.r = Inf, lc.c = Inf, n.lc = 6, N.p.t0 = 10,
   p.f = c(0.45, 0, 0.291, 0.309, 0.309, 0.272), mu = c(1948, 0, 14, 41,
-  41, 21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.149,
-  0.149, 0.273, 0.233, 0.233, 0.273), sdd.rate = 0.03775, sdd.max = 24,
+  41, 21), gamma = 2.48, m = c(3, 3, 7, 7, 7, 7), p.c = c(0.165,
+  0.165, 0.296, 0.252, 0.252, 0.296), sdd.rate = 0.03775, sdd.max = 24,
   bird.hab = c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09), n.ldd = 19,
   s.c = 0.585, s.B = 0.72, s.M = c(0.9, 0, 0.6, 0.6, 0.6, 0.6),
   s.N = c(1, 1, 1, 1, 1, 1), K = c(28205, 0, 4162, 4162, 4162, 4162),
@@ -45,7 +45,7 @@ fruit per adult}
 \item{m}{\code{c(3, 3, 7, 7, 7, 7)} Vector \code{length=n.lc} or scalar of
 age at first fruiting. Individuals at this age are considered adults}
 
-\item{p.c}{\code{c(0.149, 0.149, 0.273, 0.233, 0.233, 0.273)} Vector
+\item{p.c}{\code{c(0.165, 0.165, 0.296, 0.252, 0.252, 0.296)} Vector
 \code{length=n.lc} of proportion of fruits eaten by birds, with
 \code{1-p.c} assumed to drop directly below buckthorn individuals}
 

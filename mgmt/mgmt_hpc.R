@@ -23,8 +23,8 @@ Packages <- c("gbPopMod", "tidyverse", "magrittr", "here", "doSNOW", "fastmatch"
 suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
-res <- c("20ac", "9km2")[1]
-n.sim <- 100
+res <- c("20ac", "9km2")[2]
+n.sim <- 12
 dem_par <- set_g_p(tmax=20, n.cores=4)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
