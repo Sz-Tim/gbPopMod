@@ -378,7 +378,7 @@ pop_init <- function(ngrid, g.p, lc.df, p.0=NULL, N.0=NULL) {
 #' @param g.D \code{0} Probability of direct germination (i.e., a seed
 #'   germinates in the same year it is produced)
 #' @param g.B \code{0.2} Probability of germinating from the seed bank
-#' @param p \code{c(0.358, 0, 0.421, 0.0792, 0.0792, 0.25)} Vector
+#' @param p \code{c(0.295, 0, 0.421, 0.082, 0.082, 0.23)} Vector
 #'   \code{length=n.lc} of seedling establishment probabilities
 #' @param edges \code{"wall"} Boundary behavior, taking values of \code{"wall"},
 #'   \code{"sink"}, or \code{"none"}. See boundary_behavior.Rmd for descriptions
@@ -412,7 +412,7 @@ set_g_p <- function(tmax=100, dem.st=FALSE, sdd.st=TRUE, bank=TRUE, n.cores=4,
                     K=c(28205, 0, 4162, 4162, 4162, 4162),
                     g.D=0, 
                     g.B=0.2,
-                    p=c(0.358, 0, 0.421, 0.0792, 0.0792, 0.25),
+                    p=c(0.295, 0, 0.421, 0.082, 0.082, 0.23),
                     edges="wall", method="wt.mn") {
   
   g.p <- list(tmax=tmax, dem.st=dem.st, sdd.st=sdd.st, bank=bank,

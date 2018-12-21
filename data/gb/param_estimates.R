@@ -25,6 +25,7 @@ res <- c("20ac", "9km2")[1]
 fec_allen <- read_csv("data/gb/Allen_fecundity.csv") %>%
   mutate(Date=as.Date(Date, format="%m/%d/%Y"))
 flwr_allen <- read_csv("data/gb/Allen_flower.csv")
+emerge_allen <- read_csv("data/gb/Allen_emerge.csv") %>% filter(Visit==max(Visit))
 dens_lee <- read_csv("data/gb/Lee_density.csv") %>% group_by(Canopy)
 fec_lee <- read_csv("data/gb/Lee_fecundity.csv")
 emerge_lee <- read_csv("data/gb/Lee_emerge.csv")
@@ -227,13 +228,17 @@ par.rng$g.B$max <- quantile(germ_data, 0.75)
 
 ## p: Proportion of germinants that establish
 #--- Source: Tom Lee field + Allen Lab field
-p_lee <- emerge_lee %>% group_by(Treatment) %>% summarise(p=mean(propEmerge))
-par.best$p <- c(p_lee$p[2], 0, p_lee$p[3], 
-                p_lee$p[4], p_lee$p[4], mean(p_lee$p[3:4])) / par.best$g.B
+p_lee <- emerge_lee %>% group_by(Treatment) %>% 
+  summarise(p=mean(propEmerge)/par.best$g.B)
+p_allen <- emerge_allen %>% group_by(Plot_type) %>% summarise(p=mean(p_tot_live))
+par.best$p <- c(mean(c(p_lee$p[2], p_allen$p[1])), 0, 
+                p_lee$p[3], mean(c(p_lee$p[4], p_allen$p[3])), 
+                mean(c(p_lee$p[4], p_allen$p[3])), 
+                mean(c(p_lee$p[3:4], p_allen$p[2])))
 par.rng$p$min <- par.best$p * 0.75
 par.rng$p$max <- pmin(1, par.best$p * 1.25)
 # ground cover treatment: cover crop
-p_lee$p[5]/par.best$g.B
+p_lee$p[5]
 
 
 

@@ -12,7 +12,7 @@ set_g_p(tmax = 100, dem.st = FALSE, sdd.st = TRUE, bank = TRUE,
   bird.hab = c(0.32, 0.36, 0.05, 0.09, 0.09, 0.09), n.ldd = 19,
   s.c = 0.585, s.B = 0.72, s.M = c(0.9, 0, 0.6, 0.6, 0.6, 0.6),
   s.N = c(1, 1, 1, 1, 1, 1), K = c(28205, 0, 4162, 4162, 4162, 4162),
-  g.D = 0, g.B = 0.2, p = c(0.358, 0, 0.421, 0.0792, 0.0792, 0.25),
+  g.D = 0, g.B = 0.2, p = c(0.295, 0, 0.421, 0.082, 0.082, 0.23),
   edges = "wall", method = "wt.mn")
 }
 \arguments{
@@ -78,7 +78,7 @@ germinates in the same year it is produced)}
 
 \item{g.B}{\code{0.2} Probability of germinating from the seed bank}
 
-\item{p}{\code{c(0.358, 0, 0.421, 0.0792, 0.0792, 0.25)} Vector
+\item{p}{\code{c(0.295, 0, 0.421, 0.082, 0.082, 0.23)} Vector
 \code{length=n.lc} of seedling establishment probabilities}
 
 \item{edges}{\code{"wall"} Boundary behavior, taking values of \code{"wall"},

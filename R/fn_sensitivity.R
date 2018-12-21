@@ -86,8 +86,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                    list(param="g.D", type="prob", LC=0, min=0, max=0),
                    list(param="g.B", type="prob", LC=0, min=0.18, max=0.28),
                    list(param="p", type="prob", LC=1,
-                        min=c(0.269, 0, 0.316, 0.0594, 0.0594, 0.188), 
-                        max=c(0.448, 0, 0.526, 0.099, 0.099, 0.313))
+                        min=c(0.221, 0, 0.316, 0.062, 0.062, 0.172), 
+                        max=c(0.369, 0, 0.526, 0.103, 0.103, 0.287))
     )
   }
   
