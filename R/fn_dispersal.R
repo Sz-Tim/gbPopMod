@@ -268,14 +268,14 @@ sdd_disperse <- function(id.i, Fr, gamma, p.c.E, s.c,
       # assign emigrants to target cells & sum within each cell
       if(edges=="none") {
         N.seed %<>% 
-          add_row(id=c(apply(N.source, 1, function(x) names(sdd.sp[[x[1]]]))), 
-                  N.dep=c(apply(N.source, 1, 
+          add_row(id=unlist(apply(N.source, 1, function(x) names(sdd.sp[[x[1]]]))), 
+                  N.dep=unlist(apply(N.source, 1, 
                                 function(x) c(x[6] * sdd.sp[[x[1]]])))) %>%
           filter(N.dep > 0)
       } else {
         N.seed %<>% 
-          add_row(id=c(apply(N.source, 1, function(x) names(sdd.sp[[x[8]]]))), 
-                  N.dep=c(apply(N.source, 1, 
+          add_row(id=unlist(apply(N.source, 1, function(x) names(sdd.sp[[x[8]]]))), 
+                  N.dep=unlist(apply(N.source, 1, 
                                 function(x) c(x[6] * sdd.sp[[x[8]]])))) %>%
           filter(N.dep > 0)
       }
