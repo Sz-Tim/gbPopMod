@@ -59,8 +59,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                         min=c(2, 2, 4, 4, 4, 4), 
                         max=c(4, 4, 8, 8, 8, 8)),
                    list(param="p.c", type="prob", LC=1,
-                        min=c(0.113, 0.113, 0.222, 0.205, 0.205, 0.222), 
-                        max=c(0.206, 0.206, 0.314, 0.250, 0.250, 0.314)),
+                        min=c(0.122, 0.122, 0.25, 0.219, 0.219, 0.25), 
+                        max=c(0.229, 0.229, 0.333, 0.262, 0.262, 0.333)),
                    list(param="sdd.rate", type="cont", LC=0, 
                         min=ifelse(res=="20ac", 0.03, 0.05), 
                         max=ifelse(res=="20ac", 0.5, 1.87)),
@@ -86,8 +86,8 @@ set_sensitivity_pars <- function(pars, span="total", res="20ac") {
                    list(param="g.D", type="prob", LC=0, min=0, max=0),
                    list(param="g.B", type="prob", LC=0, min=0.18, max=0.28),
                    list(param="p", type="prob", LC=1,
-                        min=c(0.269, 0, 0.316, 0.0594, 0.0594, 0.188), 
-                        max=c(0.448, 0, 0.526, 0.099, 0.099, 0.313))
+                        min=c(0.221, 0, 0.316, 0.062, 0.062, 0.172), 
+                        max=c(0.369, 0, 0.526, 0.103, 0.103, 0.287))
     )
   }
   
