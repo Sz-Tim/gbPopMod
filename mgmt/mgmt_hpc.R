@@ -24,8 +24,8 @@ suppressMessages(invisible(lapply(Packages, library, character.only=TRUE)))
 
 # set parameters
 res <- c("20ac", "9km2")[1]
-n.sim <- 100
-dem_par <- set_g_p(tmax=20, n.cores=4)
+n.sim <- 500
+dem_par <- set_g_p(tmax=20, n.cores=24)
 if(res == "9km2") {
   dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
   dem_par$sdd.max <- 7
@@ -139,7 +139,7 @@ for(m in seq_along(mgmt)) {
 # plots
 library(viridis)
 plot.dir <- "out/mgmt/"
-gifs <- T
+gifs <- F
 theme_set(theme_bw())
 out.df <- dplyr::bind_rows(out.df.ls, .id="mgmt")
 out.all <- dplyr::bind_rows(out.all.ls, .id="mgmt")
