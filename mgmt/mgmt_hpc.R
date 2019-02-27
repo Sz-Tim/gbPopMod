@@ -103,7 +103,7 @@ for(m in seq_along(mgmt)) {
       # buckthorn management, population growth, dispersal
       out <- iterate_pop(ngrid, ncell, N_s[,k,,], B_s[,k], dem_par, 
                          lc.df[,-(15:18)], sdd, mgmt[[m]]$ctrl_par, 
-                         cover_k, manual_k)
+                         cover_k, manual_k, p.trt_OpnOnly=TRUE)
       
       # update abundances
       N_s[,k+1,,] <- out$N

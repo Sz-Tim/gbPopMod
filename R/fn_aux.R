@@ -190,9 +190,8 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 #' @param s.M Vector \code{length=n.lc} with juvenile survival probability for
 #'   each land cover type or vector of slopes corresponding with columns in
 #'   lc.df
-#' @param s.N Vector \code{length=n.lc} of annual
-#'   adult survival rates or vector of slopes corresponding with columns in
-#'   lc.df
+#' @param s.N Vector \code{length=n.lc} of annual adult survival rates or vector
+#'   of slopes corresponding with columns in lc.df
 #' @param mu Vector \code{length=n.lc} with mean per-individual fruit production
 #'   for each land cover type or vector of slopes corresponding with columns in
 #'   lc.df
@@ -220,6 +219,8 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 #'   a regression with the slopes contained in each parameter vector.
 #'   Individuals cannot be assigned to specific land cover categories with
 #'   \code{"lm"}, so \code{"m"} must be scalar.
+#' @param p.trt_OpnOnly \code{FALSE} Do ground cover treatments only apply to
+#'   Open land cover types?
 #' @return Named list with values aggregated within cells based on land cover
 #'   types. Includes: \describe{ \item{\code{lc.mx}}{Matrix \code{(ncol=n.lc,
 #'   nrow=ngrid)} with land cover proportions} \item{\code{K.E}}{Vector
@@ -243,7 +244,7 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 #' @export
 
 cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p, 
-                   p.trt=NULL, edges="wall", method="wt.mn") {
+                   p.trt=NULL, edges="wall", method="wt.mn", p.trt_OpnOnly=F) {
   
   library(tidyverse)
   
@@ -284,7 +285,20 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
   }
   
   if(!is.null(p.trt)) {
-    p.E[p.trt$id,] <- p.trt$p
+    if(p.trt_OpnOnly) {
+      if(method=="wt.mn") {
+        for(i in seq_along(p.trt$id)) {
+          p.E[p.trt$id[i],] <- lc.mx[p.trt$id[i],] %*% c(p.trt$p[i], p[-1])
+        }
+      } else if(method=="lm") {
+        for(i in seq_along(p.trt$id)) {
+          p.E[p.trt$id[i],] <- antilogit(lc.mx[p.trt$id[i],1:length(p)] %*% 
+                                           c(p.trt$p[i], p[-1]))
+        }
+      }
+    } else {
+      p.E[p.trt$id,] <- p.trt$p
+    }
   }
   
   if(edges=="sink") p.E[!lc.df$inbd] <- 0

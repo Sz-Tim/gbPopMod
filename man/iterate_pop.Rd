@@ -6,7 +6,7 @@
 \usage{
 iterate_pop(ngrid, ncell, N.0 = NULL, B.0 = NULL, g.p, lc.df, sdd,
   control.p = NULL, grd_cover.i = NULL, mech_chem.i = NULL,
-  read_write = FALSE, path = NULL)
+  read_write = FALSE, path = NULL, p.trt_OpnOnly = FALSE)
 }
 \arguments{
 \item{ngrid}{Number of grid cells in entire map}
@@ -44,6 +44,9 @@ implementing manual management of adults, and columns \code{id} and
 
 \item{path}{\code{NULL} Directory for stored output. Overwrites files
 (path/N.rds, path/B.rds) each iteration.}
+
+\item{p.trt_OpnOnly}{\code{FALSE} Should ground cover treatments only apply
+to Open canopy land cover types?}
 }
 \value{
 Array N of abundances for each cell and age group, and vector B of

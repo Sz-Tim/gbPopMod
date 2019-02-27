@@ -5,7 +5,7 @@
 \title{Aggregate compositional data within each cell}
 \usage{
 cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt = NULL,
-  edges = "wall", method = "wt.mn")
+  edges = "wall", method = "wt.mn", p.trt_OpnOnly = F)
 }
 \arguments{
 \item{lc.df}{Dataframe or tibble with xy coords, land cover proportions,
@@ -18,9 +18,8 @@ type or vector of slopes corresponding with columns in lc.df}
 each land cover type or vector of slopes corresponding with columns in
 lc.df}
 
-\item{s.N}{Vector \code{length=n.lc} of annual
-adult survival rates or vector of slopes corresponding with columns in
-lc.df}
+\item{s.N}{Vector \code{length=n.lc} of annual adult survival rates or vector
+of slopes corresponding with columns in lc.df}
 
 \item{mu}{Vector \code{length=n.lc} with mean per-individual fruit production
 for each land cover type or vector of slopes corresponding with columns in
@@ -55,6 +54,9 @@ in the parameter vectors. If \code{"lm"}, the expectation is calculated in
 a regression with the slopes contained in each parameter vector.
 Individuals cannot be assigned to specific land cover categories with
 \code{"lm"}, so \code{"m"} must be scalar.}
+
+\item{p.trt_OpnOnly}{\code{FALSE} Do ground cover treatments only apply to
+Open land cover types?}
 }
 \value{
 Named list with values aggregated within cells based on land cover

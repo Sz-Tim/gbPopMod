@@ -307,6 +307,8 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 #' @param read_write \code{FALSE} Read and write \code{N} and \code{B}
 #' @param path \code{NULL} Directory for stored output. Overwrites files
 #'   (path/N.rds, path/B.rds) each iteration.
+#' @param p.trt_OpnOnly \code{FALSE} Should ground cover treatments only apply
+#'   to Open canopy land cover types?
 #' @return Array N of abundances for each cell and age group, and vector B of
 #'   seed bank abundances.
 #' @keywords run, simulate
@@ -314,7 +316,7 @@ run_sim_lambda <- function(ngrid, ncell, g.p, lambda, lc.df, sdd.pr,
 
 iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd, 
                         control.p=NULL, grd_cover.i=NULL, mech_chem.i=NULL, 
-                        read_write=FALSE, path=NULL) {
+                        read_write=FALSE, path=NULL, p.trt_OpnOnly=FALSE) {
   library(gbPopMod); library(tidyverse); library(magrittr)
   if(read_write) {
     N.0 <- readRDS(paste0(path, "/N.rds"))
@@ -336,7 +338,7 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
                       ncol(mech_chem.i)>2)
   }
   # pre-multiply compositional parameters for cell expectations
-  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, p.trt_OpnOnly)
   
   #--- fruit production
   N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, T)
