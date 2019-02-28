@@ -338,7 +338,7 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
                       ncol(mech_chem.i)>2)
   }
   # pre-multiply compositional parameters for cell expectations
-  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, p.trt_OpnOnly)
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, p.trt_OpnOnly=p.trt_OpnOnly)
   
   #--- fruit production
   N.f <- make_fruits(N.0, pm$lc.mx, pm$mu.E, pm$p.f.E, m.max, T)
