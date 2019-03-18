@@ -26,6 +26,8 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 inst/doc
+# DS store
+*.DS_Store
 
 # econ output
 econ/*.gif
