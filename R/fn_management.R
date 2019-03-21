@@ -113,6 +113,31 @@ trt_manual <- function(N.t, m.max, N.trt, man.trt, byLC=FALSE) {
 
 
 
+#' Implement cutting & spraying treatments for econ simulations
+#' 
+#' Adjust the abundances within cells receiving cutting and/or spraying 
+#' treatments according to the mortality rates calculated by the economic 
+#' decision model.
+#' @param N.t Matrix or array of abundances, with dims=c(ngrid, (lc), m.max)
+#' @param m.max Max(age at maturity)
+#' @param id.trt Dataframe with the grid id and mortality rate for each cell
+#' @return Matrix or array of the same dimensions as N.t with adjusted abundances
+#' @keywords control, treatment, manual, cutting, spraying
+#' @export
+
+trt_econ <- function(N.t, m.max, id.trt) {
+  if(length(dim(N.t))==2) {
+    N.t[id.trt[,1],] <- round(N.t[id.trt[,1],] * (1-id.trt[,2]))
+  } else {
+    N.t[id.trt[,1],,] <- round(N.t[id.trt[,1],,] * (1-id.trt[,2]))
+  }
+  
+  return(N.t)
+}
+
+
+
+
 #' Assign cells to convert a proportion of forest.col to open invasible
 #'
 #' Assign a specified number of random cells to have their forest.col habitat

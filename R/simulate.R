@@ -395,10 +395,10 @@ iterate_pop <- function(ngrid, ncell, N.0=NULL, B.0=NULL, g.p, lc.df, sdd,
 #'   implementing ground cover management, and columns \code{id} and \code{Trt}
 #'   detailing the cell ID and ground cover treatment (\code{"Cov", "Com",
 #'   "Lit"} for ground cover crop, compaction, or litter, respectively).
-#' @param mech_chem.i \code{NULL} Dataframe with a row for each cell
-#'   implementing manual management of adults, and columns \code{id} and
-#'   \code{Trt} detailing the cell ID and manual treatment (\code{"M", "C",
-#'   "MC"} for mechanical, chemical, or mechanical and chemical, respectively).
+#' @param mech_chem.i \code{NULL} List of dataframes (one for forest, one for
+#'   open), each with a row for each cell implementing manual management,and
+#'   columns \code{id} and \code{mort} detailing the cell ID and mortality rate
+#'   from manual management
 #' @param read_write \code{FALSE} Read and write \code{N} and \code{B}
 #' @param path \code{NULL} Directory for stored output. Overwrites files
 #'   (path/N.rds, path/B.rds) each iteration.
@@ -431,8 +431,8 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
     p.trt <- trt_ground(grd_cover.i, control.p$grd.trt)
   }
   if(!is.null(mech_chem.i)) {
-    N.0 <- trt_manual(N.0, m.max, mech_chem.i, control.p$man.trt, 
-                      ncol(mech_chem.i)>2)
+    N.0[,1,] <- trt_econ(N.0[,1,], m.max, mech_chem.i$id.trt.open)
+    N.0[,3:6,] <- trt_econ(N.0[,3:6,], m.max, mech_chem.i$id.trt.forest)
   }
   
   #--- sum abundance within pixels
