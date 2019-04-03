@@ -37,10 +37,10 @@ implementing ground cover management, and columns \code{id} and \code{Trt}
 detailing the cell ID and ground cover treatment (\code{"Cov", "Com",
 "Lit"} for ground cover crop, compaction, or litter, respectively).}
 
-\item{mech_chem.i}{\code{NULL} Dataframe with a row for each cell
-implementing manual management of adults, and columns \code{id} and
-\code{Trt} detailing the cell ID and manual treatment (\code{"M", "C",
-"MC"} for mechanical, chemical, or mechanical and chemical, respectively).}
+\item{mech_chem.i}{\code{NULL} List of dataframes (one for forest, one for
+open), each with a row for each cell implementing manual management,and
+columns \code{id} and \code{mort} detailing the cell ID and mortality rate
+from manual management}
 
 \item{read_write}{\code{FALSE} Read and write \code{N} and \code{B}}
 
