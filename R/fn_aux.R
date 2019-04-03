@@ -204,6 +204,12 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 #' @param p Vector \code{length=n.lc} with seedling establishment probability
 #'   for each land cover type or vector of slopes corresponding with columns in
 #'   lc.df
+#' @param g.B Vector \code{length=n.lc} with seed bank germination probability
+#'   for each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
+#' @param g.D Vector \code{length=n.lc} with direct germination probability
+#'   for each land cover type or vector of slopes corresponding with columns in
+#'   lc.df
 #' @param p.trt Tibble with grid id and modified establishment probabilities for
 #'   cells with ground cover treatments; default = NULL
 #' @param edges Character taking the value of one of: \code{"wall", "sink",
@@ -243,7 +249,7 @@ make_grid <- function(in.file, x.="lon", y.="lat", col.inc, out.file=NULL) {
 #' @keywords premultiply, aggregate, set up, initialize
 #' @export
 
-cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p, 
+cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p, g.B, g.D,
                    p.trt=NULL, edges="wall", method="wt.mn", p.trt_OpnOnly=F) {
   
   library(tidyverse)
@@ -260,6 +266,8 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
     if(length(p.f)==1) p.f <- rep(p.f, nLC)
     if(length(p.c)==1) p.c <- rep(p.c, nLC)
     if(length(p)==1) p <- rep(p, nLC)
+    if(length(g.B)==1) p <- rep(g.B, nLC)
+    if(length(g.D)==1) p <- rep(g.D, nLC)
     # take weighted mean
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))
@@ -270,18 +278,22 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
     p.f.E <- lc.mx %*% p.f
     p.c.E <- lc.mx %*% p.c
     p.E <- lc.mx %*% p
+    g.B.E <- lc.mx %*% g.B
+    g.D.E <- lc.mx %*% g.D
   } else if(method=="lm") {
     lc.mx <- cbind(1, as.matrix(select(lc.df, 
                               -one_of("x", "y", "x_y", "inbd", "id", "id.in"))))
-    K.E <- exp(lc.mx[,1:length(K)] %*% K)
+    K.E <- exp(lc.mx[,1:length(K)] %*% cbind(K))
     K.lc <- NULL
     rel.dens <- NULL
-    s.N.E <- c(antilogit(lc.mx[,1:length(s.N)] %*% s.N))
-    s.M.E <- c(antilogit(lc.mx[,1:length(s.M)] %*% s.M))
-    mu.E <- exp(lc.mx[,1:length(mu)] %*% mu)
-    p.f.E <- antilogit(lc.mx[,1:length(p.f)] %*% p.f)
-    p.c.E <- antilogit(lc.mx[,1:length(p.c)] %*% p.c)
-    p.E <- antilogit(lc.mx[,1:length(p)] %*% p)
+    s.N.E <- c(antilogit(lc.mx[,1:length(s.N)] %*% cbind(s.N)))
+    s.M.E <- c(antilogit(lc.mx[,1:length(s.M)] %*% cbind(s.M)))
+    mu.E <- exp(lc.mx[,1:length(mu)] %*% cbind(mu))
+    p.f.E <- antilogit(lc.mx[,1:length(p.f)] %*% cbind(p.f))
+    p.c.E <- antilogit(lc.mx[,1:length(p.c)] %*% cbind(p.c))
+    p.E <- antilogit(lc.mx[,1:length(p)] %*% cbind(p))
+    g.B.E <- antilogit(lc.mx[,1:length(g.B)] %*% cbind(g.B))
+    g.D.E <- antilogit(lc.mx[,1:length(g.D)] %*% cbind(g.D))
   }
   
   if(!is.null(p.trt)) {
@@ -305,7 +317,7 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p,
   
   return(list(lc.mx=lc.mx, K.E=K.E, K.lc=K.lc, rel.dens=rel.dens,
               s.M.E=s.M.E, s.N.E=s.N.E, mu.E=mu.E, p.f.E=p.f.E,
-              p.c.E=p.c.E, p.E=p.E))
+              p.c.E=p.c.E, p.E=p.E, g.B.E=g.B.E, g.D.E=g.D.E))
 }
 
 

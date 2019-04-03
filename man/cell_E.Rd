@@ -4,7 +4,7 @@
 \alias{cell_E}
 \title{Aggregate compositional data within each cell}
 \usage{
-cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt = NULL,
+cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, g.B, g.D, p.trt = NULL,
   edges = "wall", method = "wt.mn", p.trt_OpnOnly = F)
 }
 \arguments{
@@ -34,6 +34,14 @@ for each land cover type or vector of slopes corresponding with columns in
 lc.df}
 
 \item{p}{Vector \code{length=n.lc} with seedling establishment probability
+for each land cover type or vector of slopes corresponding with columns in
+lc.df}
+
+\item{g.B}{Vector \code{length=n.lc} with seed bank germination probability
+for each land cover type or vector of slopes corresponding with columns in
+lc.df}
+
+\item{g.D}{Vector \code{length=n.lc} with direct germination probability
 for each land cover type or vector of slopes corresponding with columns in
 lc.df}
 

@@ -69,7 +69,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     N <- array(0, dim=c(ngrid, n_yrs, m.max))
   }
   # 2. Pre-multiply compositional parameters for cell expectations
-  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt, edges, method)
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, g.B, g.D, p.trt, edges, method)
   if(!is.null(K_max)) pm$K.E <- pmin(K_max, pm$K.E)
   
   if(verbose) pb <- txtProgressBar(min=0, max=tmax, width=80, style=3)
@@ -129,7 +129,7 @@ run_sim <- function(ngrid, ncell, g.p, lc.df, sdd, N.init, control.p,
     }
     
     # 6. Seedling establishment
-    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B,
+    estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, pm$g.D, pm$g.B,
                                s.B, dem.st, bank)
     rm(N.Sd)
     B.1 <- estab.out$B

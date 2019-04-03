@@ -70,7 +70,7 @@ new_seedlings <- function(ngrid, N.seed, B, p.E, g.D, g.B, s.B,
   
   library(tidyverse)
   
-  M.D <- germ.D <- rep(0, ngrid)
+  M.D <- germ.D <- germ.B <- rep(0, ngrid)
   if(dem.st) {
     M.0[N.seed$id] <- rbinom(nrow(N.seed), N.seed$N, p.E[N.seed$id])
     if(bank) {
@@ -82,15 +82,15 @@ new_seedlings <- function(ngrid, N.seed, B, p.E, g.D, g.B, s.B,
       M.0[N.seed$id] <- M.0[N.seed$id] + N.sbEst[N.seed$id]
       # N_to_sb = (N_sb_notEst + N_addedToSB) * p(SB)
       B[N.seed$id] <- rbinom(nrow(N.seed),
-                                B[N.seed$id] + N.seed$N - M.0[N.seed$id],
-                                s.B)
+                             B[N.seed$id] + N.seed$N - M.0[N.seed$id],
+                             s.B)
     } else {
       B <- rep(0, ngrid)
     }
     
   } else {
     # N_est = N_seed * g.D * p(est)
-    germ.D[N.seed$id] <- round(N.seed$N * g.D)
+    germ.D[N.seed$id] <- round(N.seed$N * g.D[N.seed$id])
     M.D <- round(germ.D * p.E)
     if(bank) {
       # N_est_sb = B * g.B * p(est)
