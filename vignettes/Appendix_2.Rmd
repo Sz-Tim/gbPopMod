@@ -1,0 +1,127 @@
+---
+title: "Appendix B"
+subtitle: "Local management in a regional context: Simulations with process-based species distribution models"
+author: "Tim M. Szewczyk, Tom Lee, Mark J. Ducey, Matthew E. Aiello-Lammens, Hayley Bibaud, Jenica M. Allen"
+output:
+  pdf_document: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+editor_options:
+  chunk_output_type: inline
+header-includes:
+  - \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{B.\arabic{table}} \setcounter{figure}{0} \renewcommand{\thefigure}{B.\arabic{figure}}}
+---
+
+\beginsupplement
+
+```{r setup, echo=FALSE}
+library(tidyverse); library(gbPopMod); library(viridis)
+```
+
+
+---
+
+
+Appendix B contains additional information for the global sensitivity analysis and pattern-oriented parameterization of the dispersal parameters. 
+
+
+---
+
+
+# Global sensitivity analysis
+We assessed the relative influence of each parameter with a global sensitivity analysis, in which all parameters were varied simultaneously within plausible ranges informed by data, using six different responses. Specifically, we evaluated the impact of each parameter on the proportion of cells occupied by adults, Pr(N>0), the proportion of cells occupied by the seed bank, Pr(B>0), the proportion of occupied cells at carrying capacity, Pr(N=K \| N>0), the mean abundance in occupied cells, mean(N \| N>0), the median abundance in occupied cells, median(N \| N>0), and the standard deviation in abundance among occupied cells, sd(N \| N>0). 
+
+We used boosted regression trees (BRTs) to estimate the relative influence of each parameter on each of these metrics, comparing BRT complexities of 1, 3, and 5. Prior to interpreting the relative influences, we used bootstrapped subsamples of different sizes to visually assess the appropriate BRT complexity by comparing the cross-validation deviance and to confirm that the sampling of the parameter space was adequate by calculating a difference metric similar to beta diversity (Aiello-Lammens et al. 2017, Prowse et al. 2016). 
+
+```{r GSA_output, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+res <- "20ac"
+out.dir <- paste0("out/", res, "/")
+cvDev.df <- read_csv(paste0(out.dir, "BRT_cvDev.csv"))
+beta.df <- read_csv(paste0(out.dir, "BRT_betaDiv.csv"))
+ri.df <- read_csv(paste0(out.dir, "BRT_RI.csv")) %>%
+  mutate(response=as.factor(response))
+resp_col <- c(pOcc="#005a32", pSB="#74c476", pK="#99000d",
+              meanNg0="#084594", medNg0="#6baed6", sdNg0="#4a1486")
+ri.df$response <- lvls_reorder(ri.df$response, 
+                               match(names(resp_col), levels(ri.df$response)))
+cvDev.df$response <- factor(cvDev.df$response, 
+                            labels=c("Pr(N>0)", "Pr(B>0)", "Pr(N=K | N>0)", 
+                                  "mean(N | N>0)", "median(N | N>0)",
+                                  "sd(N | N>0)"))
+beta.df$response <- factor(beta.df$response, labels=levels(cvDev.df$response))
+```
+
+```{r GSA_cvDev, echo=FALSE, warning=FALSE, fig.width=8, fig.height=4, fig.cap="Cross validation deviance across subsample sizes at tree depths of 1, 3, and 5. Based on bootstrapped subsamples, the cross validation stabilized within 25,000 samples in the parameter space, and indicated that a tree complexity of 5 was generally appropriate for each response metric."}
+ggplot(cvDev.df, aes(x=smp, y=Dev, group=td, colour=factor(td))) + geom_line(size=1) +
+  facet_wrap(~response, scale="free_y") + 
+  scale_colour_manual("BRT\nComplexity", values=c("black", "gray40", "gray70")) +
+  labs(x="Subsample size", y="Cross-validation Deviance") +
+  scale_x_continuous(breaks=c(15000, 20000, 25000))
+```
+
+```{r GSA_stability, echo=FALSE, warning=FALSE, fig.width=8, fig.height=4, fig.cap="Stability of relative influence estimates across subsample sizes. The relative influence of parameters was highly stable, particularly with sample sizes greater than 20,000. This indicates that the parameter sample space was adequately sampled and that additional samples are unlikely to alter conclusions regarding the influence of each parameter."}
+ggplot(beta.df, aes(x=smp, y=beta, group=td, colour=factor(td))) + 
+  geom_line(size=1) +
+  facet_wrap(~response) + ylim(NA, max(1.01, beta.df$beta, na.rm=T)) +
+    scale_colour_manual("BRT\nComplexity", values=c("black", "gray40", "gray70")) +
+  labs(x="Subsample size", y="Stability of relative influence metrics") +
+  scale_x_continuous(breaks=c(15000, 20000, 25000))
+```
+
+
+---
+
+\newpage
+
+# Pattern-oriented parameterization
+```{r dispTune_setUp, echo=FALSE, message=FALSE}
+lc.df <- read.csv(paste0("data/gb/spread_", res, ".csv"))
+obs.sf <- filter(lc.df, !is.na(MinObsYear)) %>%
+  sf::st_as_sf(coords=c("lon", "lat")) %>%
+  sf::st_set_crs(32618) 
+out.dir <- paste0("out/sdd_tune/", res, "/")
+disp.out <- read_csv(paste0(out.dir, "dispersal_out.csv")) %>% filter(Year==2018)
+```
+The large majority of demographic parameters were informed by published data, experiments, or observational studies for glossy buckthorn. However, dispersal data were largely based on information for similar species, primarily *Celastrus orbiculatus* (Merow et al. 2011). Though both produce fleshy red fruits dispersed by birds, the estimates used by Merow et al. (2011) were based on radio tracking and banding data for the American Robin and European Starling in Connecticut with gut passage times for *C. orbiculatus*. Given that 1) glossy buckthorn is likely also dispersed by Cedar Waxwings in our study area (Craves 2015), 2) bird movement may differ in our study extent, which is further north, 3) glossy buckthorn seeds appear to have a laxative effect (Aiello-Lammens 2014), and 4) our definition of long distance dispersal includes and emphasizes human-mediated dispersal as opposed to predominantly rare long distance bird movements, we used pattern-oriented parameterization for the dispersal parameters. 
+
+We used historical records of glossy buckthorn from herbaria and from EDDMapS (Aiello-Lammens 2014, EDDMapS 2016) with best estimates for demographic parameters to identify the dispersal parameter values necessary to accurately predict the observed distribution of glossy buckthorn. We used the same strategy as the global sensitivity analysis described above, but varied only the exponential kernel rate, $r$, the maximum short distance dispersal distance, $sdd_{max}$, and the number of annual long distance dispersal events, $n_{ldd}$. For each sample from the parameter space, we initialized the grid with the earliest record of buckthorn in the extent, occurring in 1922, and ran the simulation for 96 years, representing the predicted distribution in 2018. We then calculated the proportion of correctly predicted records.  
+
+```{r dispTune_records, echo=FALSE, dev='jpeg', dpi=300, message=FALSE, warning=FALSE, fig.cap="Glossy buckthorn records through 2018 in the study extent. Observations were compiled from herbarium records and from EDDMapS. The earliest record in the study extent (1922) is indicated by the star."}
+ggplot() + geom_tile(data=filter(lc.df, inbd), aes(lon, lat), colour="gray30") +
+  geom_sf(data=arrange(filter(obs.sf, MinObsYear != 1922), desc(MinObsYear)),
+          aes(colour=MinObsYear)) +
+  geom_point(data=filter(lc.df, MinObsYear==1922), aes(lon, lat), shape=8, size=2) +
+  scale_colour_viridis("Observation\nYear", option="B", limits=c(1922,2018)) + 
+  labs(x="Longitude", y="Latitude")
+```
+
+
+To identify the best estimate for each parameter to use for the management simulations, we selected all parameter draws that correctly predicted >90% of records. We used the medain for each parameter from this subset.
+
+```{r dispTune_best}
+# best estimates:
+disp.out %>% filter(pCorr > 0.9) %>% select(sdd.rate, sdd.max, n.ldd) %>%
+  summarise_all(median)
+```
+
+
+---
+
+
+# References  
+Aiello-Lammens, Matthew E. “Patterns and Processes of the Invasion of Frangula Alnus: An Integrated Model Framework.” Stony Brook University, 2014.  
+
+Aiello-Lammens, Matthew E., and H. Resit Akçakaya. “Using Global Sensitivity Analysis of Demographic Models for Ecological Impact Assessment.” Conservation Biology 31, no. 1 (2017): 116–25.  
+
+Craves, Julie A. “Birds That Eat Nonnative Buckthorn Fruit (Rhamnus Cathartica and Frangula Alnus, Rhamnaceae) in Eastern North America.” Natural Areas Journal 35, no. 2 (2015): 279–87.  
+
+EDDMapS. “Early Detection & Distribution Mapping System.” The University of Georgia - Center for Invasive Species and Ecosystem Health, 2016. Accessed 10 Aug 2018.  
+
+Merow, Cory, Nancy LaFleur, John A. Silander Jr., Adam M. Wilson, and Margaret Rubega. “Developing Dynamic Mechanistic Species Distribution Models: Predicting Bird-Mediated Spread of Invasive Plants across Northeastern North America.” The American Naturalist 178, no. 1 (2011): 30–43.  
+
+Prowse, Thomas A. A., Corey J. A. Bradshaw, Steven Delean, Phillip Cassey, Robert C. Lacy, Konstans Wells, Matthew E. Aiello-Lammens, H. R. Akçakaya, and Barry W. Brook. “An Efficient Protocol for the Global Sensitivity Analysis of Stochastic Ecological Models.” Ecosphere 7, no. 3 (2016): e01238.  

@@ -36,13 +36,13 @@ ms_fonts <- theme(plot.title=element_text(size=11),
 ## Appendixes
 ########
 rmarkdown::render("vignettes/Appendix_1.Rmd", 
-                  output_file="../../ms_DemogCA/EcMod/01_original/supp/App_A.pdf",
+                  output_file="../../ms_DemogCA/EcMod/02_revision/supp/App_A.pdf",
                   knit_root_dir="../")
 rmarkdown::render("vignettes/Appendix_2.Rmd", 
-                  output_file="../../ms_DemogCA/EcMod/01_original/supp/App_B.pdf",
+                  output_file="../../ms_DemogCA/EcMod/02_revision/supp/App_B.pdf",
                   knit_root_dir="../")
 rmarkdown::render("vignettes/Appendix_3.Rmd", 
-                  output_file="../../ms_DemogCA/EcMod/01_original/supp/App_C.pdf",
+                  output_file="../../ms_DemogCA/EcMod/02_revision/supp/App_C.pdf",
                   knit_root_dir="../")
 
 
