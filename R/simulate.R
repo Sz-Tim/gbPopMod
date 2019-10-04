@@ -424,7 +424,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   
   #--- pre-multiply compositional parameters for cell expectations
   p.trt <- NULL
-  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, p.trt)
+  pm <- cell_E(lc.df, K, s.M, s.N, mu, p.f, p.c, p, g.B, g.D, p.trt=p.trt)
   
   #--- implement management
   if(!is.null(grd_cover.i)) {

@@ -266,8 +266,8 @@ cell_E <- function(lc.df, K, s.M, s.N, mu, p.f, p.c, p, g.B, g.D,
     if(length(p.f)==1) p.f <- rep(p.f, nLC)
     if(length(p.c)==1) p.c <- rep(p.c, nLC)
     if(length(p)==1) p <- rep(p, nLC)
-    if(length(g.B)==1) p <- rep(g.B, nLC)
-    if(length(g.D)==1) p <- rep(g.D, nLC)
+    if(length(g.B)==1) g.B <- rep(g.B, nLC)
+    if(length(g.D)==1) g.D <- rep(g.D, nLC)
     # take weighted mean
     K.E <- round(lc.mx %*% K)
     K.lc <- round(t(t(lc.mx) * K))
