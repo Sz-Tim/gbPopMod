@@ -453,7 +453,7 @@ iterate_pop_econ <- function(parcel.df, pp.ls, N.0, B.0, g.p, lc.df, sdd,
   rm(N.f)
   
   #--- seedling establishment
-  estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, g.D, g.B, s.B)
+  estab.out <- new_seedlings(ngrid, N.Sd$N.seed, B.0, pm$p.E, pm$g.D, pm$g.B, s.B)
   rm(N.Sd)
   estab.out$M.0 <- estab.out$M.0[lc.df$inbd]
   
