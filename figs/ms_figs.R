@@ -294,3 +294,139 @@ mgmt_comp.df <- read.csv("mgmt/out/20ac_mgmt_comp.csv")
 out.property %>% filter(mgmt=="aggressive") %>% group_by(Property) %>%
   summarise(min=min(N_adult/nCell)) %>% summary 
 
+
+
+
+########
+## Management gifs
+########
+library(gganimate)
+out.all <- read.csv("mgmt/out/20ac_out_all.csv") %>%
+  mutate(N.none=rep(filter(., mgmt=="none")$N_adult, 4),
+         B.none=rep(filter(., mgmt=="none")$B, 4))
+out.all$mgmt <- lvls_revalue(out.all$mgmt, 
+                             c("Aggressive", "None", "Realized", "Stated"))
+out.all$mgmt <- lvls_reorder(out.all$mgmt, c(2, 4, 3, 1))
+UNH.bbox <- filter(out.all, in.UNH & year==1 & mgmt=="None") %>%
+  summarise(x.min=min(x)-5, x.max=max(x)+5, y.min=min(y)-5, y.max=max(y)+5)
+
+anim_save("figs/mgmt_N_diff.gif",
+          animate(ggplot(filter(out.all, mgmt!="None" &
+                          x>UNH.bbox$x.min & x<UNH.bbox$x.max &
+                          y>UNH.bbox$y.min & y<UNH.bbox$y.max), 
+                 aes(x=lon, y=lat)) + 
+                   geom_tile(aes(fill=(N.none-N_adult)/N.none*100, colour=in.UNH)) +
+                   scale_fill_gradient("Percent reduction\nin adult abundance", 
+                                       high="#ece7f2", low="#045a8d",
+                                       breaks=c(0, 50, 100), limits=c(-1, 100),
+                                       labels=c("0%", "50%", "100%")) + 
+                   scale_colour_manual(values=c(NA, "#ffff33"), guide=FALSE) +
+                   transition_time(year) +  
+                   facet_wrap(~mgmt, nrow=2) +
+                   theme(strip.text=element_text(size=16),
+                         plot.title=element_text(size=20),
+                         legend.title=element_text(size=16),
+                         legend.text=element_text(size=14),
+                         legend.position=c(0.62, 0.37),
+                         axis.ticks=element_blank(),
+                         axis.text=element_blank(),
+                         axis.title=element_blank()) +
+                   ggtitle("Adult abundance. Year {frame_time}"),
+                 nframes=n_distinct(out.all$year), duration=5,
+                 width=10.25, height=8, res=300, units="in"))
+anim_save("figs/mgmt_B_diff.gif", 
+          animate(ggplot(filter(out.all, mgmt!="None" &
+                                x>UNH.bbox$x.min & x<UNH.bbox$x.max &
+                                  y>UNH.bbox$y.min & y<UNH.bbox$y.max), 
+                         aes(x=lon, y=lat)) + 
+                    geom_tile(aes(fill=(B.none-B)/B.none*100, colour=in.UNH)) +
+                    scale_fill_gradient("Percent reduction\nin seed bank", 
+                                        high="#ece7f2", low="#045a8d",
+                                        breaks=c(0, 50, 100), limits=c(-1, 100),
+                                        labels=c("0%", "50%", "100%")) + 
+                    scale_colour_manual(values=c(NA, "#ffff33"), guide=FALSE) +
+                    transition_time(year) +  
+                    facet_wrap(~mgmt, nrow=2) +
+                    theme(strip.text=element_text(size=16),
+                          plot.title=element_text(size=20),
+                          legend.title=element_text(size=16),
+                          legend.text=element_text(size=14),
+                          legend.position=c(0.62, 0.37),
+                          axis.ticks=element_blank(),
+                          axis.text=element_blank(),
+                          axis.title=element_blank()) +
+                    ggtitle("Seed bank abundance. Year {frame_time}"),
+                  nframes=n_distinct(out.all$year), duration=5,
+                  width=10.25, height=8, res=300, units="in"))
+  
+anim_save("figs/mgmt_N.gif",
+          animate(ggplot(filter(out.all, mgmt!="None" &
+                                  x>UNH.bbox$x.min & x<UNH.bbox$x.max &
+                                  y>UNH.bbox$y.min & y<UNH.bbox$y.max), 
+                         aes(x=lon, y=lat)) + 
+                    geom_tile(aes(fill=N_adult, colour=in.UNH)) +
+                    scale_fill_gradient(high="#045a8d", low="#ece7f2") + 
+                    scale_colour_manual(values=c(NA, "#ffff33")) +
+                    transition_time(year) +  
+                    facet_wrap(~mgmt) +
+                    labs(x="Easting", y="Northing") +
+                    theme(strip.text=element_text(size=16)) +
+                    ggtitle("Adult abundance. Year {frame_time}"),
+                  nframes=n_distinct(out.all$year), 
+                  width=800, height=300, duration=5, units="px"))
+
+
+
+
+
+########
+## mgmt_N_B
+########
+out.property <- read_csv(paste0("mgmt/out/", res, "_out_property.csv")) %>%
+  select(mgmt, year, Property, N_adult, B, nCell) %>%
+  filter(year != 1) %>%
+  mutate(year=year-1) %>%
+  rename(Adults=N_adult, `Seed bank`=B) %>%
+  gather(Stage, Abundance, 4:5) 
+out.property$mgmt <- factor(out.property$mgmt,
+                            levels=c("none", "stated", "reality", "aggressive"),
+                            labels=c("No action", "Stated",
+                                     "Realized", "Aggressive"))
+out.compare <- out.property %>% 
+  mutate(N.none=c(rep(filter(out.property, 
+                             mgmt=="No action" & Stage=="Adults")$Abundance, 4),
+                  rep(filter(out.property, 
+                             mgmt=="No action" & Stage=="Seed bank")$Abundance, 4)))
+mgmt_N_B_diff <- ggplot(filter(out.compare, mgmt != "No action"), 
+                        aes(x=year, y=Abundance/N.none*100, 
+                            colour=Property, group=Property)) + 
+  geom_line() + facet_grid(Stage~mgmt) + ms_fonts +
+  scale_y_continuous(breaks=c(0, 50, 100), labels=c("0%", "50%", "100%")) +
+  scale_colour_brewer("Managed property", type="qual", palette="Paired") +
+  labs(y="Percent of un-managed abundance") +
+  theme(panel.grid.minor=element_blank(),
+        panel.grid.major.x=element_blank(),
+        panel.grid.major.y=element_line(colour="gray95"),
+        legend.position="none")
+ggsave("figs/mgmt_N_B_diff.jpeg", mgmt_N_B_diff,
+       width=5, height=3, dpi=400, units="in")
+
+
+
+
+########
+## 3D parameter space plot
+########
+
+library(scatterplot3d)
+source('http://www.sthda.com/sthda/RDoc/functions/addgrids3d.r')
+gsa.pars <- gbPopMod::set_sensitivity_pars(c("p.f", "p", "mu"), span="gb")
+n.gsa <- 25000
+gsa.examp <- data.frame(p=runif(n.gsa, gsa.pars$p$min[3], gsa.pars$p$max[3]),
+                        f=runif(n.gsa, gsa.pars$p.f$min[5], gsa.pars$p.f$max[5]),
+                        mu=runif(n.gsa, gsa.pars$mu$min[1], gsa.pars$mu$max[1]))
+scatterplot3d(gsa.examp, color=rgb(3/255,78/255,123/255,0.05), pch=19, 
+              xlab="", ylab="", zlab="", grid=F)
+addgrids3d(gsa.examp, grid = c("xy", "xz", "yz"), col.grid=rgb(0.5, 0.5, 0.5, 0.5))
+
+
