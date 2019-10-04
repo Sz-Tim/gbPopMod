@@ -1,0 +1,587 @@
+---
+title: "Appendix A"
+subtitle: "Local management in a regional context: Simulations with process-based species distribution models"
+author: "Tim M. Szewczyk, Tom Lee, Mark J. Ducey, Matthew E. Aiello-Lammens, Hayley Bibaud, Jenica M. Allen"
+output:
+  pdf_document: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+editor_options:
+  chunk_output_type: inline
+header-includes:
+  - \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{A.\arabic{table}} \setcounter{figure}{0} \renewcommand{\thefigure}{A.\arabic{figure}}}  \usepackage{longtable}  \usepackage{caption}
+---
+
+\beginsupplement
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse); library(gbPopMod)
+```
+
+
+---
+
+
+# Parameter values
+\captionsetup{width=6.5in}
+\begin{longtable}{l c c c l l}
+	\caption{Parameter details. Parameters were either global or dependent on land cover type. The \emph{Best} value was used to initialize the landscape and simulate management strategies. The \emph{Min} and \emph{Max} values defined the range explored in the global sensitivity analysis. Land cover categories include \emph{Open}, \emph{Deciduous Forest}, \emph{Mixed Forest}, \emph{White Pine Forest}, \emph{Other Evergreen Forest}, and \emph{Other}, where \emph{Other} is unsuitable. See Section A.2 for data source details, and Section A.4 for land cover categorizations.}\\
+		\hline \\[-2.5ex]
+		\textbf{Parameter} & \textbf{Best} & \textbf{Min} & \textbf{Max} & \textbf{Description} & \textbf{Source}\\
+		\hline 
+		\hline \\[-2ex]
+		\multicolumn{5}{l}{\textsc{Fecundity parameters}} \\[.1ex]
+		$f_{Open}$ & 0.45 & 0.338 & 0.563 & Pr(flower $\vert$ adult) & 1, 3 \\
+		$f_{Dec.}$ & 0.29 & 0.218 & 0.364 & Pr(flower $\vert$ adult) & 3, 4 \\
+		$f_{Mxd.}$ & 0.27 & 0.204 & 0.340 & Pr(flower $\vert$ adult) & 4 \\
+		$f_{WP}$ & 0.31 & 0.232 & 0.387 & Pr(flower $\vert$ adult) & 4 \\
+		$f_{Evg.}$ & 0.31 & 0.232 & 0.387 & Pr(flower $\vert$ adult) & 3, 4 \\
+		$f_{Other}$ & 0 & 0 & 0 & Pr(flower $\vert$ adult) & 20 \\[1ex]
+		$\mu_{Open}$ & 1948 & 1461 & 2435 & Mean fruits per flowering adult & 6 \\
+		$\mu_{Dec.}$ & 14 & 10 & 17 & Mean fruits per flowering adult & 3 \\
+		$\mu_{Mxd.}$ & 21 & 15 & 26 & Mean fruits per flowering adult & 1, 3 \\
+		$\mu_{WP}$ & 41 & 31 & 52 & Mean fruits per flowering adult & 1, 3 \\
+		$\mu_{Evg.}$ & 41 & 31 & 52 & Mean fruits per flowering adult & 1, 3 \\
+		$\mu_{Other}$ & 0 & 0 & 0 & Mean fruits per flowering adult & 20 \\[1ex]
+		$\gamma$ & 2.48 & 2.378 & 2.595 & Mean seeds per fruit & 6, 16 \\[1ex]
+		$m_{Open}$ & 3 & 2 & 4 & Age at adulthood & 6 \\
+		$m_{Dec.}$ & 7 & 4 & 8 & Age at adulthood & 4 \\
+		$m_{Mxd.}$ & 7 & 4 & 8 & Age at adulthood & 4 \\
+		$m_{WP}$ & 7 & 4 & 8 & Age at adulthood & 4 \\
+		$m_{Evg.}$ & 7 & 4 & 8 & Age at adulthood & 4 \\
+		$m_{Other}$ & 3 & 2 & 4 & Age at adulthood & 20 \\
+		[.5ex]\hline \\[-2ex]
+		\multicolumn{5}{l}{\textsc{Dispersal parameters}} \\[.1ex]
+		$c_{Open}$ & 0.149 & 0.113 & 0.21 & Pr(fruit is consumed by bird) & 1 \\
+		$c_{Dec.}$ & 0.273 & 0.222 & 0.314 & Pr(fruit is consumed by bird) & 1 \\
+		$c_{Mxd.}$ & 0.273 & 0.222 & 0.314 & Pr(fruit is consumed by bird) & 1 \\
+		$c_{WP}$ & 0.233 & 0.205 & 0.250 & Pr(fruit is consumed by bird) & 1 \\
+		$c_{Evg.}$ & 0.233 & 0.205 & 0.250 & Pr(fruit is consumed by bird) & 1 \\
+		$c_{Other}$ & 0 & 0 & 0 & Pr(fruit is consumed by bird) & 20 \\[1ex]
+		$r$ & 0.0378 & 0.03 & 0.5 & SDD exponential kernel rate & 10, 19 \\[1ex]
+		$sdd_{max}$ & 27 & 4 & 36 & Maximum SDD distance (cells) & 10, 19 \\[1ex]
+		$\eta_{Open}$ & 0.32 & 0.240 & 0.400 & Bird habitat preference & 10 \\
+		$\eta_{Dec.}$ & 0.05 & 0.037 & 0.06 & Bird habitat preference & 10 \\
+		$\eta_{Mxd.}$ & 0.09 & 0.068 & 0.113 & Bird habitat preference & 10 \\
+		$\eta_{WP}$ & 0.09 & 0.068 & 0.113 & Bird habitat preference & 10 \\
+		$\eta_{Evg.}$ & 0.09 & 0.068 & 0.113 & Bird habitat preference & 10 \\
+		$\eta_{Other}$ & 0.36 & 0.270 & 0.451 & Bird habitat preference & 10 \\[1ex]
+		$n_{ldd}$ & 19 & 1 & 20 & Annual long distance dispersal events & 10, 19 \\
+		[.5ex]\hline \\[-2ex]
+		\multicolumn{5}{l}{\textsc{Survival parameters}} \\[.1ex]
+		$s_{c}$ & 0.585 & 0.4875 & 0.605 & Pr(seed survival $\vert$ consumed) & 11, 12, 13 \\[1ex]
+		$s_{B}$ & 0.72 & 0.641 & 0.766 & Pr(seed survival $\vert$ seed bank) & 14, 15, 20 \\[1ex]
+		$s_{M,Open}$ & 0.9 & 0.675 & 0.95 & Pr(juvenile survival) & 8, 18, 20 \\
+		$s_{M,Dec.}$ & 0.6 & 0.45 & 0.75 & Pr(juvenile survival) & 8, 18, 20 \\
+		$s_{M,Mxd.}$ & 0.6 & 0.45 & 0.75 & Pr(juvenile survival) & 8, 18, 20 \\
+		$s_{M,WP}$ & 0.6 & 0.45 & 0.75 & Pr(juvenile survival) & 8, 18, 20 \\
+		$s_{M,Evg.}$ & 0.6 & 0.45 & 0.75 & Pr(juvenile survival) & 8, 18, 20 \\
+		$s_{M,Other}$ & 0 & 0 & 0 & Pr(juvenile survival) & 20 \\[1ex]
+		$s_{N,Open}$ & 1 & 0.9 & 1 & Pr(adult survival) & 20 \\
+		$s_{N,Dec.}$ & 1 & 0.9 & 1 & Pr(adult survival) & 20 \\
+		$s_{N,Mxd.}$ & 1 & 0.9 & 1 & Pr(adult survival) & 20 \\
+		$s_{N,WP}$ & 1 & 0.9 & 1 & Pr(adult survival) & 20 \\
+		$s_{N,Evg.}$ & 1 & 0.9 & 1 & Pr(adult survival) & 20 \\
+		$s_{N,Other}$ & 1 & 0.9 & 1 & Pr(adult survival) & 20 \\[1ex]
+		$K_{Open}$ & 28205 & 19533 & 38713 & Adult carrying capacity & 7, 17 \\
+		$K_{Dec.}$ & 4162 & 1383 & 5378 & Adult carrying capacity & 7, 17 \\
+		$K_{Mxd.}$ & 4162 & 1383 & 5378 & Adult carrying capacity & 7, 17 \\
+		$K_{WP}$ & 4162 & 1383 & 5378 & Adult carrying capacity & 7, 17 \\
+		$K_{Evg.}$ & 4162 & 1383 & 5378 & Adult carrying capacity & 7, 17 \\
+		$K_{Other}$ & 0 & 0 & 100 & Adult carrying capacity & 20 \\
+		[.5ex]\hline \\[-2ex]
+		\multicolumn{5}{l}{\textsc{Seedling parameters}} \\[.1ex]
+		$g_{D}$ & 0 & 0 & 0 & Pr(germinating in year produced) & 16, 20 \\[1ex]
+		$g_{B}$ & 0.2 & 0.18 & 0.28 & Pr(germinating from seed bank) & 9 \\[1ex]
+		$p_{Open}$ & 0.295 & 0.221 & 0.369 & Pr(establish $\vert$ germinate) & 2, 5 \\
+		$p_{Dec.}$ & 0.421 & 0.316 & 0.526 & Pr(establish $\vert$ germinate) & 5 \\
+		$p_{Mxd.}$ & 0.230 & 0.172 & 0.287 & Pr(establish $\vert$ germinate) & 2, 5 \\
+		$p_{WP}$ & 0.082 & 0.062 & 0.103 & Pr(establish $\vert$ germinate) & 2, 5 \\
+		$p_{Evg.}$ & 0.082 & 0.062 & 0.103 & Pr(establish $\vert$ germinate) & 2, 5 \\
+		$p_{Other}$ & 0 & 0 & 0 & Pr(establish $\vert$ germinate) & 20 \\
+		[.5ex]\hline
+\end{longtable}
+
+---
+
+\newpage
+
+# Data source details
+1. **Bird exclusion experiment:** Five sites were established near Durham, NH, USA in the summer of 2017, with two in open canopy, two in white pine forest, and one in mixed forest. At each site, five mature glossy buckthorn plants were haphazardly selected, and four branches were marked on each. Two branches on each plant were enclosed within a mesh bag to prevent fruit consumption by avian dispersers and to capture any fruit naturally falling off the branch. The other two branches remained unaltered. On each branch, all fruits were counted every 2-4 weeks from August - December. Additionally, the presence or absence of fruits or flowers were recorded for 10 different individuals at each site. Data were collected to fill a data gap in this paper and have not been published elsewhere.   
+2. **Field germination experiment:** In the open canopy sites established in *Data Source 1*, we collected ~600 fruits in the summer of 2017. The seeds were separated and cleaned in the lab, and then placed in four germination plots at each of the five sites described in *Data Source 1* in a fully factorial design such that two plots were directly under buckthorn and two were away from buckthorn, and two contained undisturbed litter and two were cleared of litter. A total of 54 seeds were placed in each germination plot in the fall of 2017, and plots were covered with mesh to prevent seed predation. Seedlings were counted throughout the summer of 2018. Data were collected to fill a data gap in this paper and have not been published elsewhere.  
+3. **Aiello-Lammens doctoral dissertation:** The component of this dataset used here includes three populations of glossy buckthorn near Durham, New Hampshire, monitored in 2010-2012, and spanning *Open*, *Deciduous Forest*, *Mixed Forest*, and *White Pine Forest*. Across three field seasons, a total of 251 buckthorn individuals were tagged. In addition to height, diameter, and number of stems, the number of fruits produced by each individual was counted. If an individual did not produce any fruits, we categorized it as non-flowering. A complete description of field methods can be found in: Aiello-Lammens, Matthew E. “Patterns and Processes of the Invasion of Frangula Alnus: An Integrated Model Framework.” Stony Brook University, 2014.  
+4. **Flowering age study:** In the summer of 2018, 20 populations of glossy buckthorn were identified near Durham, NH, USA, with 10 under Eastern white pine canopy and 10 under deciduous canopy. All sites were under closed canopy, >10 m from a clearing or change in forest type with no major disturbance in the past 15 years. At each site, all glossy buckthorn individuals were counted and aged within a 3 m radius plot. A total of 1,363 individuals were monitored from late June - mid-August, and were categorized as *flowering* if any flower buds, flowers, or fruits were present. This dataset was a component of Hayley Bibaud's Master's thesis at the University of New Hampshire.  
+5. **Ground cover establishment rate study:** In 2016, 30 seed establishment plots were established at Kingman Farm, Madbury, NH, USA, with 5 ground cover treatments and 6 replicates of 200 scattered seeds each, sown in October 2016. Treatments included compacted soil, oak leaf litter at a depth found at nearby field sites, white pine leaf litter at a depth found at nearby field sites, a planted mix of perennial grasses used to revegetate logged areas (planted in June 2016), and a control with bare tilled soil. All plots were open, with minimal shading from other plants including trees, and enclosed by a fine mesh cage to prevent seed deposition into the replicate. Plants were marked at emergence and followed for two years, to September 2018. Data were collected by Tom Lee.  
+6. **Orchard experiment:** In May 2015, 15 two-week old glossy buckthorn seedlings were transplanted from College Woods, Durham, NH, USA to an orchard at the UNH Kingman Farm, Madbury, NH, USA. These individuals were grown in optimal conditions, with full sun free from competition on a common New Hampshire soil (Hollis-Charlton). The height, number of fruits produced by each individual, and number of seeds per fruit were recorded in 2015, 2016, and 2017. Data were collected by Tom Lee.  
+7. **Field density study:** At six sites near Durham, NH, USA, glossy buckthorn density was measured in closed canopy and in canopy gaps in predominantly Eastern white pine forest. Sites were assessed in 2006, 2007, 2008, or 2013, and consisted of 20 circular plots with a radius of either 3 m or 5.5 m. Glossy buckthorn individuals may be multi-stemmed, and the density of both stems and of plants was recorded. We used the density of individuals rather than stems in our estimate of carrying capacity. Data were collected by Tom Lee.  
+8. **Juvenile mortality study:** In July 2016 & 2017, a total of 201 buckthorn individuals <2 years old were tagged in 60 canopy gaps and 60 continuous canopy plots in the College Woods Natural Area, Durham, NH, USA. The forest is a Hemlock-Beech-Oak-Pine type with strong dominance of eastern hemlock. Mortality was recorded at the end of the initial summer and in July of the next summer. Data were collected by Tom Lee.  
+9. **Lab germination experiment:** In the fall of 2016, fruits were collected from glossy buckthorn populations in Durham, NH, USA and Madbury, NH, USA. Seeds were removed, washed, soaked 5-6 times, and cold stratified from December 2016 - April 2017. Then, from 6 April - 25 April, seeds were placed in one of three temperature treatments: 1) ambient temperature (ca. 20 ºC) under a 40 watt lamp; 2) alternating 14 hrs in a refrigerator (ca. 5 ºC) with 10 hrs at ambient temperature under a 40 watt lamp; or 3) refrigerator only. There were three replicates for each treatment, where each replicate consisted of 25 seeds in a petri dish with moist filter paper. Data were collected by Tom Lee.  
+10. Merow, Cory, Nancy LaFleur, John A. Silander Jr., Adam M. Wilson, and Margaret Rubega. 2011. “Developing Dynamic Mechanistic Species Distribution Models: Predicting Bird-Mediated Spread of Invasive Plants across Northeastern North America.” The American Naturalist 178(1): 30–43.  
+11. Bartuszevige, Anne M., and David L. Gorchov. 2006. “Avian Seed Dispersal of an Invasive Shrub.” Biological Invasions 8(5): 1013–22.  
+12. Lafleur, Nancy, Margaret Rubega, and Jason Parent. 2009. “Does Frugivory by European Starlings (Sturnus Vulgaris) Facilitate Germination in Invasive Plants?” The Journal of the Torrey Botanical Society 136(3): 332–41.  
+13. Ramírez, Magdalena Maria, and Juan Francisco Ornelas. 2009. “Germination of Psittacanthus Schiedeanus (Mistletoe) Seeds after Passage through the Gut of Cedar Waxwings and Grey Silky-Flycatchers.” Journal of the Torrey Botanical Society 136(3): 322–31.  
+14. Godwin, H. “Frangula Alnus (Miller).” 1943. Journal of Ecology 31(1): 77–92.  
+15. Granstrom, Anders. 1988. “Seed Banks at Six Open and Afforested Heathland Sites in Southern Sweden.” Journal of Applied Ecology 25(1): 297–306.  
+16. Gosling, Peter. 2007. Raising Trees and Shrubs from Seed. Forestry Commission Practice Guide. Edinburgh: Forestry Commission.  
+17. EDDMapS. 2016. “Early Detection & Distribution Mapping System.” The University of Georgia - Center for Invasive Species and Ecosystem Health. Accessed 10 Aug 2018.  
+18. COMPADRE Plant Matrix Database. Max Planck Institute for Demographic Research (Germany). Available at www.compadre-db.org. (version 4.0.1).  
+19. Pattern-oriented parameterization using historical occurrence records: See Appendix B.  
+20. Expert experience and knowledge (Tom Lee, Dept. of Natural Resources & the Environment, University of New Hampshire)  
+
+
+---
+
+\newpage
+
+# Parameter calculations
+```{r parCalc_setup, echo=F, message=FALSE}
+d_1a <- read_csv("data/gb/Allen_fecundity.csv") %>%
+  mutate(Date=as.Date(Date, format="%m/%d/%Y"))
+d_1b <- read_csv("data/gb/Allen_flower.csv")
+d_2 <- read_csv("data/gb/Allen_emerge.csv") %>% filter(Visit==max(Visit))
+d_3 <- read_csv("data/gb/Aiello_fral-df-ann.csv") %>%
+  mutate(nhlc=factor(nhlc, labels=c("Opn", "Dec", "Mxd", "WP"))) %>%
+  filter(!is.na(nhlc))
+d_4 <- read_csv("data/gb/Bibaud_flower.csv")
+d_5 <- read_csv("data/gb/Lee_emerge.csv")
+d_6 <- read_csv("data/gb/Lee_fecundity.csv") %>% mutate(Age=as.numeric(factor(Year)))
+d_7 <- read_csv("data/gb/Lee_density.csv") %>% group_by(Canopy)
+d_8 <- read_csv("data/gb/Lee_juvMortality.csv")
+d_9 <- read_csv("data/gb/Lee_germ.csv") %>%
+  select(Treatment, SeedSource, Replicate, propGerm)
+d_17 <- read.csv("data/gb/eddmaps_gb.csv", 
+                     na.strings=c("NA", "NULL", "")) %>%
+  filter(grossAreaInAcres > infestedAreaInAcres &
+           grossAreaInAcres > 15 & grossAreaInAcres < 500) %>%
+  mutate(prop_infested=infestedAreaInAcres/grossAreaInAcres) %>%
+  select(ObjectID, infestedAreaInAcres, grossAreaInAcres, prop_infested)
+d_mgmt <- read_csv("data/gb/Eisenhaure_cut.csv") %>% 
+  mutate(Date=as.Date(Date, format="%m/%d/%Y"),
+         Season=forcats::lvls_reorder(Season, c(3,2,1)))
+LCs <- c("Open", "Other", "Dec", "Evg", "WP", "Mxd")
+```
+
+We used several datasets to calculate estimates and ranges for each parameter. When possible, we calculated values for each land cover category. For some parameters, only open vs. closed canopy data were available, and so we applied the closed canopy values to all forested land cover categories. If no habitat-specific data were available or feasibly collected, we estimated global values. To calculate the minimum and maximum plausible values to use in the global sensitivity analysis, we calculated used the 25% and 75% quantiles when possible, or used the best estimate $\pm$ 25%. Note that all values in the model represent population-level averages, and so our goal was to capture the likely range of these averages rather than the range of individual variation.
+
+The datasets are named according to Section A.2. For each dataset, the structure and land cover categories or environmental conditions included are as follows:   
+```{r parCalc_datasets}
+str(d_1a, give.attr=F) # Data Source 1: open, white pine, mixed
+str(d_1b, give.attr=F) # Data Source 1: open, white pine, mixed
+str(d_2, give.attr=F) # Data Source 2: open, white pine, mixed
+str(d_3, give.attr=F) # Data Source 3: open, white pine, deciduous, mixed
+str(d_4, give.attr=F) # Data Source 4: white pine, deciduous
+str(d_5, give.attr=F) # Data Source 5: open, compacted, oak, white pine, cover crop
+str(d_6, give.attr=F) # Data Source 6: open: ideal conditions
+str(d_7, give.attr=F) # Data Source 7: open vs. closed canopy
+str(d_8, give.attr=F) # Data Source 8: open vs. closed canopy
+str(d_9, give.attr=F) # Data Source 9: ambientTemp, coldTemp, alternatingTemp
+str(d_17, give.attr=F) # Data Source 17: global (density)
+str(d_mgmt, give.attr=F) # Lee et al. 2017: global (cutting treatment mortality)
+```
+
+## $\boldsymbol{f}$ : Probability of an adult flowering
+We used data from three field studies to calculate flowering probability in each land cover category, with *Data Source 1* for *Open*, *Data Source 3* for *Open*, *Deciduous Forest*, and *Mixed Forest*, and *Data Source 4* for *Deciduous Forest*, *Evergreen Forest*, *White Pine Forest*, and *Mixed Forest*. This probability represents the expected proportion of individuals capable of reproduction that actually reproduce in a given year.
+```{r parCalc_f}
+p.f_1b <- d_1b %>% group_by(Plot_type) %>% summarise(p.f=mean(Fruit))
+p.f_3 <- d_3 %>% group_by(nhlc) %>% summarise(p.f=mean(fruit>0))
+m_4 <- d_4 %>% filter(!is.na(Flowering)) %>% summarise(m=min(Age))
+p.f_4 <- d_4 %>% filter(Age > m_4$m) %>% group_by(Canopy) %>% 
+  summarise(nFlower=sum(Flowering, na.rm=T),
+            nNotFlower=sum(NotFlowering, na.rm=T),
+            p.f=nFlower/nNotFlower)
+p.f <- setNames(c(mean(c(p.f_1b$p.f[1], p.f_3$p.f[1])), 
+                  0,
+                  mean(p.f_3$p.f[2], p.f_4$p.f[1]), 
+                  p.f_4$p.f[2], 
+                  p.f_4$p.f[2],
+                  mean(c(p.f_4$p.f, p.f_3$p.f[3]))), 
+                LCs)
+# best estimate
+round(p.f, 3)
+# min
+round(p.f*0.75, 3)
+# max
+round(pmin(p.f*1.25, 1), 3)
+```
+
+## $\boldsymbol{\mu}$ : Mean fruits per flowering adult
+We used data from three field studies to estimate the mean number of fruits produced by a reproducing individual in each land cover category. We used *Data Source 6*, which represents ideal orchard conditions, for *Open*, *Data Source 1* for *Evergreen Forest*, *White Pine Forest*, and *Mixed Forest*, and *Data Source 3* for *Deciduous Forest*. Because *Data Source 1* only includes counts from select branches, we assumed the proportion relative to *Data Source 3* was constant across land cover categories, and so divided by this proportion to approximate plant-level totals for *Data Source 1*.
+```{r parCalc_mu}
+# open: ideal conditions
+mu_6 <- filter(d_6, nFruit>0)$nFruit
+# open, deciduous, mixed
+mu_3 <- filter(d_3, fruit>0) %>% group_by(nhlc) %>% 
+  summarise(mu=mean(fruit))
+# open, white pine, mixed
+mu_1a <- d_1a %>% filter(Treatment=="closed") %>%
+  group_by(Plot_type, Plant) %>%
+  summarise(tot_fruit=sum(T_t1, na.rm=TRUE)) %>% ungroup %>%
+  mutate(canopy=case_when(Plot_type == "cleared" ~ "open",
+                          Plot_type != "cleared" ~ "closed"))
+prop_a.b <- mean(filter(mu_1a, Plot_type=="mixed")$tot_fruit)/mu_3$mu[3]
+mu_1a <- mu_1a %>% 
+  mutate(est_fruit=case_when(canopy == "open" ~ tot_fruit/prop_a.b,
+                             canopy == "closed" ~ tot_fruit/prop_a.b)) %>% 
+  group_by(Plot_type) %>% summarise(mn=mean(est_fruit))
+mu <- setNames(c(mean(mu_6), 
+                 0, 
+                 mu_3$mu[2], 
+                 mu_1a$mn[3], 
+                 mu_1a$mn[3], 
+                 mu_1a$mn[2]), 
+               LCs)
+# best estimate
+round(mu)
+# min
+round(mu * 0.75)
+# max
+round(mu * 1.25)
+```
+
+## $\boldsymbol{\gamma}$ : Mean seeds per fruit
+We used counts from *Data Source 6* to calculate the mean number of seeds per fruit. This is in accordance with the expectation published in *Data Source 16*. We assumed that this value is constant across all landcover types.
+```{r parCalc_gamma}
+fruit_cts <- filter(d_6, nFruit>0)$nSeedFruit
+gamma <- mean(fruit_cts)
+# best estimate
+round(gamma, 3)
+# min
+round(quantile(fruit_cts, 0.25), 3)
+# max
+round(quantile(fruit_cts, 0.75), 3)
+```
+
+## $\boldsymbol{m}$ : Age at adulthood
+We estimated the age at which individuals are capable of reproduction with two datasets, partitioning the six land cover categories into *open canopy* and *closed canopy*. We used *Data Source 4* to inform the age under closed canopy, and *Data Source 6* to inform the value under open canopy.
+```{r parCalc_m}
+# open: ideal orchard conditions
+d_6 %>% group_by(Age) %>% summarise(mean(nFruit>0))
+# closed canopy
+m_4 <- d_4 %>% filter(!is.na(Flowering)) %>% 
+  group_by(Plot) %>% summarise(m=min(Age))
+summary(m_4)
+# best estimate
+setNames(c(3, 3, 7, 7, 7, 7), LCs)
+# min
+setNames(c(2, 2, 4, 4, 4, 4), LCs)
+# max
+setNames(c(4, 4, 10, 10, 10, 10), LCs)
+```
+
+## $\boldsymbol{c}$ : Pr(fruit is consumed by a bird)
+In the model, fruits are either consumed by birds, or dropped below the plant. We used *Data Source 1* to estimate the proportion of fruits consumed by birds on a typical plant in each land cover category. As described above, the experiment included branches that were open and branches that were covered by mesh bags to exclude birds. Between successive counts, the new fruit on closed branches is $n_1 = T_1 - T_0 + b_1 - b_0$, where $n_1$ is fruit produced between time 0 and time 1, $T_1$ is the total fruit on the branch at time 1, $T_0$ is the total fruit on the branch at time 0, $b_1$ is the fruit dropped in the bag at time 1, and $b_0$ is the fruit dropped in the bag at time 0. On open branches, the new fruit produced between time 0 and time 1 is $n_1 = T_1 - T_0 + c + d$, where $c$ is the number of fruits consumed and $d$ is the number of fruits that were dropped. To estimate the fruits consumed, we assume that the fruit production rates and fruit drop rates are constant among branches on each plant. Thus, we use closed branches to calculate the rate of new fruit production as $n_{rate} = n_1 / (T_1 + b_1 - b_0)$ and the rate of fruit drop as $d_{rate} = (b_1 - b_0)/(T_1 + b_1 - b_0)$. On open branches, these rates are defined as $n_{rate} = n_e / (T_1 + d_e + c_e)$, where $n_e$ is the estimated number of new fruits, $d_e$ is the estimated number of dropped fruits, and $c_e$ is the estimated number of consumed fruits, and as $d_{rate} = d_e / (T_1 + d_e + c_e)$. Using algebra and substitution, we can then use the plant-specific rates to calculate the estimate number of consumed fruits as $c_e = (T_0 * (1-d_{rate})) / (1-n_{rate}) - T_1$, the estimated number of dropped fruits as $d_e = (d_{rate}*(T_1+c_e))/(1-d_{rate})$, and the estimated new fruit production as $n_e = n_{rate} (T_1 + d_e + c_e)$. Lastly, the estimated proportion of consumed fruits is then $c_e / (T_1 + d_e + c_e)$.
+```{r parCalc_c}
+# align t0 and t1 counts for each branch
+for(x in 2:n_distinct(d_1a$t_1)) {
+  for(j in 1:n_distinct(d_1a$Plot_abbrev)) {
+    for(k in 1:n_distinct(d_1a$Plant)) {
+      for(l in 1:n_distinct(d_1a$Branch)) {
+        x_t1 <- with(d_1a, which(t_1==x & 
+                                        Plot_abbrev==unique(Plot_abbrev)[j] &
+                                        Plant==unique(Plant)[k] &
+                                        Branch==unique(Branch)[l]))
+        x_t0 <- with(d_1a, which(t_1==(x-1) & 
+                                        Plot_abbrev==unique(Plot_abbrev)[j] &
+                                        Plant==unique(Plant)[k] &
+                                        Branch==unique(Branch)[l]))
+        d_1a$i_t0[x_t1] <- d_1a$i_t1[x_t0]
+        d_1a$m_t0[x_t1] <- d_1a$m_t1[x_t0]
+        d_1a$T_t0[x_t1] <- d_1a$T_t1[x_t0]
+        d_1a$b_t0[x_t1] <- d_1a$b_t1[x_t0]
+      }
+    }
+  }
+}
+# calculate changes between visits
+d_1a <- d_1a %>%
+  mutate(delta_T=T_t1-T_t0,
+         delta_m=m_t1-T_t0,
+         delta_b=b_t1-b_t0)
+
+# calculate new fruit production rates on closed branches
+rates.df <- d_1a %>%
+  filter(Treatment=="closed") %>%
+  mutate(n_t1=T_t1-T_t0+b_t1-b_t0) 
+rates.df <- rates.df %>%
+  mutate(delta_b=b_t1-b_t0) %>%
+  group_by(Plot_abbrev, Plant) %>%
+  summarise(n_rate=sum(n_t1, na.rm=T)/(sum(T_t1, delta_b, na.rm=T)),
+            d_rate=sum(delta_b, na.rm=T)/(sum(T_t1, delta_b, na.rm=T))) %>%
+  as.tibble
+
+# calculate new fruit production on open branches
+fec_all <- left_join(d_1a, rates.df, by=c("Plot_abbrev", "Plant")) %>%
+  filter(Treatment=="open") %>%
+  mutate(c_e=(T_t0*(1-d_rate)/(1-n_rate) - T_t1),
+         d_e=(d_rate*(T_t1+c_e))/(1-d_rate),
+         n_e=n_rate*(T_t1 + d_e + c_e)) %>%
+  group_by(Plot_type, Plot_abbrev, Plant) %>%
+  summarise(ce=sum(c_e, na.rm=T),
+            de=sum(d_e, na.rm=T),
+            ne=sum(n_e, na.rm=T),
+            p.c=sum(c_e, na.rm=T)/sum(T_t1, d_e, c_e, na.rm=T))
+fec_all$p.c[fec_all$p.c<0] <- 0
+fec_all$p.c[fec_all$p.c>1] <- 1
+
+# summarise estimated proportion consumed
+fec_sum <- fec_all %>% ungroup %>% group_by(Plot_type) %>% 
+  summarise(c_mn=mean(p.c, na.rm=T),
+            c_25=quantile(p.c, probs=0.25, na.rm=T),
+            c_75=quantile(p.c, probs=0.75, na.rm=T))
+# best estimate
+setNames(round(fec_sum$c_mn[c(1,1,2,3,3,2)], 3), LCs)
+# min
+setNames(round(fec_sum$c_25[c(1,1,2,3,3,2)], 3), LCs)
+# max
+setNames(round(fec_sum$c_75[c(1,1,2,3,3,2)], 3), LCs)
+```
+
+## $\boldsymbol{r}$ : Short distance dispersal rate
+We used pattern-oriented parameterization for the dispersal parameters, using values from the invasive vine Oriental Bittersweet (*Celastrus orbiculatus*) as initial starting points (*Data Source 10*: Merow et al. 2011). The short distance dispersal probabilities are defined by a modified exponential kernel, such that the probability decreases with rate *r*, equal to the inverse of the mean distance, weighted by the relative habitat preferences of the avian dispersal agents. Using radiotelemetry data for American Robins and European Starlings, Merow et al. (2011) calculated a mean dispersal distance of ~2.14 km. We translate the unit into cells to obtain our starting value for our parameterization.
+```{r parCalc_r}
+# Merow et al. 2011: mean distance = 0.286 cells ~ 2.14km
+# starting point -- cells are 20 ac ~ 285m x 285m
+1/(2.14/0.285)
+# see Appendix B for pattern-oriented parameterization results
+```
+
+## $\boldsymbol{sdd_{max}}$ : Short distance dispersal max distance
+The maximum distance for short distance dispersal is defined by $sdd_{max}$, a radius about the source cell. Again using *Data Source 10* (Merow et al. 2011), the maximum distance a bird would be expected to travel prior to defecating a consumed seed is ~22 km. However, with the much higher resolution used to model management strategies here, this distance is computationally prohibitive even on a High Performance Computing cluster. Further, glossy buckthorn fruits have laxative effects (Aiello-Lammens 2014), and consequently the short distance dispersal neighborhoods are likely somewhat smaller than those for *C. orbiculatus*. 
+```{r parCalc_sddMax}
+# Merow et al. 2011: max distance = 22km
+# starting point -- number of cells
+22/0.285 
+# with starting SDD rate, 99% of the probability density is within a 36 cell radius
+round(pexp(1:36, 0.13, lower.tail=F), 3) 
+# see Appendix B for pattern-oriented parameterization results
+```
+
+## $\boldsymbol{\eta}$ : Bird habitat preferences
+Glossy buckthorn fruits are consumed by a wide variety of bird species (Craves 2015), though the majority of dispersal in New England likely occurs by American Robins, European Starlings, and Cedar Waxwings. We adapt the habitat preferences calculated by Merow et al. (2011) using radiotelemetry data on American Robins and European Starlings to align with our land cover categories. We were unable to locate quantitative data on Cedar Waxwing preferences. 
+```{r parCalc_birdHab}
+# Merow et al. 2011 (Dev=.39, Ag=.44, Dec=.06, Evg=.11)
+eta <- setNames(c(.39, .44, .06, .11, .11, .11), LCs)
+# best estimate
+round(eta/sum(eta), 3)
+# min
+round(eta*0.75, 3) # automatically rescales to 0 in sensitivity analysis
+# max
+round(eta*1.25, 3) # automatically rescales to 0 in sensitivity analysis
+```
+
+## $\boldsymbol{n_{ldd}}$ : Annual long distance dispersal events
+Merow et al. (2011) use a single event per year in their model of *C. orbiculatus*. However, we define long distance dispersal more broadly, with an emphasis on intentional and unintentional human-mediated dispersal rather than solely through occasional long distance bird movement. Additionally, we use a much higher resolution, and so each long distance dispersal event is assigned to a much smaller area, and short distance dispersal involves more discretized movements. We therefore explore a much wider range to account for these differences. See Appendix B for details on the pattern-oriented parameterization for dispersal.
+
+## $\boldsymbol{s_c}$ : Pr(seed survival \| consumed by bird)
+When birds consume glossy buckthorn fruits, the seeds contained within may not survive the digestive process. Lacking data for glossy buckthorn specifically, we used data from similar species, including *Lonicera maackii* consumed by Robins and Waxwings (*Data Source 11*), *Rosa multiflora* consumed by Starlings (*Data Source 12*), and *Psittacantus schiedeanus* consumed by Waxwings (*Data Source 13*).
+```{r parCalc_sC}
+# aggregated from literature on similar species (see above)
+s.c_lit <- c(0.86, 0.47, 0.56, 0.54, 0.46, 0.62)
+# best estimate
+mean(s.c_lit)
+# min
+quantile(s.c_lit, 0.25)
+# max
+quantile(s.c_lit, 0.75)
+```
+
+## $\boldsymbol{s_B}$ : Pr(seed survival \| seed bank)
+Glossy buckthorn seeds have been confirmed to survive for at least three years in the seed bank (*Data Source 14* & *Data Source 15*). As with many species, however, data on seed bank survival is sparse. We therefore interpret three years as the mean life expectancy, and calculate an annual survival rate using the equation $life expectancy = -1 / log(s_B)$.
+```{r parCalc_sB}
+# best estimate
+exp(-1/3) 
+# min
+exp(-1/(3*0.75))
+# max
+exp(-1/(3*1.25))
+```
+
+## $\boldsymbol{s_M}$ : Pr(juvenile survival)
+Data on the survival rates of glossy buckthorn juveniles are sparse. We estimate values for open vs. closed canopy, using *Data Source 8* and survival matrices for the similar species *Lindera benzoin* (*Data Source 18*). Based on expert knowledge, survival rates are likely higher in open canopy, and so our values reflect this. Given the paucity of data, we apply one survival rate to all juveniles, regardless of age.
+```{r parCalc_sM}
+d_8 %>% group_by(Age, Canopy) %>% filter(Age!=0) %>% summarise(sM=mean(pr_s))
+# survival matrices from COMPADRE for the similar species Lindera benzoin
+load("data/gb/COMPADRE_v.4.0.1.RData")
+which(compadre$metadata$SpeciesAccepted=="Lindera benzoin") %>% 
+  map(~compadre$mat[[.]]$matU) 
+# estimates are rather variable, so estimate higher survival in open canopy
+s.M <- setNames(c(0.9, 0, 0.6, 0.6, 0.6, 0.6), LCs)
+# best estimate
+s.M
+# min
+s.M*0.75
+# max
+pmin(s.M*1.25, 1)
+```
+
+## $\boldsymbol{s_N}$ : Pr(adult survival)
+Glossy buckthorn appears to be long-lived with very low adult mortality. Within the time frame of the management simulations, we therefore assume adults do not die in the absence of management action. For the sensitivity analysis, we explore annual survival rates of $0.9-1$.
+
+## $\boldsymbol{K}$ : Adult carrying capacity
+We used estimates of the density of stems greater than 1m in height in open and closed canopy plots (radius 3m or 5.5m) to calculate the upper limits of adult glossy buckthorn density (*Data Source 7*). Because these extremely dense local patches would not be expected to apply in reality to a typical 20 acre (285m x 285m = 8.1 ha) grid cell, we scaled this density by the mean proportion of infested acres reported in the EDDMapS database for glossy buckthorn (*Data Source 17*). This provides a more realistic carrying capacity estimate for an average grid cell across the landscape.
+```{r parCalc_K}
+propInfest_17 <- max(d_17$prop_infested)
+density_7 <- d_7 %>% # density is per hectare
+  summarise(mn=mean(n_g1m_ha),
+            q25=quantile(n_g1m_ha, 0.25),
+            q75=quantile(n_g1m_ha, 0.75))
+density_7[,2:4] <- density_7[,2:4] * 8.1 * propInfest_17
+# best estimate
+setNames(with(density_7, c(mn[2], 0, mn[1], mn[1], mn[1], mn[1])), LCs)
+# min
+setNames(with(density_7, c(q25[2], 0, q25[1], q25[1], q25[1], q25[1])), LCs)
+# max
+setNames(with(density_7, c(q75[2], 100, q75[1], q75[1], q75[1], q75[1])), LCs)
+```
+
+## $\boldsymbol{g_D}$ : Pr(germination directly in year produced)
+Glossy buckthorn seeds must overwinter prior to germination (*Data Source 16*). Thus, we set this parameter to 0 and did not include it in the global sensitivity analysis.
+
+## $\boldsymbol{g_B}$ : Pr(germination from the seed bank)
+To estimate the probability of a glossy buckthorn seed germinating from the seed bank, we use data from a lab experiment in which glossy buckthorn seeds were treated under several temperature regimes (*Data Source 9*).
+```{r parCalc_gB}
+germ_prop <- filter(d_9, Treatment!="ColdTemp")$propGerm
+# best estimate
+mean(germ_prop)
+# min
+quantile(germ_prop, 0.25)
+# max
+quantile(germ_prop, 0.75)
+```
+
+## $\boldsymbol{p}$ : Pr(establishment \| germination)
+Seeds that have germinated are removed from the seed bank, but still may not survive to establish as seedlings. We use datasets *2* and *5* to estimate this probability in each land cover category.
+```{r parCalc_p}
+emerge_5 <- d_5 %>% group_by(Treatment) %>% 
+  summarise(p=mean(propEmerge)/mean(germ_prop))
+emerge_2 <- d_2 %>% group_by(Plot_type) %>% summarise(p=mean(p_tot_live))
+p <- setNames(c(mean(c(emerge_5$p[2], emerge_2$p[1])), 0, 
+                emerge_5$p[3], mean(c(emerge_5$p[4], emerge_2$p[3])), 
+                mean(c(emerge_5$p[4], emerge_2$p[3])), 
+                mean(c(emerge_5$p[3:4], emerge_2$p[2]))), LCs)
+# best estimate
+round(p, 3)
+# min
+round(p * 0.75, 3)
+# max
+round(pmin(p * 1.25, 1), 3)
+```
+
+## Management action: Cutting
+When cut, glossy buckthorn may resprout from the stump. To quantify the success of cutting, we estimated the mortality rate using data from experimental plots, with three paired plots near Durham, NH, USA receiving a cutting treatment or no treatment (Lee et al. 2017).
+```{r parCalc_cut}
+d_mgmt %>% filter(Season == "Start" & Year!=2010) %>%
+  mutate(Year=factor(Year, labels=c("Y0", "Y1"))) %>%
+  group_by(Treatment, Year, Subblock) %>%
+  summarise(N=sum(N)) %>%
+  spread(Year, N) %>%
+  mutate(pN=(Y1-Y0)/Y0) %>% 
+  select(Treatment, Subblock, pN) %>%
+  spread(Treatment, pN) %>%
+  ungroup %>% summarise(mn_mortality=mean(CUT-NONE))
+# best estimate: mortality = 0.68
+```
+
+## Management action: Cutting + Spraying
+Our estimate of the mortality rate for cutting and spraying glossy buckthorn with herbicide was approximated from several literature sources, with success rates ranging from 91% - 100% (Reinartz 1997, Delanoy & Archibold 2007, Nagel et al. 2008, Dornbos and Pruim 2012). 
+```{r parCalc_cutSpray}
+# best estimate: mortality = 0.97
+```
+
+
+## Management action: Spraying
+The mortality rate for spraying glossy buckthorn with herbicide was approximated based on the mortality rates for cutting and spraying. We were unable to locate studies on glossy buckthorn that included only herbicide, and so assumed the success rate was intermediate between cutting and cutting + spraying.
+```{r parCalc_spray}
+# best estimate: mortality = 0.90
+```
+
+
+## Management action: Cover crop
+We calculated the establishment rate of germinated seeds under a cover crop treatment using *Data Source 5*.
+```{r parCalc_pCoverCrop}
+emerge_5$p[5]
+```
+
+
+---
+
+\newpage
+
+# Landscape description
+The landscape used in the model had a resolution of 20 acres (~285 x 285 m). For the sensitivity analysis, pattern-oriented parameterization, and population initialization, the extent included southern New Hampshire and Maine, USA (240,656 cells). For the management simulations, we constrained the extent to the bounding box encapsulating a $2*sdd_{max}$ buffer about the managed properties. The environment within each cell of the landscape was described by the proportional composition of six land cover categories: *Open*, *Deciduous Forest*, *Mixed Forest*, *White Pine Forest*, *Other Evergreen Forest*, and *Other*, where *Open* includes open canopy land cover types highly suitable to glossy buckthorn, and *Other* includes all categories deemed unsuitable. 
+
+To create the landscape, we combined two land cover datasets using a hierarchical Bayesian model (Szewczyk et al. *in review*). First, the New Hampshire GRANIT dataset has high accuracy and details species-specific canopies including *White Pine* based on satellite imagery from throughout the 1990s, but only covers the state of New Hampshire (Justice et al. 2002). Second, the 2001 National Land Cover Database (NLCD) has lower accuracy and only includes broad forest types based on satellite imagery from 2001, but extends across the conterminous United States (Homer et al. 2007). Prior to using these datasets in the hierarchical model, we aggregated the original categories to the six listed above. For the NH GRANIT dataset, we used the following aggregation scheme:
+```{r lc_agg_grnt, echo=F}
+grnt <- readxl::read_xlsx("data/gb/Landcover_aggregation.xlsx", sheet=1)
+print.AsIs(grnt)
+```
+
+For the 2001 NLCD dataset, we used the following aggregation scheme:
+```{r lc_agg_nlcd, echo=F}
+nlcd <- readxl::read_xlsx("data/gb/Landcover_aggregation.xlsx", sheet=2)
+print.AsIs(nlcd)
+```
+
+For each 20 acre cell, we calculated the proportional cover of each land cover type. The hierarchical model then used climatic (Karger et al. 2017: mean annual temperature, annual precipitation, temperature annual range), topographic (Gesch et al. 2002: elevation, terrain ruggedness), and anthropogenic (Manson et al. 2017: total population, housing units for seasonal, recreational, or occasional use; U.S. Census 2000: length of primary and secondary roads) variables as well as the modeled distribution of eastern white pine (Pasquarella et al. 2018) to improve the accuracy of the NLCD dataset in Maine where GRANIT is unavailable, and to partition the NLCD category *Evergreen Forest* into *White Pine Forest* and *Other Evergreen Forest*. We used this extended map produced by the hierarchical model as the landscape for the simulations (Szewczyk et al., *in review*).
+
+
+---
+
+
+# References  
+Aiello-Lammens, Matthew E. “Patterns and Processes of the Invasion of Frangula Alnus: An Integrated Model Framework.” Stony Brook University, 2014.  
+
+Bartuszevige, Anne M., and David L. Gorchov. “Avian Seed Dispersal of an Invasive Shrub.” Biological Invasions 8, no. 5 (2006): 1013–22.  
+
+COMPADRE Plant Matrix Database. Max Planck Institute for Demographic Research (Germany). Available at www.compadre-db.org. (version 4.0.1).  
+
+Craves, Julie A. “Birds That Eat Nonnative Buckthorn Fruit (Rhamnus Cathartica and Frangula Alnus, Rhamnaceae) in Eastern North America.” Natural Areas Journal 35, no. 2 (2015): 279–87.  
+
+Delanoy, Luc, and O. W. Archibold. “Efficacy of Control Measures for European Buckthorn (Rhamnus Cathartica L.) in Saskatchewan.” Environmental Management 40, no. 4 (2007): 709–18.  
+
+Dornbos, David L., and Randall Pruim. “Moist Soils Reduce the Effectiveness of Glyphosate on Cut Stumps of Buckthorn.” Natural Areas Journal 32, no. 3 (2012): 240–46.  
+
+EDDMapS. “Early Detection & Distribution Mapping System.” The University of Georgia - Center for Invasive Species and Ecosystem Health, 2016. Accessed 10 Aug 2018.  
+
+Godwin, H. “Frangula Alnus (Miller).” Journal of Ecology 31, no. 1 (1943): 77–92.  
+
+Homer, C., J. Dewitz, J. Fry, M. Coan, N. Hossain, C. Larson, N. Herold, A. McKerrow, J.N. VanDriel, and J. D. Wickham. “Completion of the 2001 National Land Cover Database for the Conterminous United States.” Photogrammetric Engineering & Remote Sensing 73, no. 4 (2007): 337–41.  
+
+Gesch, D. et al. 2002. The National Elevation Dataset. - Photogramm. Eng. Remote Sens. 68: 1–9.
+
+Gosling, Peter. Raising Trees and Shrubs from Seed. Forestry Commission Practice Guide. Edinburgh: Forestry Commission, 2007.  
+
+Granstrom, Anders. “Seed Banks at Six Open and Afforested Heathland Sites in Southern Sweden.” Journal of Applied Ecology 25, no. 1 (1988): 297–306.  
+
+Justice, D, A Deely, and F Rubin. “New Hampshire Land Cover Assesment,” 2002.  
+
+Karger, D. N. et al. 2017. Climatologies at high resolution for the earth’s land surface areas. - Sci. Data 4: 1–20.
+
+Lafleur, Nancy, Margaret Rubega, and Jason Parent. “Does Frugivory by European Starlings (Sturnus Vulgaris) Facilitate Germination in Invasive Plants?” The Journal of the Torrey Botanical Society 136, no. 3 (2009): 332–41.  
+
+Lee, Thomas D., Stephen E. Eisenhaure, and Ian P. Gaudreau. “Pre-Logging Treatment of Invasive Glossy Buckthorn (Frangula Alnus Mill.) Promotes Regeneration of Eastern White Pine (Pinus Strobus L.).” Forests 8, no. 1 (2017): 1–12.  
+
+Manson, S. et al. 2017. IPUMS National Historical Geographic Information System: Version 12.0 [Database].
+
+Merow, Cory, Nancy LaFleur, John A. Silander Jr., Adam M. Wilson, and Margaret Rubega. “Developing Dynamic Mechanistic Species Distribution Models: Predicting Bird-Mediated Spread of Invasive Plants across Northeastern North America.” The American Naturalist 178, no. 1 (2011): 30–43.  
+
+Nagel, L. M., R. G. Corace, and A. J. Storer. “An Experimental Approach to Testing the Efficacy of Management Treatments for Glossy Buckthorn at Seney National Wildlife Refuge, Upper Michigan.” Ecological Restoration 26, no. 2 (2008): 136–42.  
+
+Pasquarella, V. J. et al. 2018. Improved mapping of forest type using spectral-temporal Landsat features. - Remote Sens. Environ. 210: 193–207.
+
+Ramírez, Magdalena Maria, and Juan Francisco Ornelas. “Germination of Psittacanthus Schiedeanus (Mistletoe) Seeds after Passage through the Gut of Cedar Waxwings and Grey Silky-Flycatchers.” Journal of the Torrey Botanical Society 136, no. 3 (2009): 322–31.  
+
+Reinartz, James A. “Controlling Glossy Buckthorn (Rhamnus frangula L.) with Winter Herbicide Treatments of Cut Stumps.” Natural Areas Journal 17, no. 1 (1997): 38–41.  
+
+Szewczyk, Tim M., Mark J. Ducey, Valerie J. Pasquarella, and Jenica M. Allen. “Refining Compositional Land Cover Maps in a Hierarchical Bayesian Framework to Improve Ecological Models.” Ecological Applications, *in review*.  
+
+Manson, S. et al. 2017. IPUMS National Historical Geographic Information System: Version 12.0 [Database].
+
+
+
+

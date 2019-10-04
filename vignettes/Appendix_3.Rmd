@@ -1,0 +1,592 @@
+---
+title: "Appendix C"
+subtitle: "Local management in a regional context: Simulations with process-based species distribution models"
+author: "Tim M. Szewczyk, Tom Lee, Mark J. Ducey, Matthew E. Aiello-Lammens, Hayley Bibaud, Jenica M. Allen"
+output:
+  pdf_document: 
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+editor_options:
+  chunk_output_type: inline
+header-includes:
+  - \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{C.\arabic{table}} \setcounter{figure}{0} \renewcommand{\thefigure}{C.\arabic{figure}}}
+---
+
+\beginsupplement
+
+---
+
+
+Appendix C illustrates how to run a global sensitivity analysis, initialize populations on the landscape, and simulate management strategies. **Note: the sensitivity analyses and simulations are computationally intensive, and the full runs described in the main manuscript were performed on a high performance computing cluster.** 
+
+All necessary functions are included in the R package `gbPopMod`, which can be installed with the following line of R code:
+
+```{r installPkg, eval=FALSE}
+devtools::install_github("Sz-Tim/gbPopMod", dependencies=T)
+help(package="gbPopMod")
+```
+
+
+---
+
+
+# Data and functions
+All files associated with the R package can be viewed on the GitHub repository [https://github.com/Sz-Tim/gbPopMod](https://github.com/Sz-Tim/gbPopMod). All functions are in the `R` folder, separated by category (e.g., all dispersal-related functions are in `R/fn_dispersal.R`). 
+
+The landscape data files are provided at two resolutions: 20 acre (240,656 inbound cells) and 9 km^2^ (2,047 inbound cells). On a personal computer, we suggest adjusting the code below to run fewer simulations and to use the coarser 9 km^2^ resolution rather than the finer 20 acre resolution.
+
+
+---
+
+\newpage
+
+# Running a global sensitivity analysis
+Global sensitivity analyses vary all parameters simultaneously, drawing values from the specified distribution. Here, each parameter is drawn from a uniform distribution, with the maximum and minimum as specified in Table S1.1. By default, the following parameters are explored:  
+- `p.f`: pr(flower)  
+- `mu`: mean(fruits | flower)  
+- `gamma`: mean(seeds/fruit)  
+- `m`: maturation age  
+- `p.c`: pr(fruit consumed by bird)  
+- `sdd.rate`: 1/mean(short distance dispersal distance in cells)  
+- `sdd.max`: maximum short distance dispersal distance  
+- `bird.hab`: bird relative habitat preferences  
+- `n.ldd`: long distance dispersal events per year  
+- `s.c`: survival rate for seeds consumed by birds  
+- `s.B`: survival rate in seed bank  
+- `s.M`: survival rate for juveniles  
+- `s.N`: survival rate for adults  
+- `K`: carrying capacity  
+- `g.B`: pr(germination from seed bank)  
+- `p`: pr(establish | germination)  
+
+```{r GSA_setup, message=FALSE, warning=FALSE}
+library(gbPopMod)
+library(tidyverse)
+library(doSNOW)  # for parallel simulations
+
+# set parameters & ranges
+nSamp <- 25000  # number of draws from the parameter space
+res <- c("20ac", "9km2")[1]  # landscape resolution
+global_pars <- set_g_p(tmax=50,  # number of time steps to simulate
+                       lc.r=Inf, lc.c=Inf,  # for truncating the landscape
+                       N.p.t0=1,  # number of initial populations at t=0
+                       n.cores=4)  # number of parallel simulations
+par.ls <- set_sensitivity_pars(names(global_pars)[10:26][-15], "gb", res)
+
+# load landscape
+load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
+ngrid <- nrow(lc.df)
+ncell <- sum(lc.df$inbd)
+
+# initialize
+cell.init <- get_pt_id(lc.df, c(739235.9, 4753487)) # 1st record in extent
+
+# output storage
+out.dir <- paste0("out/", res, "/")
+if(!dir.exists(out.dir)) dir.create(out.dir, recursive=TRUE)
+```
+
+The landscape is loaded as `lc.df`, and is rectangular. The dataframe contains columns for indexing rows/columns on the grid, landscape composition across six categories, latitude, longitude, the column `inbd` to denote whether the cell is inbounds, a unique id for each cell within the rectangular grid, and a unique id for each inbound cell.
+```{r GSA_viewLandscape_id, echo=FALSE, eval=TRUE, warning=FALSE, fig.height=5, fig.width=6, fig.cap="Inbound cell IDs."}
+force.sf <- filter(lc.df, id.in %% 1000 == 0) %>% # for cleaner maps
+  sf::st_as_sf(coords=c("lon", "lat"), remove=FALSE) %>%
+  sf::st_set_crs(32618) 
+str(lc.df, give.attr=F)
+```
+
+```{r GSA_viewLandscape_Opn, echo=FALSE, eval=TRUE, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of open canopy suitable habitat in each grid cell."}
+ggplot(lc.df) + geom_tile(aes(x=lon, y=lat, fill=Opn)) + 
+  scale_fill_gradient("Proportion\nOpen Suitable", limits=c(0,1)) + 
+  geom_sf(data=force.sf, colour=NA) +
+  labs(x="Longitude", y="Latitude")
+```
+
+```{r GSA_viewLandscape_Dec, echo=FALSE, eval=TRUE, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of deciduous forest in each grid cell."}
+ggplot(lc.df) + geom_tile(aes(x=lon, y=lat, fill=Dec)) + 
+  scale_fill_gradient("Proportion\nDeciduous Forest", limits=c(0,1)) + 
+  geom_sf(data=force.sf, colour=NA) +
+  labs(x="Longitude", y="Latitude")
+```
+
+```{r GSA_viewLandscape_Mxd, echo=FALSE, eval=TRUE, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of mixed forest in each grid cell."}
+ggplot(lc.df) + geom_tile(aes(x=lon, y=lat, fill=Mxd)) + 
+  scale_fill_gradient("Proportion\nMixed Forest", limits=c(0,1)) + 
+  geom_sf(data=force.sf, colour=NA) +
+  labs(x="Longitude", y="Latitude")
+```
+
+```{r GSA_viewLandscape_WP, echo=FALSE, eval=TRUE, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of white pine forest in each grid cell."}
+ggplot(lc.df) + geom_tile(aes(x=lon, y=lat, fill=WP)) + 
+  scale_fill_gradient("Proportion\nWhite Pine Forest", limits=c(0,1)) + 
+  geom_sf(data=force.sf, colour=NA) +
+  labs(x="Longitude", y="Latitude")
+```
+
+```{r GSA_viewLandscape_Evg, echo=FALSE, eval=TRUE, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of other evergreen forest in each grid cell."}
+ggplot(lc.df) + geom_tile(aes(x=lon, y=lat, fill=Evg)) + 
+  scale_fill_gradient("Proportion\nOther Evergreen Forest", limits=c(0,1)) + 
+  geom_sf(data=force.sf, colour=NA) +
+  labs(x="Longitude", y="Latitude")
+```
+
+\newpage
+
+The object `par.ls` is a list with an element for each parameter, where each element is a list with the parameter name, the parameter type, whether parameter is land cover dependent vs. global, and the minimum and maximum allowable values. 
+```{r GSA_par.ls, eval=TRUE}
+names(par.ls)
+par.ls[[1]]
+par.ls[[3]]
+par.ls[[7]]
+```
+
+The `global_sensitivity()` function generates `nSamp` draws from the parameter space specified in `par.ls`, runs one simulation for each draw, and stores summarized output in `sim.dir`. We set `control.p=NULL` to run simulations in the absence of any management actions. The summarized output includes six landscape-wide metrics:  
+1. The proportion of cells occupied by adults  
+2. The proportion of cells occupied by seeds  
+3. The proportion of occupied cells at carrying capacity at `tmax`  
+4. The mean adult abundance in occupied cells  
+5. The median adult abundance in occupied cells  
+6. The standard deviation in adult abundance in occupied cells  
+
+**WARNING: THIS WILL TAKE A LONG TIME TO RUN**
+```{r GSA_runSims, eval=FALSE}
+global_sensitivity(par.ls=par.ls, nSamp=nSamp, ngrid=ngrid, ncell=ncell, 
+                   g.p=global_pars, lc.df=lc.df, sdd=NULL, cell.init=cell.init, 
+                   control.p=NULL, verbose=T, sim.dir=paste0(out.dir, "sims/"))
+```
+
+We fit boosted regression trees (BRTs) to the stored output, with each summary metric predicted by all parameters. For parameters that varied by land cover type, each land cover value was included as a separate predictor. After the BRTs were fit, the relative influence was summed for each parameter to calculate an aggregate effect. The following chunk creates a .csv file for relative influence, cross validation deviance, and between-subsample beta diversity to estimate the stability of the relative influence results.
+```{r GSA_emulate, eval=FALSE}
+# load sensitivity output files
+out <- list.files(paste0(out.dir, "sims"), full.names=T) %>% map_dfr(read.csv)
+
+# specify number of metrics, parameters
+nMetric <- 6  # pOcc, pSB, pK, meanNg0, medNg0, sdNg0
+nPar <- ncol(out)-nMetric
+brt.sum <- vector("list", nMetric)
+
+# run BRTs & calculate parameter summaries
+for(i in 1:nMetric) {
+  metric <- names(out)[nPar+i]
+  emulate_sensitivity(sens.out=out, par.ls=par.ls, n.cores=global_pars$n.cores, 
+                      n.sub=10,  # number of subsamples for bootstrapping
+                      td=c(1,3,5),  # tree depth (~number of interactions)
+                      resp=metric, brt.dir=paste0(out.dir, "brt/"))
+  brt.sum[[i]] <- emulation_summary(resp=metric, brt.dir=paste0(out.dir, "brt/"))
+}
+
+# save output
+write_csv(map_dfr(brt.sum, ~.$ri.df), paste0(out.dir, "BRT_RI.csv"))
+write_csv(map_dfr(brt.sum, ~.$cvDev.df), paste0(out.dir, "BRT_cvDev.csv"))
+write_csv(map_dfr(brt.sum, ~.$betaDiv.df), paste0(out.dir, "BRT_betaDiv.csv"))
+```
+
+Finally, we 1) confirm adequate sampling of the parameter space through the stability of relative influence across subsamples, 2) evaluate the necessary tree depth through cross validation deviance, and 3) assess the relative influence of each parameter.
+```{r GSA_output, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+cvDev.df <- read_csv(paste0(out.dir, "BRT_cvDev.csv"))
+beta.df <- read_csv(paste0(out.dir, "BRT_betaDiv.csv"))
+ri.df <- read_csv(paste0(out.dir, "BRT_RI.csv")) %>%
+  mutate(response=as.factor(response))
+resp_col <- c(pOcc="#005a32", pSB="#74c476", pK="#99000d",
+              meanNg0="#084594", medNg0="#6baed6", sdNg0="#4a1486")
+ri.df$response <- lvls_reorder(ri.df$response, 
+                               match(names(resp_col), levels(ri.df$response)))
+str(cvDev.df)
+str(beta.df)
+str(ri.df)
+```
+
+
+---
+
+
+# Initializing populations
+To create the starting landscape for the management simulations, we run simulations from the first known introduction. For glossy buckthorn, the first record was in 1922, so we run each simulation for 96 years to predict the distribution for 2018. 
+```{r popInit_setup, message=FALSE}
+library(gbPopMod); library(doSNOW); library(foreach); library(viridis)
+tmp.dir <- "data/inits/temp/"
+if(!dir.exists(tmp.dir)) dir.create(tmp.dir, recursive=T)
+init.dir <- "data/inits/"
+
+# set parameters
+n_sim <- 1000
+global_pars <- set_g_p(tmax=96, # 1st glossy buckthorn record: 1922
+                       n.cores=4)
+if(res == "9km2") {  # adjust K, dispersal
+  global_pars$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
+  global_pars$sdd.max <- 7
+  global_pars$sdd.rate <- 0.8
+  global_pars$n.ldd <- 3
+}
+
+# load landscape
+load(paste0("data/USDA_", res, ".rda")) # loads landscape as lc.df
+ngrid <- nrow(lc.df)
+ncell <- sum(lc.df$inbd)
+
+cell.init <- get_pt_id(lc.df, c(739235.9, 4753487)) # 1st record in extent
+```
+
+Calculating the short distance dispersal neighborhoods and probabilities is computationally expensive, so that is run once here and stored for all subsequent iterations. Next, the populations in the first simulated year are initialized. Then, simulations are run for `global_pars$tmax` years with identical initial population sizes and parameter values, but with stochastic dispersal. Outputs from each iteration are stored in `tmp.dir`, and averages are calculated across simulations. These averages represent the predicted distribution after `global_pars$tmax` years, and serve as the initial distribution for the management simulations.
+```{r popInit_run, eval=FALSE}
+# calculate short distance dispersal neighborhoods & probabilities
+sdd <- sdd_set_probs(ncell=ncell, lc.df=lc.df, g.p=global_pars)
+saveRDS(sdd, paste0(init.dir, "sdd_", res, ".rds"))
+
+# populations in each cell in first year of simulation
+N_0 <- pop_init(ngrid=ngrid, g.p=global_pars, lc.df=lc.df, p.0=cell.init, N.0=10)
+
+# run simulations
+p.c <- makeCluster(global_pars$n.cores); registerDoSNOW(p.c)
+sim.out <- foreach(s=1:n_sim,
+                   .packages=c("gbPopMod", "stringr")) %dopar% {
+  out <- run_sim(ngrid=ngrid, ncell=ncell, g.p=global_pars, lc.df=lc.df, 
+                 sdd=sdd, N.init=N_0, control.p=NULL, verbose=F, 
+                 save_yrs=global_pars$tmax, collapse_LCs=F)
+  
+  # store each simulation in tmp.dir
+  s.f <- str_pad(s, 4, "left", "0")
+  saveRDS(out$N[,1,,], paste0(tmp.dir, res, "_N_", s.f, ".rds"))
+  saveRDS(out$B[,1], paste0(tmp.dir, res, "_B_", s.f, ".rds"))
+  saveRDS(out$nSd[,1], paste0(tmp.dir, res, "_nSd_", s.f, ".rds"))
+  saveRDS(out$nSdStay[,1], paste0(tmp.dir, res, "_nSdStay_", s.f, ".rds"))
+  saveRDS(out$D[,1], paste0(tmp.dir, res, "_D_", s.f, ".rds"))
+  saveRDS(out$nFl[,1], paste0(tmp.dir, res, "_nFl_", s.f, ".rds"))
+  return(s)
+}
+stopCluster(p.c)
+
+# store summarized output: mean across simulations
+## Juvenile and adult abundance
+N.tmax <- dir(tmp.dir, paste0(res, "_N_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+saveRDS(N.tmax, paste0(init.dir, "N_2018_", res, ".rds"))
+
+## seed bank abundance
+B.tmax <- dir(tmp.dir, paste0(res, "_B_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+saveRDS(B.tmax, paste0(init.dir, "B_2018_", res, ".rds"))
+
+## number of seeds produced
+nSd.tmax <- dir(tmp.dir, paste0(res, "_nSd_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+saveRDS(nSd.tmax, paste0(init.dir, "nSd_2018_", res, ".rds"))
+
+## number of seeds produced and remaining in cell
+nSdStay.tmax <- dir(tmp.dir, paste0(res, "_nSdStay_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+saveRDS(nSdStay.tmax, paste0(init.dir, "nSdStay_2018_", res, ".rds"))
+
+## number of immigrant seeds to each cell
+D.tmax <- dir(tmp.dir, paste0(res, "_D_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+saveRDS(D.tmax, paste0(init.dir, "D_2018_", res, ".rds"))
+
+## number of flowering adults
+nFl.tmax <- dir(tmp.dir, paste0(res, "_nFl_"), full.names=T) %>%
+  map(readRDS) %>%
+  Reduce(`+`, .)/n_sim
+saveRDS(nFl.tmax, paste0(init.dir, "nFl_2018_", res, ".rds"))
+```
+
+```{r popInit_plotSetUp, warning=FALSE, fig.height=5, fig.width=6}
+N.0 <- readRDS(paste0(init.dir, "N_2018_", res, ".rds")) # [cell,LC,age]
+full.2018 <- lc.df %>% 
+  mutate(N.adult=rowSums(N.0[,,7]),
+         N.juv=apply(N.0[,,-7], 1, sum, na.rm=T),
+         B=readRDS(paste0(init.dir, "B_2018_", res, ".rds")),
+         nSeed=readRDS(paste0(init.dir, "nSd_2018_", res, ".rds")),
+         nSdStay=readRDS(paste0(init.dir, "nSdStay_2018_", res, ".rds")),
+         D=readRDS(paste0(init.dir, "D_2018_", res, ".rds")),
+         nFl=readRDS(paste0(init.dir, "nFl_2018_", res, ".rds")),
+         p.est=c(as.matrix(lc.df[,4:9]) %*% set_g_p()$p),
+         mu=c(as.matrix(lc.df[,4:9]) %*% set_g_p()$mu),
+         m=c(as.matrix(lc.df[,4:9]) %*% set_g_p()$m),
+         bird.hab=c(as.matrix(lc.df[,4:9]) %*% set_g_p()$bird.hab),
+         s.M=c(as.matrix(lc.df[,4:9]) %*% set_g_p()$s.M),
+         K=c(as.matrix(lc.df[,4:9]) %*% set_g_p()$K))
+base_map <- ggplot(full.2018, aes(lon, lat)) +
+  geom_sf(data=force.sf, colour=NA) +
+  labs(x="Longitude", y="Latitude") +
+  theme_bw() + 
+  theme(panel.background=element_rect(fill="white"),
+        panel.grid.minor=element_line(colour=NA))
+```
+
+```{r popInit_adult, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Abundance of glossy buckthorn adults in the initial landscape used for the management simulations."}
+base_map + geom_tile(aes(fill=N.adult)) + 
+  scale_fill_viridis("", option="B", limits=c(0,NA)) +
+  ggtitle("Adult abundance")
+```
+
+```{r popInit_B, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Abundance of glossy buckthorn seed bank in the initial landscape used for the management simulations."}
+base_map + geom_tile(aes(fill=B)) + 
+  scale_fill_viridis("", option="B", limits=c(0,NA)) +
+  ggtitle("Seed bank")
+```
+
+```{r popInit_pFl, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of adults expected to flower in a typical year."}
+base_map + geom_tile(aes(fill=nFl/N.adult)) + 
+  scale_fill_viridis("", option="B", limits=c(0,1)) + 
+  ggtitle("Proportion of adults flowering")
+```
+
+```{r popInit_pEst, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Probability of seedling establishment."}
+base_map + geom_tile(aes(fill=p.est)) + 
+  scale_fill_viridis("", option="B", limits=c(0,1)) + 
+  ggtitle("Seedling establishment rate")
+```
+
+```{r popInit_TotSeed, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Total propagule pressure in each cell, representing local seed production and immigration."}
+base_map + geom_tile(aes(fill=D+nSdStay)) + 
+  scale_fill_viridis("", option="B", limits=c(0,NA)) + 
+  ggtitle("Propagule pressure")
+```
+
+```{r popInit_perCapSeed, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Per capita seed production."}
+base_map + geom_tile(aes(fill=nSeed/nFl)) + 
+  scale_fill_viridis("", option="B", limits=c(0,NA)) + 
+  ggtitle("Per capita seed production")
+```
+
+```{r popInit_EmSeed, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Immigration pressure on each grid cell."}
+base_map + geom_tile(aes(fill=nSeed-nSdStay)) + 
+  scale_fill_viridis("", option="B", limits=c(0,NA)) + 
+  ggtitle("Emigrant seeds produced")
+```
+
+```{r popInit_ImmSeedProp, warning=FALSE, fig.height=5, fig.width=6, dev='jpeg', dpi=300, fig.cap="Proportion of seeds in each cell that are immigrants."}
+base_map + geom_tile(aes(fill=D/(nSdStay+D))) + 
+  scale_fill_viridis("", option="B", limits=c(0,1)) + 
+  ggtitle("Proportion of immigrant seeds")
+```
+
+
+
+---
+
+\newpage
+
+# Simulating management actions
+This last section runs simulations of management strategies on 12 properties in southeastern New Hampshire, USA. The landscape is initialized with the output from the previous section, representing the best estimated distribution in 2018. Each simulation is run for 20 years. For computational efficiency, we use a landscape truncated to the bounding box surrounding a buffer of 2*$sdd_{max}$ about the properties. This landscape dataframe, `lc.mgmt.df`, is re-indexed (i.e., `id` and `id.in` are `1:length(lc.mgmt.df)`) and includes four additional columns: `in.UNH` which indicates whether the cell falls within a managed property, `Property` which contains the property names or `NA` if the cell is not managed, `id.full` which is the corresponding `id` on the full landscape, and `id.in.full` which is the corresponding `id.in` on the full landscape.
+```{r mgmt_setup, echo=FALSE, message=FALSE}
+n.sim <- 12
+dem_par <- set_g_p(tmax=20, n.cores=4)
+if(res == "9km2") {
+  dem_par$K <- c(3133908, 0, 462474, 462474, 462474, 462474)
+  dem_par$sdd.max <- 7
+  dem_par$sdd.rate <- 0.8
+  dem_par$n.ldd <- 3
+}
+
+# load landscape
+lc.mgmt.df <- read.csv(paste0("data/USDA_", res, "_mgmt.csv"))
+ngrid <- nrow(lc.mgmt.df)
+ncell <- sum(lc.mgmt.df$inbd)
+
+# initial populations
+N_0 <- readRDS(paste0(init.dir, "N_2018_", res, ".rds"))[lc.mgmt.df$id.full,,]
+B_0 <- readRDS(paste0(init.dir, "B_2018_", res, ".rds"))[lc.mgmt.df$id.full]
+sdd <- sdd_set_probs(ncell=ncell, lc.df=lc.mgmt.df, g.p=dem_par, verbose=F)
+str(lc.df, give.attr=FALSE)
+str(lc.mgmt.df, give.attr=FALSE)
+```
+
+The management plans are stored as .csv files in `/mgmt/`. Each file details the management actions, thresholds, and cycle length for each property. Treatments may vary among land cover types. Treatment cycles are defined in the `trt.cycle` and `trt.followup` columns, where the cycle length in years is contained in the former, and the number of followup years is contained in the latter. For example, `trt.cycle=5; trt.followup=3` would indicate that the property is treated in years 1, 2, 3, 6, 7, 8, etc. The .csv files are stored in the list `mgmt_plans`, and the data are extracted and reformatted for use in the simulations in `mgmt`. The threshold refers to the total number of individuals rather than only adults. The default treatment/control parameters are loaded with the function `set_control_p(null_ctrl=FALSE)`, where the relevant elements that may be modified manually are `.$man.trt`, which defines the manual treatments and associated mortality rates, and `.$grd.trt`, which defines the ground cover treatments and resulting seedling establishment rates. For example, if experimental evidence suggested that mechanical removal had a 40% mortality rate, chemical treatment had a 50% mortality rate, and mechanical + chemical had a 95% mortality rate, that would be specified as `set_control_p(null_ctrl=FALSE, man.trt=c(M=0.4, C=0.5, MC=0.95, N=0))`. 
+```{r mgmt_planDefs}
+# management plans
+mgmt.dir <- "mgmt/"
+mgmt_plans <- dir(mgmt.dir, "^p", full.names=T) %>% map(read.csv) %>%
+  setNames(str_remove(str_remove(dir(mgmt.dir, "^p"), "p._"), ".csv"))
+str(mgmt_plans)
+mgmt <- setNames(vector("list", length(mgmt_plans)), names(mgmt_plans))
+lc.UNH <- filter(lc.mgmt.df, in.UNH)
+for(m in seq_along(mgmt)) {
+  if(names(mgmt)[m] == "none") {
+    mgmt[[m]] <- list(ctrl_par=set_control_p(null_ctrl=TRUE),
+                      manual.i=NULL,
+                      cover.i=NULL)
+  } else {
+    mgmt_index <- match(lc.UNH$Property, mgmt_plans[[m]]$Property)
+    mgmt_m <- cbind(id=lc.UNH$id, mgmt_plans[[m]][mgmt_index,])
+    mgmt[[m]] <- list(ctrl_par=set_control_p(null_ctrl=FALSE),
+                      manual.i=mgmt_m[,grep("id|Trt", names(mgmt_m))],
+                      thresh=mgmt_m$thresh,
+                      trt.int=mgmt_m$trt.cycle,
+                      trt.followup=mgmt_m$trt.followup,
+                      cover.i=mgmt_m[,grep("id|ground", names(mgmt_m))] %>%
+                        dplyr::rename(Trt=ground_cover))
+  }
+} 
+str(mgmt)
+```
+
+Once the management strategies have been defined in `mgmt`, the initial population state can be loaded and simulations run. 
+```{r mgmt_sims, eval=FALSE}
+# storage and initialization objects
+out.df.ls <- out.all.ls <- setNames(vector("list", length(mgmt)), names(mgmt))
+N <- array(0, dim=c(ngrid, dem_par$tmax+1, 6, max(dem_par$m)))
+N[,1,,] <- N_0
+B <- matrix(0, nrow=ngrid, ncol=dem_par$tmax+1)
+B[,1] <- B_0
+
+for(m in seq_along(mgmt)) {
+  # ids of all managed cells
+  managed <- unique(c(mgmt[[m]]$manual.i$id, mgmt[[m]]$cover.i$id))
+  
+  # storage for simulation output
+  N_m <- B_m <- vector("list", n.sim)
+  
+  # iterate through simulations
+  p.c <- makeCluster(dem_par$n.cores); registerDoSNOW(p.c)
+  out_m <- foreach(s=1:n.sim, 
+                   .packages=c("gbPopMod", "tidyverse", "magrittr")) %dopar% {
+    # iterate through years
+    N_s <- N
+    B_s <- B
+    for(k in 1:dem_par$tmax) {
+      # decide which cells are managed this year
+      # do any cells have year k as a treatment year based on cycles?
+      if(names(mgmt)[m] != "none" && 
+         any((k %% mgmt[[m]]$trt.int) <= mgmt[[m]]$trt.followup) 
+         ) {  
+        # is N > threshold in those cells?
+        managed_k <- managed[apply(N_s[managed,k,,], 1, sum) > mgmt[[m]]$thresh &
+                               (k %% mgmt[[m]]$trt.int) <= mgmt[[m]]$trt.followup]
+        # store cell ids
+        manual_k <- mgmt[[m]]$manual.i[mgmt[[m]]$manual.i$id %in% managed_k,]
+        cover_k <- mgmt[[m]]$cover.i[mgmt[[m]]$cover.i$id %in% managed_k,]
+        if(names(mgmt)[m] != "aggressive") cover_k <- NULL
+      } else {
+        manual_k <- NULL
+        cover_k <- NULL
+      }
+      
+      # buckthorn management, population growth, dispersal
+      out <- iterate_pop(ngrid=ngrid, ncell=ncell, N.0=N_s[,k,,], B.0=B_s[,k], 
+                         g.p=dem_par, lc.df=lc.mgmt.df[,-(15:18)], sdd=sdd, 
+                         control.p=mgmt[[m]]$ctrl_par, 
+                         grd_cover.i=cover_k, mech_chem.i=manual_k)
+      
+      # update abundances
+      N_s[,k+1,,] <- out$N
+      B_s[,k+1] <- out$B
+    }
+    # return abundances
+    list(N=N_s, B=B_s)
+  }
+  stopCluster(p.c)
+  N_m <- map(out_m, ~.$N)
+  B_m <- map(out_m, ~.$B)
+  
+  # summarise: means across simulations
+  N_adult.tot <- Reduce('+', map(N_m, ~apply(.[,,,max(dem_par$m)], 1:2, sum)))/n.sim
+  N_all.tot <- Reduce('+', map(N_m, ~apply(., 1:2, sum)))/n.sim
+  B.tot <- Reduce('+', B_m)/n.sim
+  N_adult.df <- as.data.frame(N_adult.tot); names(N_adult.df) <- 1:ncol(N_adult.df)
+  N_all.df <- as.data.frame(N_all.tot); names(N_all.df) <- 1:ncol(N_all.df)
+  out.all.ls[[m]] <- cbind(lc.mgmt.df, N_adult.df) %>%
+    gather(year, N_adult, (ncol(lc.mgmt.df)+1):ncol(.)) %>% 
+    mutate(year=as.numeric(year),
+           N_all=unlist(N_all.df),
+           B=c(B.tot))
+  out.df.ls[[m]] <- lc.mgmt.df %>%
+    mutate(N_adult.0=N_adult.tot[,1],
+           N_all.0=N_all.tot[,1],
+           B.0=B.tot[,1],
+           N_adult.final=N_adult.tot[,dem_par$tmax+1],
+           N_all.final=N_all.tot[,dem_par$tmax+1],
+           B.final=B.tot[,dem_par$tmax+1])
+}
+
+# store output
+mgmt.out.dir <- paste0(mgmt.dir, "out/")
+if(!dir.exists(mgmt.out.dir)) dir.create(mgmt.out.dir)
+out.df <- dplyr::bind_rows(out.df.ls, .id="mgmt")
+out.all <- dplyr::bind_rows(out.all.ls, .id="mgmt")
+out.property <- out.all %>% filter(!is.na(Property)) %>%
+  group_by(mgmt, year, Property) %>% 
+  summarise(N_adult=sum(N_adult), N_all=sum(N_all), B=sum(B), nCell=n())
+mgmt_comp.df <- out.df %>% 
+  select(mgmt, lon, lat, id, id.in, in.UNH, Property, N_all.final) %>% 
+  tidyr::spread(mgmt, N_all.final) %>%
+  mutate(propDiff.none=(none-none)/none,
+         propDiff.stated=(stated-none)/none,
+         propDiff.reality=(reality-none)/none,
+         propDiff.agg=(aggressive-none)/none) %>%
+  select(-c(none, stated, reality, aggressive)) %>%
+  gather(mgmt, prDiff, contains("propDiff")) %>%
+mgmt_comp.df$mgmt <- factor(mgmt_comp.df$mgmt, labels=levels(out.property$mgmt))
+write.csv(out.df, paste0(mgmt.out.dir, res, "_out_df.csv"))
+write.csv(out.all, paste0(mgmt.out.dir, res, "_out_all.csv"))
+write.csv(out.property, paste0(mgmt.out.dir, res, "_out_property.csv"))
+write.csv(mgmt_comp.df, paste0(mgmt.out.dir, res, "_mgmt_comp.csv"))
+```
+
+Lastly, we can visualize the simulation predictions.
+```{r mgmt_plotSetUp, fig.width=12}
+# plots
+library(viridis); theme_set(theme_bw())
+mgmt.out.dir <- paste0(mgmt.dir, "out/")
+out.all <- read.csv(paste0(mgmt.out.dir, res, "_out_all.csv"))
+out.property <- read.csv(paste0(mgmt.out.dir, res, "_out_property.csv"))
+mgmt_comp.df <- read.csv(paste0(mgmt.out.dir, res, "_mgmt_comp.csv"))
+unh.bbox <- with(filter(lc.mgmt.df, in.UNH), c(range(lon), range(lat)))
+```
+
+```{r mgmt_adult_cell, fig.width=12, echo=FALSE, dev='jpeg', dpi=300, fig.cap="Abundance of glossy buckthorn adults in each cell on each property across 25 simulated years under each management regime."}
+ggplot(filter(out.all, in.UNH), aes(year, N_adult, group=id)) + 
+  geom_line(alpha=0.5) + 
+  facet_grid(mgmt~Property, labeller=labeller(Property=label_wrap_gen(10))) + 
+  ylab("Adult abundance")
+```
+
+```{r mgmt_B_cell, fig.width=12, echo=FALSE, dev='jpeg', dpi=300, fig.cap="Abundance of the glossy buckthorn seedbank in each cell on each property across 25 simulated years under each management regime."}
+ggplot(filter(out.all, in.UNH), aes(year, B, group=id)) + 
+  geom_line(alpha=0.5) +
+  facet_grid(mgmt~Property, labeller=labeller(Property=label_wrap_gen(10))) + 
+  ylab("Seed bank")
+```
+
+```{r mgmt_adult_property, fig.width=8, echo=FALSE, dev='jpeg', dpi=300, fig.cap="Mean density of glossy buckthorn adults on each property across 25 simulated years under each management regime."}
+ggplot(out.property, aes(year, N_adult/nCell, group=Property, colour=Property)) +
+  geom_line() + facet_wrap(~mgmt) + 
+  scale_colour_brewer("Managed property", type="qual", palette="Paired") +
+  labs(y=paste("Mean buckthorn adult density per", res))
+```
+
+```{r mgmt_B_property, fig.width=8, echo=FALSE, dev='jpeg', dpi=300, fig.cap="Mean density of the glossy buckthorn seedbank on each property across 25 simulated years under each management regime."}
+ggplot(out.property, aes(year, B/nCell, group=Property, colour=Property)) +
+  geom_line() + facet_wrap(~mgmt) + 
+  scale_colour_brewer("Managed property", type="qual", palette="Paired") +
+  labs(y=paste("Mean buckthorn seed bank density per", res))
+```
+
+```{r mgmt_N_diff, fig.width=8, fig.height=4, echo=FALSE, dev='jpeg', dpi=300, fig.cap="Expected difference in adult glossy buckthorn abundance relative to no management. Managed cells are outlined in gray. Note that the extent shown is a cropped extent to improve display of the managed properties."}
+ggplot(filter(mgmt_comp.df, mgmt != "none" &
+              lon>=unh.bbox[1] & lon<=unh.bbox[2] & lat>=unh.bbox[3] & lat<=unh.bbox[4]), 
+       aes(lon, lat, fill=prDiff, colour=in.UNH)) + 
+  geom_tile() + 
+  scale_colour_manual("Managed\nProperty", values=c(NA, "gray30"), guide=FALSE) +
+  scale_fill_gradient2("Proportion change\nin abundance\nvs. no control",
+                       low="blue", high="red", limits=c(-1,1)) + 
+  facet_wrap(~mgmt) + labs(x="Longitude", y="Latitude") + 
+  geom_sf(data=filter(force.sf,
+                      lon>=unh.bbox[1] & lon<=unh.bbox[2] & lat>=unh.bbox[3] & lat<=unh.bbox[4]), 
+          fill=NA, colour=NA) +
+  scale_x_continuous(breaks=c(-71.2, -71.1, -71))
+```
+
+
+
+
+
