@@ -95,7 +95,6 @@ context_map <- ggplotGrob(
 property_map <- ggplot() + ms_fonts +
   geom_polygon(data=lc_unh_bound, aes(long, lat, group=group), 
                fill="gray97", colour=NA) +
-  # geom_tile(data=lc_unh.df, aes(lon, lat, alpha=N_adult), fill="gray30") + 
   geom_sf(data=towns, fill=NA, colour="gray80", size=0.2) +
   geom_polygon(data=lc_unh_bound, aes(long, lat, group=group), 
                fill=NA, colour="red", size=1) +
@@ -103,9 +102,6 @@ property_map <- ggplot() + ms_fonts +
   geom_tile(data=filter(lc_unh.df, !is.na(Property)),
             aes(lon, lat, fill=Property)) +
   scale_fill_brewer("Managed property", type="qual", palette="Paired") +
-  # scale_alpha_continuous("Predicted buckthorn\nabundance", 
-  #                        breaks=c(0,10000,20000)) +
-  # guides(fill=guide_legend(order=1), alpha=guide_legend(order=0)) +
   scale_x_continuous(breaks=c(-71.4, -71.2, -71, -70.8)) +
   labs(x="Longitude", y="Latitude") +
   theme(legend.key.size=unit(0.12, "in"),
@@ -117,7 +113,7 @@ property_map <- ggplot() + ms_fonts +
                    height=unit(0.05, "in"), width_hint=0.09, 
                    bar_cols=c("gray30", "gray90"), text_cex=0.6) 
 ggsave(paste0(ms_fig.dir, "UNH_map.jpeg"), property_map,
-       width=6, height=3, dpi=300, units="in")
+       width=140, height=70, dpi=500, units="mm")
 
 
 
@@ -127,6 +123,9 @@ ggsave(paste0(ms_fig.dir, "UNH_map.jpeg"), property_map,
 ########
 N.0 <- readRDS(paste0("data/inits/N_2018_", res, ".rds")) 
 lab.coord <- c(x=703000, y=4875000)
+scales::trans_new("log_p1", 
+                  function(x) {log(x+1)},
+                  function(x) {exp(x)-1})
 full.2018 <- lc.df %>% 
   mutate(N.adult=rowSums(N.0[,,7]),
          N.juv=apply(N.0[,,-7], 1, sum, na.rm=T),
@@ -147,33 +146,36 @@ base_map <- ggplot(full.2018, aes(lon, lat)) +
         legend.key.height=unit(0.1, "in"),
         legend.key.width=unit(0.09, "in"))
 p.N_ad <- base_map + geom_tile(aes(fill=N.adult)) + 
-  scale_fill_viridis("", option="B", limits=c(0,NA),
-                     breaks=c(0, max(full.2018$N.adult)/2, max(full.2018$N.adult)),
-                     labels=c(0, "1.3e4", "2.6e4")) +
+  scale_fill_viridis("", option="B", limits=c(0,NA), trans="log1p",
+                     breaks=c(0, exp(log(max(full.2018$N.adult))/2), 
+                              max(full.2018$N.adult)),
+                     labels=c(0, "1.6e2", "2.6e4")) +
   ggtitle("Adult abundance") + 
   annotate("text", label="a.", x=lab.coord[1], y=lab.coord[2])
 p.p_est <- base_map + geom_tile(aes(fill=p.est)) + 
-  scale_fill_viridis("", option="B", limits=c(0,1), breaks=c(0,0.5,1)) + 
+  scale_fill_viridis("", option="B", limits=c(0,0.5), breaks=c(0,0.25,0.5)) + 
   ggtitle("Seedling establishment rate") + 
   annotate("text", label="b.", x=lab.coord[1], y=lab.coord[2])
 p.propagule <- base_map + geom_tile(aes(fill=D+nSdStay)) + 
-  scale_fill_viridis("", option="B", limits=c(0,NA),
-                     breaks=c(0, max(full.2018$D + full.2018$nSdStay)/2,
+  scale_fill_viridis("", option="B", limits=c(0,NA), trans="log1p",
+                     breaks=c(0, 
+                              exp(log(max(full.2018$D + full.2018$nSdStay))/2),
                               max(full.2018$D + full.2018$nSdStay)),
-                     labels=c(0, "2.3e7", "4.6e7")) + 
+                     labels=c(0, "6.8e4", "4.6e7")) + 
   ggtitle("Total propagule pressure") + 
   annotate("text", label="c.", x=lab.coord[1], y=lab.coord[2])
 p.pcap_seed <- base_map + geom_tile(aes(fill=nSeed/N.adult)) + 
-  scale_fill_viridis("", option="B", limits=c(0,NA),
-                     breaks=c(0, max(full.2018$nSeed/(full.2018$N.adult+1))/2,
+  scale_fill_viridis("", option="B", limits=c(0,NA), trans="log1p",
+                     breaks=c(0, 
+                              exp(log(max(full.2018$nSeed/(full.2018$N.adult+1)))/2),
                               max(full.2018$nSeed/(full.2018$N.adult+1))),
-                     labels=c(0, "1.1e3", "2.1e3")) + 
+                     labels=c(0, "4.6e1", "2.1e3")) + 
   ggtitle("Per capita seed production") + 
   annotate("text", label="d.", x=lab.coord[1], y=lab.coord[2])
 p.immigr <- base_map + geom_tile(aes(fill=D)) + 
-  scale_fill_viridis("", option="B", limits=c(0,NA),
-                     breaks=c(0, max(full.2018$D)/2, max(full.2018$D)),
-                     labels=c(0, "1.5e6", "3.0e6")) + 
+  scale_fill_viridis("", option="B", limits=c(0,NA), trans="log1p",
+                     breaks=c(0, exp(log(max(full.2018$D))/2), max(full.2018$D)),
+                     labels=c(0, "1.7e4", "3.0e6")) + 
   ggtitle("Number of immigrant seeds") + 
   annotate("text", label="e.", x=lab.coord[1], y=lab.coord[2])
 p.pr_immigr <- base_map + geom_tile(aes(fill=D/(nSdStay+D))) + 
@@ -184,8 +186,8 @@ mod_output <- grid.arrange(p.N_ad, p.p_est, p.propagule,
                            p.pcap_seed, p.immigr, p.pr_immigr, 
                            nrow=2)
 ggsave(paste0(ms_fig.dir, "model_output.jpeg"), mod_output, 
-       # width=5.25, height=8, dpi=300, units="in")
-       width=7.5, height=5, dpi=300, units="in")
+       width=190, height=125, dpi=700, units="mm")
+       # width=7.5, height=5, dpi=300, units="in")
 
 
 
@@ -208,7 +210,7 @@ ri.df$resp_pretty <- factor(ri.df$response,
 ri.df$response <- lvls_reorder(ri.df$response, 
                                match(names(resp_col), levels(ri.df$response)))
 ri.df$param_pretty <- factor(ri.df$param,
-                             labels=c("birds", "g[B]", "gamma", "K", "m",
+                             labels=c("eta", "g[B]", "gamma", "K", "m",
                                       "mu", "N[0]", "n[ldd]", "p", "c", "f", 
                                       "s[B]", "s[c]", "s[M]", "s[N]", 
                                       "sdd[max]", "r"))
@@ -227,7 +229,8 @@ relInf <- ggplot(filter(ri.df, smp==max(ri.df$smp) & td==max(ri.df$td)),
         strip.text=element_text(size=9),
         panel.grid.minor=element_blank())
 ggsave(paste0(ms_fig.dir, "GSA_relInf.jpeg"), relInf, 
-       width=6.5, height=3, dpi=300, units="in")
+       width=190, height=87, dpi=500, units="mm")
+       # width=6.5, height=3, dpi=300, units="in")
 
 
 
@@ -243,8 +246,8 @@ out.property <- read_csv(paste0("mgmt/out/", res, "_out_property.csv")) %>%
   gather(Stage, Abundance, 4:5) 
 out.property$mgmt <- factor(out.property$mgmt,
                             levels=c("none", "stated", "reality", "aggressive"),
-                            labels=c("No action", "Stated plan",
-                                     "Realized\naction", "Aggressive\nstrategy"))
+                            labels=c("No action", "Stated",
+                                     "Actual", "Aggressive"))
 out.compare <- out.property %>% 
   mutate(N.none=c(rep(filter(out.property, 
                              mgmt=="No action" & Stage=="Adults")$Abundance, 4),
@@ -264,15 +267,17 @@ mgmt_N_B_diff <- ggplot(filter(out.compare, mgmt != "No action"),
   geom_line() + facet_grid(Stage~mgmt) + ms_fonts +
   scale_y_continuous(breaks=c(0, 0.5, 1), labels=c("0.0", "0.5", "1.0")) +
   scale_colour_brewer("Managed property", type="qual", palette="Paired") +
-  labs(y="Proportion of  'No action'  abundance") +
+  labs(y="Proportion of un-managed abundance") +
   theme(panel.grid.minor=element_blank(),
         panel.grid.major.x=element_blank(),
         panel.grid.major.y=element_line(colour="gray95"),
         legend.key.size=unit(0.12, "in"))
 ggsave(paste0(ms_fig.dir, "mgmt_N_B.jpeg"), mgmt_N_B,
-       width=6.5, height=3, dpi=300, units="in")
+       width=190, height=87, dpi=500, units="mm")
+       # width=6.5, height=3, dpi=300, units="in")
 ggsave(paste0(ms_fig.dir, "mgmt_N_B_diff.jpeg"), mgmt_N_B_diff,
-       width=6.5, height=3, dpi=300, units="in")
+       width=190, height=87, dpi=500, units="mm")
+       # width=6.5, height=3, dpi=300, units="in")
 
 
 
