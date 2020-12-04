@@ -1,4 +1,10 @@
-# gbPopMod  
+### Szewczyk TM, T Lee, MJ Ducey, ME Aiello-Lammens, H Bibaud, JM Allen. 2019. Local management in a regional context: Simulations with process-based species distribution models. *Ecological Modelling* 413(1): 108827  
+
+---  
+
+Code repository accompanying [Szewczyk et al. 2019](https://doi.org/10.1016/j.ecolmodel.2019.108827)  
+
+---  
 
 This R package runs a population-level demographic cellular automata model. The life history structure and default parameterization are based on [glossy buckthorn](https://en.wikipedia.org/wiki/Frangula_alnus) (*Frangula alnus*) in New England. The model is spatially explicit and temporally dynamic, simulating the growth and spread of a species on a gridded landscape. Population and life history dynamics occur within each occupied grid cell, driven by vital rates and demographic parameters which can be global or dependent on the cell environment. Cells are connected through mechanistic short distance dispersal (SDD) and rare long distance dispersal (LDD). Management actions can target specific life stages, such as reducing seedling establishment (e.g., through planted ground cover) or reducing the number of adults (e.g., through cutting and/or spraying).  In each year, the simulation occurs according to the following series of steps:  
 
